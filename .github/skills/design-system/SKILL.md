@@ -170,6 +170,156 @@ If Inter feels generic for the specific project, alternatives:
 - Labels and uppercase text: add `letter-spacing: 0.02em` and use `text-transform: uppercase` 
   with `font-size: 11px; font-weight: 500; color: var(--text-secondary)`.
 
+### Step 3b: Apply Text Formatting & Capitalization
+
+Typography isn't just fonts and sizes — it's also **how you format the words themselves**.
+Capitalization, punctuation, and text structure are critical and most apps get them wrong.
+These rules are synthesized from Apple HIG, Microsoft Writing Style Guide, Google Material
+Design, Google Developer Style Guide, and Anthropic's design principles.
+
+#### The 5 Capitalization Styles
+
+| Style | Example | CSS |
+|---|---|---|
+| **Sentence case** | "Upload your file" | (no CSS needed — write it this way) |
+| **Title Case** | "Upload Your File" | (no CSS needed — write it this way) |
+| **UPPERCASE** | "UPLOAD" | `text-transform: uppercase;` |
+| **lowercase** | "upload your file" | `text-transform: lowercase;` |
+| **Capitalize Each** | "Upload Your File" | `text-transform: capitalize;` (unreliable — capitalize in code instead) |
+
+#### The Modern Default: Sentence Case
+
+**All three major companies (Apple, Microsoft, Google) now recommend sentence case as the
+default** for nearly all UI text. Sentence case means: capitalize only the first word and
+proper nouns, lowercase everything else.
+
+Why sentence case wins:
+- **Easier to read** — mixed case gives words recognizable shapes; all-caps looks like rectangles
+- **Feels more natural** — reads like normal speech, less corporate/formal
+- **Better for scanning** — proper nouns stand out when everything else is lowercase
+- **Localization-friendly** — many languages don't have capital letters; sentence case translates better
+- **Modern aesthetic** — Linear, Notion, Vercel, Stripe, Arc all use sentence case
+
+#### Capitalization Rules by UI Element
+
+Follow this table STRICTLY. This is the consensus across Apple, Microsoft, Google, and
+modern SaaS apps:
+
+| UI Element | Case Style | Example | Notes |
+|---|---|---|---|
+| **Page titles** | Sentence case | "Account settings" | NOT "Account Settings" |
+| **Section headings** | Sentence case | "Payment methods" | NOT "Payment Methods" |
+| **Subheadings** | Sentence case | "Add a new card" | NOT "Add A New Card" |
+| **Button labels** | Sentence case | "Save changes" | NOT "Save Changes" |
+| **Navigation / tabs** | Sentence case | "My projects" | NOT "My Projects" |
+| **Menu items** | Sentence case | "Export as PDF" | NOT "Export As PDF" |
+| **Form field labels** | Sentence case | "Email address" | NOT "Email Address" |
+| **Placeholder text** | Sentence case | "Enter your name" | NOT "Enter Your Name" |
+| **Tooltip text** | Sentence case | "Copy to clipboard" | Short, no period |
+| **Error messages** | Sentence case | "That password is too short" | NOT "Error: Invalid Input!" |
+| **Success messages** | Sentence case | "Changes saved" | NOT "Changes Saved!" |
+| **Dialog/modal titles** | Sentence case | "Delete this item?" | NOT "Delete This Item?" |
+| **Toggle/switch labels** | Sentence case | "Show advanced options" | NOT "Show Advanced Options" |
+| **Checkbox/radio labels** | Sentence case | "Remember me" | NOT "Remember Me" |
+| **Empty state text** | Sentence case | "No results found" | Add guidance on next steps |
+| **Category labels/tags** | UPPERCASE | "EXERCISE", "STATUS" | 11px, gray, letter-spacing: 0.06em |
+| **Badge text** | UPPERCASE | "NEW", "PRO", "BETA" | Tiny, muted colors |
+| **Breadcrumbs** | Sentence case | "Home > Settings > Profile" | Match the actual page title |
+| **Footer links** | Sentence case | "Privacy policy" | NOT "Privacy Policy" |
+| **Product/brand names** | As branded | "GitHub", "macOS", "iPhone" | Always match the official casing |
+| **Acronyms/abbreviations** | UPPERCASE | "API", "URL", "PDF" | Never "Api" or "Url" |
+
+#### Special Cases: When NOT to Use Sentence Case
+
+**Title case** is acceptable only in these specific situations:
+- Product and service names (e.g., "Visual Studio Code", "Google Cloud Platform")
+- Legal/formal text (copyright notices, terms of service headings)
+- Book, song, or movie titles in citations
+- Marketing headlines where the brand intentionally uses title case
+- People's titles before names (e.g., "Vice President of Engineering")
+
+**UPPERCASE** is acceptable only for:
+- Category labels / tags: `font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #787878;`
+- Very short badge text: "NEW", "PRO", "BETA" (max 1-2 words)
+- Acronyms that are always uppercase: "API", "HTML", "URL"
+- **NEVER for emphasis.** Use italic sparingly instead. (Microsoft Writing Style Guide)
+- **NEVER for full sentences.** "THIS IS HARD TO READ" — always avoid.
+
+**all lowercase** — avoid this entirely:
+- Microsoft: "Don't use all lowercase as a design choice"
+- Capital letters help readers recognize new sections and sentence starts
+- Exception: brand identity that specifically requires it (rare)
+
+#### Text Structure & Punctuation Rules
+
+**Headings and titles:**
+- No period at the end of headings or titles (all companies agree)
+- Keep headings short — aim for 3-8 words
+- Use action verbs for task headings: "Create a project" not "Project creation"
+- Don't use articles in short headings: "Settings" not "The Settings"
+- If a heading has a colon, capitalize the first word after it: "Step 1: Configure the server"
+
+**Button labels:**
+- Use clear action verbs: "Save", "Delete", "Upload file"
+- 1-3 words ideal. Never a full sentence.
+- No period, no exclamation mark
+- Be specific: "Save changes" is better than "OK" or "Submit"
+- Destructive actions: be explicit — "Delete account" not just "Delete"
+- Don't start with "Click" or "Press" — the button IS the action
+
+**Form labels:**
+- Keep labels above or to the left of the field
+- No colons after form labels (modern convention — Google, Apple)
+- Placeholder text should be an example or short instruction, not a repeat of the label
+- Don't rely solely on placeholder text — it disappears when typing
+
+**Error messages:**
+- Don't blame the user: "Password must be 8+ characters" NOT "You entered an invalid password"
+- Be specific about what to fix: "Enter a valid email" NOT "Invalid input"
+- No exclamation marks — they feel aggressive
+- No "Oops!" or "Uh oh!" — they sound insincere (Apple HIG)
+- Place errors close to the problem, not in a generic banner
+
+**Notifications and toasts:**
+- Start with what happened: "File uploaded" not "Your file has been successfully uploaded"
+- Keep under 10 words when possible
+- No trailing periods on single-sentence notifications
+
+**Lists and descriptions:**
+- Use parallel structure: all items start the same way (all verbs, or all nouns)
+- Good: "Create projects", "Manage users", "View reports"
+- Bad: "Create projects", "User management", "Viewing reports"
+
+**Numbers and dates:**
+- Spell out numbers 1-9, use digits for 10+ (except in tables or data-heavy UI)
+- Use relative dates when recent: "2 hours ago", "Yesterday"
+- Be consistent with date format throughout the app
+
+#### Capitalization in Code and Technical UI
+
+When showing code elements, variable names, or technical identifiers in the UI:
+- Don't change the casing of code terms — show them as they appear in code
+- Use code font (monospace) to distinguish technical terms from regular text
+- `camelCase` and `snake_case` stay as-is — never "fix" their capitalization
+- File extensions stay lowercase: ".pdf", ".json"
+- API names stay as documented: "REST API", "GraphQL"
+
+#### Cross-Company Consensus Summary
+
+| Rule | Apple | Microsoft | Google |
+|---|---|---|---|
+| Default UI text | Sentence case (recommended) | Sentence case (required) | Sentence case (required) |
+| Headings | Sentence or title case (choose one, be consistent) | Sentence case | Sentence case |
+| Buttons | Match your chosen style consistently | Sentence case | Sentence case |
+| All-caps for emphasis | Avoid | Don't use | Don't use |
+| All-lowercase text | — | Don't use | — |
+| Colons in headings | Capitalize after colon | Capitalize after colon | Capitalize after colon |
+| Hyphenated words | Capitalize first element only | Capitalize if would be capped independently | Capitalize first element only |
+| Product names | Always capitalize | Always capitalize | Always capitalize |
+| Internal capitalization | Don't use unless brand name | Don't use unless brand name | Don't use |
+
+**The takeaway: when in doubt, use sentence case. It's the modern standard.**
+
 ### Step 4: Apply Spacing
 
 Modern UIs breathe. There is generous space between everything.
@@ -590,5 +740,15 @@ After applying changes, verify EVERY point. If ANY fails, go back and fix it.
 8. **Spacing check**: Do all sections have 24px+ gap between them? → Add more space.
 9. **Border-radius consistency**: Is the same radius value used everywhere? → Standardize to one value (6px or 10px).
 10. **Font weight audit**: Any body text using 600+? Any element using 700, 800, 900, or `bold`? → Reduce. Max 600 for page titles only.
+11. **Capitalization consistency check**: Are headings, buttons, labels, and titles using sentence case consistently? Are any using Title Case or ALL CAPS where they shouldn't be? → Fix to sentence case. Only category labels/tags and short badges should be UPPERCASE.
+12. **Text structure check**: Are button labels action-verb-first and 1-3 words? Are error messages specific and non-blaming? Are headings short (3-8 words) with no trailing periods? → Fix per text formatting rules.
 
 If any check fails, go back and fix it before presenting the result.
+
+## Post-Deploy Verification
+
+After deploying CSS/UI changes, ALWAYS test the app's core functionality:
+1. Load the page — verify it renders correctly
+2. Test the primary user flow (upload, submit, navigation) — ensure no API errors
+3. Check the browser console for errors
+4. If the app has an API backend, verify API calls return 200 (not 403/404/500)
