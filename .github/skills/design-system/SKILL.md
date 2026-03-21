@@ -1,373 +1,594 @@
 ---
 name: design-system
 description: >-
-  Comprehensive design system and UI guide for building clean, simple, and clear interfaces
-  across all platforms — web, mobile, desktop, and notifications. Use this skill whenever the 
-  user asks to design, style, theme, beautify, or improve the UI/UX of any application. Also 
-  use when creating new components, pages, layouts, color schemes, typography, animations, 
-  or visual design decisions. Applies to React, HTML/CSS, React Native, Swift/SwiftUI, Kotlin, 
-  Electron, WPF, and any other platform. Covers design tokens, accessibility, responsive 
-  layout, dark/light themes, component patterns, and cross-platform consistency. Use even when 
-  the user doesn't explicitly say "design" — if they're building UI, styling elements, picking 
-  colors, choosing fonts, laying out pages, or making anything user-facing, this skill applies.
+  Apply clean, light, modern UI design to any application. Use this skill whenever the user
+  asks to design, style, theme, beautify, improve, or fix the UI/UX of any application —
+  web, mobile, desktop, or notifications. Also use when creating new components, pages, 
+  layouts, or making any visual design decisions. Even if the user doesn't say "design" — 
+  if they're building UI, styling elements, picking colors, choosing fonts, laying out pages,
+  creating forms, buttons, cards, or anything user-facing, this skill applies. This skill 
+  gives you SPECIFIC instructions on exactly what CSS/style changes to make, not just 
+  general principles. Follow the step-by-step process below.
 ---
 
 # Design System
 
-A cross-platform design system for building interfaces that are **clean, simple, clear, and 
-intentional**. Inspired by the best of Apple HIG, Microsoft Fluent 2, and Google Material 3 — 
-but refined into a unified philosophy that prioritizes clarity and human-centered craft.
+This skill tells you exactly how to make any UI look like a modern 2026 app — the kind of 
+clean, light, airy aesthetic you see in Apple's apps, Linear, Notion, Vercel, or Arc browser.
 
-## Core Philosophy
+## What "Good" Looks Like in 2026
 
-Three words guide every decision: **Clarity. Calm. Craft.**
+The target aesthetic is **light, spacious, and quiet**. Think of it this way: if you squint 
+at the screen, you should see mostly white/light gray with tiny touches of color. The 
+interface should feel like a calm, well-lit room — not a crowded dashboard.
 
-- **Clarity** — Every element earns its place. If it doesn't help the user, remove it.
-- **Calm** — Interfaces should feel quiet and confident, never anxious or busy.
-- **Craft** — Subtle details (spacing, alignment, transitions) separate good from great.
+**Reference apps to emulate** (study their visual style):
+- **Linear** (linear.app) — The gold standard for clean SaaS UI
+- **Notion** — Warm, readable, generous whitespace
+- **Apple HIG / Liquid Glass** — Light translucent surfaces, subtle depth
+- **Vercel** — Crisp black/white with surgical accent color use
+- **Arc Browser** — Soft colors, rounded but not bubbly
+- **Raycast** — Extremely clean command-palette aesthetic
+- **Stripe Dashboard** — Professional, data-dense but still clean
 
-This is not minimalism for its own sake. It's **purposeful reduction** — removing noise so 
-content and actions shine. Think of it as the design equivalent of clean code: readable, 
-maintainable, elegant.
+## Step-by-Step: How to Redesign a UI
 
-## Design Principles
+When asked to improve/redesign any UI, follow this exact process:
 
-### 1. Content First
-The UI should disappear in favor of content. Controls, chrome, and navigation exist to serve 
-content — not to decorate the screen. Reduce visual layers. Let content breathe.
+### Step 1: Audit the Current UI
 
-### 2. Progressive Disclosure
-Show only what's needed at each moment. Advanced features exist but don't compete for 
-attention. Use hierarchy and layering to reveal complexity when the user is ready.
+Read the existing code and identify these specific problems (most UIs have all of them):
 
-### 3. Consistent Rhythm
-Spacing, sizing, and timing follow a predictable system. Users shouldn't consciously notice 
-the grid — they should just feel that "everything is in the right place."
+1. **Too much saturated color** — Large filled areas of blue, orange, red. Fix: reduce to 
+   tiny accents only.
+2. **Heavy borders and outlines** — Thick colored borders around cards/sections. Fix: remove 
+   or make nearly invisible (1px, very light gray).
+3. **Busy backgrounds** — Yellow, beige, or colored backgrounds on info sections. Fix: use 
+   white or near-white only.
+4. **Too many font weights/sizes** — Bold everywhere loses hierarchy. Fix: use weight 400 
+   for most text, 500 for emphasis, 600 only for titles.
+5. **Cramped spacing** — Elements too close together. Fix: add generous padding and gaps.
+6. **Too many visual layers** — Nested boxes, borders inside borders. Fix: flatten. One 
+   level of containment max.
+7. **Outdated patterns** — Heavy shadows, gradient buttons, colored badges. Fix: replace 
+   with flat, subtle alternatives.
 
-### 4. Respectful Motion
-Animation should orient, not entertain. Transitions explain spatial relationships. Loading 
-states communicate progress. Nothing bounces unnecessarily.
+### Step 2: Apply the Color System
 
-### 5. Universal Access
-Accessibility is not a feature, it's a foundation. Every design decision must work for 
-all users — keyboard navigation, screen readers, color contrast, reduced motion.
+This is the most important step. The entire palette is almost monochrome with ONE accent.
 
-## Design Tokens
-
-Use design tokens (CSS custom properties, platform equivalents) as the single source of truth 
-for all visual values. Never hardcode colors, spacing, or typography.
-
-### Color System
-
-The color system uses **semantic naming** — colors describe their purpose, not their hue.
+**Light theme (DEFAULT — always use this unless user asks for dark):**
 
 ```css
-/* --- Light Theme --- */
---color-bg-primary:       #FAFAF9;     /* Main background — warm white */
---color-bg-secondary:     #F3F2F0;     /* Cards, sections — subtle warmth */
---color-bg-tertiary:      #EBEAE8;     /* Inset areas, code blocks */
---color-bg-elevated:      #FFFFFF;     /* Elevated surfaces, modals, popovers */
+/* Backgrounds — almost all white */
+--bg-page:          #FAFAFA;      /* Page background — barely warm gray */
+--bg-card:          #FFFFFF;      /* Card/section background — pure white */
+--bg-subtle:        #F5F5F4;      /* Subtle distinction — secondary areas */
+--bg-hover:         #F0EFEE;      /* Hover state backgrounds */
+--bg-active:        #EAEAE8;      /* Active/pressed states */
 
---color-text-primary:     #1A1A19;     /* Main text — near-black, not pure black */
---color-text-secondary:   #6B6A68;     /* Descriptions, captions */
---color-text-tertiary:    #9B9A98;     /* Placeholders, disabled text */
---color-text-inverse:     #FAFAF9;     /* Text on dark/accent backgrounds */
+/* Text — gray scale, NOT black */
+--text-primary:     #1C1C1C;      /* Headings, important text — near-black */
+--text-body:        #3C3C3C;      /* Body text — dark gray, very readable */
+--text-secondary:   #787878;      /* Descriptions, metadata — medium gray */
+--text-tertiary:    #A0A0A0;      /* Placeholders, hints — light gray */
 
---color-accent:           #2563EB;     /* Primary action — confident blue */
---color-accent-hover:     #1D4ED8;     /* Hover state */
---color-accent-subtle:    #EFF6FF;     /* Accent-tinted backgrounds */
+/* Accent — use SPARINGLY. Only for: primary button, links, active tab indicator */
+--accent:           #0A84FF;      /* Apple-style blue — only for interactive elements */
+--accent-hover:     #0070E0;      /* Slightly darker on hover */
+--accent-bg:        #F0F7FF;      /* Very faint blue tint — for selected row or active tab bg */
 
---color-success:          #16A34A;     /* Positive states */
---color-warning:          #D97706;     /* Attention needed */
---color-error:            #DC2626;     /* Errors, destructive actions */
---color-info:             #0EA5E9;     /* Informational */
+/* Semantic colors — muted versions, NOT saturated */
+--success:          #34C759;      /* Green — iOS style */
+--success-bg:       #F0FBF4;      /* Barely green background */
+--warning:          #FF9500;      /* Amber — iOS style */
+--warning-bg:       #FFFBF0;      /* Barely amber background */
+--error:            #FF3B30;      /* Red — iOS style */
+--error-bg:         #FFF5F5;      /* Barely red background */
 
---color-border:           #E5E4E2;     /* Default borders — barely visible */
---color-border-strong:    #D1D0CE;     /* Emphasized borders */
---color-border-focus:     #2563EB;     /* Focus rings — matches accent */
+/* Borders — barely visible. This is critical. */
+--border:           #E8E8E8;      /* Default — very subtle */
+--border-hover:     #D4D4D4;      /* On hover — slightly more visible */
+--border-focus:     #0A84FF;      /* Focus ring — accent color, 2px */
+```
 
-/* --- Dark Theme --- */
---color-bg-primary:       #141413;     /* Main background */
---color-bg-secondary:     #1E1E1D;     /* Cards, sections */
---color-bg-tertiary:      #282827;     /* Inset areas */
---color-bg-elevated:      #232322;     /* Elevated surfaces */
+**Rules (STRICTLY FOLLOW — these are the most common mistakes):**
 
---color-text-primary:     #F0EFED;     /* Main text */
---color-text-secondary:   #A3A2A0;     /* Secondary text */
---color-text-tertiary:    #6B6A68;     /* Tertiary text */
+1. **Accent color budget: max ~5% of screen pixels.** Accent (#0A84FF) is ONLY for:
+   - ONE primary action button per screen (the final/submit button)
+   - Links (text only)
+   - Focus rings
+   - Thin progress bar fill (3-4px tall)
+   - Active tab indicator (thin 2px line or text color only)
+   - **That's it. Everything else is grayscale.**
 
---color-accent:           #60A5FA;     /* Lighter blue for dark backgrounds */
---color-accent-hover:     #93C5FD;
---color-accent-subtle:    #1E293B;
+2. **NO colored category labels.** Labels like "EXERCISE", "WARMUP", "STATUS" etc:
+   - Color: `#787878` (medium gray) — NEVER orange, red, blue, green
+   - Style: `font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #787878;`
+   - No background. No colored text. Just small gray uppercase text.
+   - This is how Linear, Notion, and Apple apps show category labels.
 
---color-border:           #2E2E2D;
---color-border-strong:    #3E3E3D;
+3. **NO colored info/description blocks.** Text blocks showing instructions, descriptions,
+   previous results, tips, etc.:
+   - Background: `#FFFFFF` (same as card) or `#F5F5F4` (barely different from page)
+   - NEVER use yellow, beige, cream, light blue, or any tinted background
+   - If you need visual separation, use only a 1px `#E8E8E8` top border or extra spacing
+
+4. **Background is almost all white.** 90%+ of the page: `#FAFAFA` or `#FFFFFF`.
+
+5. **Borders: 1px #E8E8E8 only.** No colored borders. Many elements need NO border at all.
+
+6. **ONE accent color per app.** Don't mix blue AND orange buttons. Pick ONE color for 
+   all primary actions. Secondary actions are always gray/outlined.
+
+### Step 3: Apply Typography
+
+Use **one font family** with different weights. Recommended:
+
+**Default choice for any project: `Inter`** — This is the standard modern UI font. It's 
+similar to SF Pro (Apple) and Segoe UI (Microsoft) but freely available everywhere.
+
+If Inter feels generic for the specific project, alternatives:
+- **DM Sans** — Slightly more geometric, good for SaaS/tools
+- **Geist** — Vercel's font, very clean
+- **SF Pro** — For Apple-native feel (system font on macOS/iOS)
+
+```css
+/* Font */
+--font-sans:        'Inter', system-ui, -apple-system, sans-serif;
+
+/* Sizes — small range, not dramatic jumps */
+--text-xs:          0.75rem;     /* 12px — timestamps, badges */
+--text-sm:          0.8125rem;   /* 13px — secondary text, metadata */
+--text-base:        0.875rem;    /* 14px — body text (standard for modern apps) */
+--text-md:          1rem;        /* 16px — emphasized body, nav items */
+--text-lg:          1.125rem;    /* 18px — section titles */
+--text-xl:          1.375rem;    /* 22px — page titles */
+--text-2xl:         1.75rem;     /* 28px — hero/main title */
+
+/* Weights */
+--weight-normal:    400;         /* Body text, descriptions */
+--weight-medium:    500;         /* Emphasis, labels, nav items */
+--weight-semibold:  600;         /* Page titles, section headers ONLY */
+
+/* Line height */
+--leading-tight:    1.3;         /* Headings */
+--leading-normal:   1.5;         /* Body text */
+--leading-relaxed:  1.65;        /* Long-form reading */
+
+/* Letter spacing */
+--tracking-tight:   -0.01em;     /* Large headings — slightly tighter */
+--tracking-normal:  0;           /* Body text */
+--tracking-wide:    0.02em;      /* Uppercased labels — open up a bit */
+```
+
+**Rules (STRICTLY FOLLOW):**
+- Base font size is `14px` for app UIs (not 16px — that's for articles/blogs). Modern apps 
+  like Linear, Figma, Notion all use 13-14px body text.
+- Headings: `font-weight: 600` max. Never use 700/800/bold for headings. It's too heavy.
+- Body text: `font-weight: 400`. Metadata/secondary: also 400 but smaller and lighter color.
+- Labels and uppercase text: add `letter-spacing: 0.02em` and use `text-transform: uppercase` 
+  with `font-size: 11px; font-weight: 500; color: var(--text-secondary)`.
+
+### Step 4: Apply Spacing
+
+Modern UIs breathe. There is generous space between everything.
+
+```css
+--space-1:    4px;
+--space-2:    8px;
+--space-3:    12px;
+--space-4:    16px;
+--space-5:    20px;
+--space-6:    24px;
+--space-8:    32px;
+--space-10:   40px;
+--space-12:   48px;
+--space-16:   64px;
+```
+
+**Where to use what:**
+- Padding inside buttons: `8px 16px` (small) or `10px 20px` (regular)
+- Padding inside cards: `20px` to `24px`
+- Gap between items in a list: `8px` to `12px`
+- Gap between sections on a page: `32px` to `48px`
+- Page side margins (mobile): `16px` to `20px`
+- Page side margins (desktop): `24px` to `40px`
+
+### Step 5: Apply Borders and Radius
+
+```css
+/* Radius — use ONE consistent level across the whole app */
+--radius-sm:      6px;      /* Buttons, inputs, small elements */
+--radius-md:      10px;     /* Cards, panels */
+--radius-lg:      14px;     /* Modals, large containers */
+--radius-full:    9999px;   /* Pills, avatars, progress bars */
+
+/* Borders */
+--border-width:   1px;
+--border-color:   #E8E8E8;
+--border:         1px solid #E8E8E8;
 ```
 
 **Rules:**
-- Never use pure black (`#000000`) for text — it's too harsh. Use near-black.
-- Never use pure white (`#FFFFFF`) for backgrounds — use warm whites with a hint of warmth.
-- Accent color should be used sparingly — only for primary actions and focus states.
-- Ensure all text passes WCAG AA contrast (4.5:1 for body, 3:1 for large text).
+- Pick `radius-sm` (6px) OR `radius-md` (10px) for the project. Use it everywhere.
+- Don't mix 4px, 8px, 12px, 20px radius on the same page.
+- Borders: use sparingly. Prefer spacing or background color differences to separate areas.
+- Never use colored borders (blue border around active card is outdated). Use a subtle 
+  shadow or background tint instead.
 
-### Typography
+### Step 6: Apply Shadows
 
-Use a **two-font system**: one for headings, one for everything else.
-
-**Recommended Pairings (choose one pair per project):**
-
-| Context | Heading Font | Body Font | Character |
-|---------|-------------|-----------|-----------|
-| Professional/SaaS | **DM Sans** | **DM Sans** | Clean, geometric, modern |
-| Editorial/Content | **Playfair Display** | **Source Sans 3** | Refined, readable |
-| Technical/Dev | **JetBrains Mono** | **Inter** | Precise, monospaced headers |
-| Warm/Friendly | **Nunito** | **Nunito** | Rounded, approachable |
-| Premium/Luxury | **Cormorant Garamond** | **Lato** | Elegant, timeless |
-
-**Type Scale (based on 1.250 — Major Third):**
+Minimal, soft, barely-there shadows:
 
 ```css
---text-xs:    0.64rem;    /* 10.24px — fine print */
---text-sm:    0.8rem;     /* 12.8px — captions, labels */
---text-base:  1rem;       /* 16px — body text */
---text-md:    1.25rem;    /* 20px — large body, lead text */
---text-lg:    1.563rem;   /* 25px — section titles */
---text-xl:    1.953rem;   /* 31.25px — page titles */
---text-2xl:   2.441rem;   /* 39px — hero headlines */
---text-3xl:   3.052rem;   /* 48.8px — display text */
+--shadow-xs:      0 1px 2px rgba(0,0,0,0.04);
+--shadow-sm:      0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+--shadow-md:      0 4px 12px rgba(0,0,0,0.06);
+--shadow-lg:      0 8px 24px rgba(0,0,0,0.08);
+```
 
---leading-tight:   1.25;
---leading-normal:  1.5;
---leading-relaxed: 1.75;
+Cards should use `shadow-sm` at most. Modals use `shadow-lg`. Most elements: no shadow.
 
---tracking-tight:  -0.02em;
---tracking-normal:  0;
---tracking-wide:    0.05em;
+### Step 7: Fix Specific Components
+
+#### Buttons
+```css
+/* Primary — only ONE per screen section */
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+
+/* Secondary — for all other actions */
+.btn-secondary {
+  background: transparent;
+  color: var(--text-body);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 10px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.btn-secondary:hover { background: var(--bg-hover); }
+
+/* Ghost / Tertiary — minimal presence */
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 400;
+  padding: 8px 12px;
+  border: none;
+}
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text-body); }
+```
+
+**What to fix on buttons (CRITICAL — most apps get this wrong):**
+
+- **NEVER make buttons full-width** unless it's a mobile bottom action bar.
+  Full-width colored buttons look dated (2018 Material Design). Modern buttons are compact:
+  - Width: `auto` (sized to content + padding). NOT `width: 100%`.
+  - Exception: a bottom sticky action bar on mobile can have a full-width button, but it 
+    should be slim (40px tall, not 48-56px).
+  - If the button MUST span a container (form submit), use `width: 100%` but with reduced
+    height (38-40px), lighter font weight, and smaller font size (14px).
+  - **Disabled buttons**: should feel nearly invisible. Use `opacity: 0.35` and keep the 
+    same bg as enabled but muted. NEVER make a disabled button still visually dominant.
+  
+- **REDUCE button size.** Most buttons in modern apps are smaller than you think:
+  - Height: 36-40px (not 48px or 56px)
+  - Font: 14px, weight 500 (never 600, 700, or bold)
+  - Padding: `8px 16px` (compact) or `10px 20px` (standard)
+  - Border-radius: 6-8px (not 12px+ — that's too bubbly)
+  - **Watch for CSS flex stretch**: if buttons are in a `display:flex` container with 
+    `flex:1` on children, they'll stretch to fill. Use `flex: 0 0 auto` to keep buttons 
+    compact. Place in a container with `justify-content: flex-end` to right-align.
+  
+- **Only ONE filled accent button per view.** The final/submit/primary CTA.
+  All other buttons: outlined (secondary) or text-only (ghost).
+  
+- **Don't mix accent colors.** If the primary button is blue, the secondary/completion 
+  button is also blue — not orange, not green. ONE color.
+
+#### Cards and Containers
+```css
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);  /* OR shadow, not both */
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+```
+
+**What to fix on cards:**
+- REMOVE colored borders (blue, orange, etc.)
+- REMOVE colored/tinted backgrounds (yellow, beige, light blue)
+- Background is always white (#FFFFFF)
+- Border is always gray (#E8E8E8) or no border (use shadow-sm instead)
+
+#### Inputs and Forms
+```css
+.input {
+  height: 38px;
+  padding: 0 12px;
+  font-size: 14px;
+  color: var(--text-body);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s ease;
+}
+.input:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+```
+
+#### Status Badges and Labels
+```css
+/* Muted pill badges — NOT bright colored blocks */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+}
+.badge-success {
+  background: var(--success-bg);
+  color: #1A7F37;  /* Muted green text, NOT bright green */
+}
+```
+
+**What to fix on badges/labels:**
+- REMOVE bright colored background badges (red label on orange bg)
+- Replace with tiny muted pills: faint bg + darker text of same hue
+- Or even simpler: just colored text, no background at all
+- Emoji in labels is fine for personality — but the surrounding style must be subtle
+
+#### File Drop Zones / Upload Areas
+```css
+.drop-zone {
+  border: 1.5px dashed #D4D4D4;    /* Gray dashed, NOT accent colored */
+  border-radius: var(--radius-md);
+  padding: 40px 16px;
+  text-align: center;
+  background: #FAFAFA;              /* Very subtle, almost same as page */
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.drop-zone:hover {
+  border-color: #A0A0A0;           /* Darker gray, NOT accent blue */
+  background: #F5F5F4;             /* Slightly more visible */
+}
+.drop-zone.active {                /* File being dragged over */
+  border-color: var(--accent);     /* Only during active drag = accent */
+  background: #F8FBFF;             /* Barely blue tint */
+}
+```
+
+**Rules for drop zones:**
+- Default border: gray dashed, NOT accent-colored
+- Hover: darken border to medium gray, do NOT turn blue
+- Only during active drag-over: accent blue border is acceptable
+- Background: `#FAFAFA` default, never bright blue/accent tint
+- When file is loaded/filled: show solid border, gray, with the preview inside
+
+#### Footer
+```css
+footer {
+  text-align: center;
+  padding: 24px 0 16px;
+  border-top: 1px solid #E8E8E8;   /* Subtle separator */
+  margin-top: 24px;
+}
+footer p {
+  font-size: 12px;
+  color: #A0A0A0;                  /* Light gray — very quiet */
+  font-weight: 400;
+}
+```
+
+#### Progress Indicators
+```css
+.progress-bar {
+  height: 4px;               /* THIN — not 8px or 12px */
+  background: var(--bg-subtle);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+```
+
+**Progress bars should be THIN (3-4px). Not thick chunky bars.**
+
+#### Selection / Toggle Buttons (like difficulty selectors)
+```css
+/* Chip-style selection (e.g., Easy / Normal / Hard) */
+.chip {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.chip:hover { background: var(--bg-hover); color: var(--text-body); }
+.chip-selected {
+  background: var(--accent-bg);   /* Very faint blue — NOT solid blue */
+  color: var(--accent);           /* Blue text */
+  border-color: var(--accent);    /* Blue border — thin */
+  font-weight: 500;
+}
+```
+
+### Step 8: Fix Layout and Spacing Issues
+
+**Typical problems and fixes:**
+- Content touching edges → add `padding: 16px 20px` on mobile containers
+- Sections cramped together → add `margin-bottom: 32px` between sections
+- List items with no breathing room → add `gap: 8px` or `padding: 12px 0` per item
+- Inconsistent alignment → pick left-align for everything (centered only for hero/empty states)
+
+### Step 9: Fix Large Numbers and Metrics
+
+Apps often display key numbers (reps, score, count, price). Modern style:
+
+```css
+.metric-value {
+  font-size: 28px;         /* NOT 48px — keep proportional */
+  font-weight: 600;        /* NOT 900 or black */
+  color: var(--text-primary);  /* Dark gray, NOT accent blue */
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.metric-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+```
+
+**Rules for numbers/metrics:**
+- Color: `#1C1C1C` (near-black). NEVER accent blue for display numbers.
+- Size: 24-32px. Not 48px+. Large numbers look dated and amateur.
+- Weight: 600 max. Not 700, 800, 900, or `bold`.
+- The label below ("reps", "goal", "total") is tiny gray uppercase at 11px.
+
+### Step 10: Fix Previous Data / Info Rows
+
+Rows showing historical data, metadata, or contextual info ("Last time: 9/9 · Easy"):
+
+```css
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-secondary);  /* Gray text — not dark */
+  background: transparent;        /* NO background tint */
+  border-radius: 6px;
+}
 ```
 
 **Rules:**
-- Body text: 16px minimum on all platforms. 14px only for secondary/auxiliary text.
-- Line height: 1.5 for body. 1.25 for headings.
-- Max line width: 65–75 characters for readability.
-- Font weight: prefer 400 (regular) and 600 (semi-bold). Avoid bold (700) except for emphasis.
+- Background: `transparent` or `#F5F5F4` at most. NO tinted/colored backgrounds.
+- Text: `--text-secondary` (#787878). Not primary dark text — this is supporting info.
+- Icons/emoji: keep inline, small, doesn't need special styling.
+- If you need visual grouping, use `border-top: 1px solid #E8E8E8` or whitespace. Not background color.
 
-### Spacing System
+## Before/After Patterns
 
-Use a **4px base grid** with an 8px rhythm as the primary spacing unit.
+These show exactly what to change when you encounter common dated patterns:
 
-```css
---space-0:   0;
---space-1:   0.25rem;   /* 4px */
---space-2:   0.5rem;    /* 8px */
---space-3:   0.75rem;   /* 12px */
---space-4:   1rem;      /* 16px */
---space-5:   1.25rem;   /* 20px */
---space-6:   1.5rem;    /* 24px */
---space-8:   2rem;      /* 32px */
---space-10:  2.5rem;    /* 40px */
---space-12:  3rem;      /* 48px */
---space-16:  4rem;      /* 64px */
---space-20:  5rem;      /* 80px */
---space-24:  6rem;      /* 96px */
-```
+### Full-width chunky button → Right-aligned compact button
+Before: `width: 100%; background: #2563EB; color: white; font-weight: 700; padding: 16px 32px; font-size: 18px; border-radius: 12px;`
+After: `width: auto; background: #0A84FF; color: white; font-weight: 500; padding: 10px 20px; font-size: 14px; border-radius: 6px;` placed in a `display:flex; justify-content:flex-end` container.
+If it MUST be full-width (mobile CTA): `height: 40px; font-size: 14px; font-weight: 500; border-radius: 8px;`
 
-**Rules:**
-- Padding inside elements: use `space-3` to `space-6`.
-- Gap between related elements: `space-2` to `space-4`.
-- Gap between sections: `space-12` to `space-20`.
-- Generous whitespace > cramped content. When in doubt, add more space.
+### Active stepper/tab indicator → Near-black, not accent
+Before: `background: #0A84FF;` for active step dot
+After: `background: #1C1C1C;` — Active states use near-black, not accent blue. This is the Linear/Vercel pattern — accent is for CTAs only, not navigation state.
 
-### Border Radius
+### Orange/colored category label → Gray uppercase
+Before: `color: #E65100; font-weight: 700; font-size: 14px; text-transform: uppercase;`
+After: `color: #787878; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;`
 
-```css
---radius-none: 0;
---radius-sm:   0.25rem;   /* 4px — subtle rounding */
---radius-md:   0.5rem;    /* 8px — buttons, inputs */
---radius-lg:   0.75rem;   /* 12px — cards */
---radius-xl:   1rem;      /* 16px — modals, panels */
---radius-2xl:  1.5rem;    /* 24px — large containers */
---radius-full: 9999px;    /* Pills, avatars */
-```
+### Colored card border → Subtle card
+Before: `border: 2px solid #2563EB; background: #F0F7FF; border-radius: 16px;`
+After: `border: 1px solid #E8E8E8; background: #FFFFFF; border-radius: 10px;`
 
-Pick one radius level per project and use it consistently. Don't mix `radius-sm` and 
-`radius-xl` on the same page.
+### Yellow/beige info box → Clean info section
+Before: `background: #FFF8E1; border-left: 4px solid #FFB300; padding: 12px;`
+After: `background: #F5F5F4; border-radius: 8px; padding: 16px;` (or just `background: transparent;`)
 
-### Shadows & Elevation
+### Colored info row → Neutral info row  
+Before: `background: #FFF3E0; padding: 8px 12px; border-radius: 6px;`
+After: `background: transparent; padding: 8px 0; color: #787878; font-size: 13px;`
 
-```css
---shadow-xs:    0 1px 2px rgba(0,0,0,0.04);
---shadow-sm:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
---shadow-md:    0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
---shadow-lg:    0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
---shadow-xl:    0 20px 25px rgba(0,0,0,0.08), 0 8px 10px rgba(0,0,0,0.04);
-```
+### Bold colored status label → Muted text label
+Before: `background: #FF5722; color: white; padding: 4px 12px; font-weight: 700; font-size: 14px;`
+After: `background: transparent; color: #787878; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;`
 
-**Rules:**
-- Shadows should be subtle and warm-toned. No dark, hard shadows.
-- Use elevation to create visual hierarchy, not decoration.
-- Dark theme: reduce shadow opacity or replace with subtle border highlights.
+### Large accent-colored number → Clean number
+Before: `font-size: 48px; font-weight: 900; color: #2563EB;`
+After: `font-size: 28px; font-weight: 600; color: #1C1C1C; letter-spacing: -0.02em;`
 
-### Motion & Animation
+### Mixed orange+blue buttons → Unified color
+Before: Primary blue, completion green, cancel red — 3+ accent colors
+After: ONE accent for all primary actions, everything else is gray outlined/ghost
+
+## Dark Mode
+
+Only implement if the user asks for it. When you do:
 
 ```css
---duration-instant:   0ms;
---duration-fast:      100ms;
---duration-normal:    200ms;
---duration-slow:      300ms;
---duration-slower:    500ms;
+[data-theme="dark"] {
+  --bg-page:        #0A0A0A;
+  --bg-card:        #141414;
+  --bg-subtle:      #1C1C1C;
+  --bg-hover:       #242424;
 
---ease-default:       cubic-bezier(0.25, 0.1, 0.25, 1);    /* Smooth decel */
---ease-in:            cubic-bezier(0.42, 0, 1, 1);          /* Accelerating */
---ease-out:           cubic-bezier(0, 0, 0.58, 1);          /* Decelerating */
---ease-in-out:        cubic-bezier(0.42, 0, 0.58, 1);       /* Symmetric */
---ease-spring:        cubic-bezier(0.34, 1.56, 0.64, 1);    /* Bouncy/spring */
+  --text-primary:   #ECECEC;
+  --text-body:      #B8B8B8;
+  --text-secondary: #787878;
+  --text-tertiary:  #525252;
+
+  --accent:         #4DA3FF;
+  --accent-bg:      #0D2240;
+
+  --border:         #2A2A2A;
+  --border-hover:   #3A3A3A;
+}
 ```
 
-**Rules:**
-- Hover transitions: `duration-fast` (100ms).
-- Page transitions: `duration-normal` to `duration-slow` (200-300ms).
-- Entrance animations: `duration-slow` (300ms) with staggered delays.
-- Always respect `prefers-reduced-motion: reduce` — disable non-essential animation.
-- Prefer opacity + translate transforms. Avoid scaling unless intentional.
+## Platform-Specific Details
 
-## Component Patterns
+Read the relevant reference file only when needed:
+- `references/web.md` — CSS architecture, responsive, SPA patterns
+- `references/mobile.md` — Touch targets, iOS/Android specifics
+- `references/desktop.md` — Multi-panel layouts, keyboard shortcuts
+- `references/notifications.md` — Toasts, push, email, banners
+- `references/components.md` — Detailed component specs
 
-Read `references/components.md` for detailed component specifications. Key principles:
+## Final Checklist (Before Saying "Done")
 
-### Buttons
-- **Primary**: Filled with accent color. One per visible area.
-- **Secondary**: Outlined or ghost. For alternative actions.
-- **Destructive**: Red/error color. Requires confirmation for permanent actions.
-- Size: min 44x44px touch target (mobile), 36px height (desktop).
-- States: default, hover, active, focus, disabled, loading.
+After applying changes, verify EVERY point. If ANY fails, go back and fix it.
 
-### Cards
-- Background: `bg-elevated` or `bg-secondary`.
-- Padding: `space-5` to `space-6`.
-- Border: subtle (`border`) or none with shadow (`shadow-sm`).
-- Border-radius: `radius-lg`.
-- Keep cards consistent in height within grids.
+1. **Squint test**: Squint at the screen. Is it mostly white/light gray with tiny color touches? If large colored blocks are still visible → fix them.
+2. **Category label check**: Are any category/type labels (like "EXERCISE", "WARMUP", "STATUS") colored (orange, blue, red, green)? → Change to gray: `color: #787878; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;`
+3. **Background tint check**: Are any text sections, description blocks, or info rows using yellow, beige, cream, light blue, or any non-white background? → Change to `#FFFFFF` or `#F5F5F4` or `transparent`.
+4. **Button size check**: Are any buttons full-width, taller than 44px, or using font-weight > 500? Are there multiple accent colors (blue AND orange buttons)? → Reduce size, use one accent color, make non-primary buttons ghost/outlined.
+5. **Number/metric check**: Are display numbers larger than 32px, bolder than weight 600, or colored (blue, orange)? → Reduce to 28px, weight 600, color #1C1C1C.
+6. **Border audit**: Are any borders thicker than 1px or colored (not gray)? → Fix to 1px #E8E8E8 or remove.
+7. **Accent budget check**: Count accent-colored elements on screen. More than 2-3? → Reduce. Only the primary CTA button and maybe one progress bar / active indicator.
+8. **Spacing check**: Do all sections have 24px+ gap between them? → Add more space.
+9. **Border-radius consistency**: Is the same radius value used everywhere? → Standardize to one value (6px or 10px).
+10. **Font weight audit**: Any body text using 600+? Any element using 700, 800, 900, or `bold`? → Reduce. Max 600 for page titles only.
 
-### Forms & Inputs
-- Label above input, not inside (placeholder is not a label).
-- Error messages below input in `color-error`.
-- Focus ring: 2px solid `color-border-focus` with 2px offset.
-- Group related fields. Single-column layout preferred.
-
-### Navigation
-- Keep navigation quiet — it should guide, not dominate.
-- Active state: accent color or bold weight, not both.
-- Mobile: bottom navigation or slide-out drawer.
-- Desktop: sidebar or top bar, never both competing.
-
-### Notifications & Toasts
-- Position: top-right (desktop), top (mobile).
-- Auto-dismiss: 5 seconds for info, persistent for errors.
-- Include icon matching severity (success/warning/error/info).
-- Support dismiss action.
-- Never stack more than 3 visible notifications.
-
-## Platform-Specific Guidelines
-
-Read the relevant reference file for platform-specific guidance:
-
-- `references/web.md` — Web applications (React, Vue, HTML/CSS, SPA, PWA)
-- `references/mobile.md` — Mobile applications (React Native, iOS, Android)
-- `references/desktop.md` — Desktop applications (Electron, WPF, macOS native)
-- `references/notifications.md` — System notifications, emails, push, toasts
-
-## Layout Patterns
-
-### The 12-Column Grid
-Use a 12-column grid for web. Common layouts:
-- **Full-width content**: 12 cols
-- **Content + sidebar**: 8+4 or 9+3
-- **Centered content**: 6-8 cols centered
-- **Bento grid**: Mixed size cards in a grid (contemporary, Apple-inspired)
-
-### Responsive Breakpoints
-```css
---bp-sm:   640px;    /* Phone landscape */
---bp-md:   768px;    /* Tablet portrait */
---bp-lg:   1024px;   /* Tablet landscape / small desktop */
---bp-xl:   1280px;   /* Desktop */
---bp-2xl:  1536px;   /* Large desktop */
-```
-
-### Container Widths
-```css
---container-sm:   640px;
---container-md:   768px;
---container-lg:   1024px;
---container-xl:   1200px;   /* Default max-width for content */
-```
-
-## Dark Mode Strategy
-
-- Light mode is the default. Dark mode should feel intentional, not inverted.
-- Don't just invert colors — dark backgrounds need warmer text (not pure white).
-- Reduce shadow usage in dark mode, use subtle border highlights instead.
-- Accent colors often need to be lighter/less saturated in dark mode.
-- Test both themes with actual content, not just components.
-
-## Accessibility Checklist
-
-Before shipping any UI:
-- [ ] All interactive elements reachable via keyboard
-- [ ] Focus indicators visible and clear
-- [ ] Color contrast meets WCAG AA (4.5:1 body, 3:1 large text)
-- [ ] No information conveyed by color alone
-- [ ] Images have alt text
-- [ ] Forms have labels (not just placeholders)
-- [ ] `prefers-reduced-motion` respected
-- [ ] Touch targets minimum 44x44px on mobile
-- [ ] Screen reader testing done on key flows
-
-## Design Review Checklist
-
-Before considering any UI "done":
-- [ ] Does every element earn its place? Remove anything decorative-only.
-- [ ] Is spacing consistent and following the grid?
-- [ ] Does it look right at all breakpoints?
-- [ ] Does dark mode work properly?
-- [ ] Is the visual hierarchy clear? Can you tell what's most important in 2 seconds?
-- [ ] Are interactive elements obvious? Can you tell what's clickable?
-- [ ] Does it feel calm and confident, or busy and anxious?
-
-## Anti-Patterns (What to Avoid)
-
-- **Purple gradients on white** — The "AI startup" look. Overdone.
-- **Too many border radiuses** — Pick one level and stick to it.
-- **Gratuitous animations** — If it doesn't aid comprehension, skip it.
-- **Gray text on gray background** — Contrast matters. Test it.
-- **Icon salad** — Don't use 15 different icon styles. Pick one icon set.
-- **Feature creep in nav** — Not everything deserves a top-level nav item.
-- **Inconsistent spacing** — The fastest way to make UI look amateur.
-- **Stock photography** — If you must use images, invest in quality or use illustrations.
-
-## Resources & Inspiration
-
-### Design Systems to Study
-- **Apple HIG**: https://developer.apple.com/design/human-interface-guidelines/
-- **Microsoft Fluent 2**: https://fluent2.microsoft.design/
-- **Google Material 3**: https://m3.material.io/
-- **Vercel/Geist**: https://vercel.com/geist/introduction
-- **Radix Themes**: https://www.radix-ui.com/themes
-- **shadcn/ui**: https://ui.shadcn.com/
-
-### Current Trends (2025-2026)
-- **Bento grids** — Multi-size card layouts (Apple keynote style)
-- **Spatial design** — Depth, layers, and glassmorphism done tastefully
-- **Micro-interactions** — Subtle response to user actions
-- **Variable fonts** — Single font file, infinite weight/width control
-- **Container queries** — Component-level responsive design
-- **View transitions** — Browser-native page transitions
-- **AI-adaptive UI** — Interfaces that restructure based on user behavior
-- **Liquid Glass** — Apple's 2025 design language with translucent, layered surfaces
-- **M3 Expressive** — Google's emotion-driven UX with vibrant colors and shapes
-
-### Tools
-- **Figma** — Design and prototyping
-- **Storybook** — Component development and documentation
-- **Chromatic** — Visual regression testing
-- **Lighthouse** — Performance and accessibility auditing
+If any check fails, go back and fix it before presenting the result.
