@@ -123,15 +123,77 @@ This is the most important step. The entire palette is almost monochrome with ON
 
 ### Step 3: Apply Typography
 
-Use **one font family** with different weights. Recommended:
+Use **one font family** with different weights. Choose from the font matrix below.
 
-**Default choice for any project: `Inter`** — This is the standard modern UI font. It's 
-similar to SF Pro (Apple) and Segoe UI (Microsoft) but freely available everywhere.
+#### Font Recommendation Matrix (All Free & Open Source)
 
-If Inter feels generic for the specific project, alternatives:
-- **DM Sans** — Slightly more geometric, good for SaaS/tools
-- **Geist** — Vercel's font, very clean
-- **SF Pro** — For Apple-native feel (system font on macOS/iOS)
+Pick the font that matches the personality of the project. ALL fonts below are free
+(Google Fonts or open-source). Never use a paid font without confirming the license.
+
+**Sans-serif (body & UI) — pick ONE:**
+
+| Font | Personality | Best for | Get it | Notes |
+|---|---|---|---|---|
+| **Inter** | Neutral, precise, workhorse | App UIs, dashboards, tools | [Google Fonts](https://fonts.google.com/specimen/Inter) / [rsms.me/inter](https://rsms.me/inter/) | The default choice. Variable font, 2000+ glyphs, 147 languages. Used everywhere: GitHub, Figma, Linear |
+| **Geist** | Minimal, developer-focused | Dev tools, SaaS, technical products | [Google Fonts](https://fonts.google.com/specimen/Geist) / [vercel.com/font](https://vercel.com/font) | Vercel's typeface. Swiss design influence. Includes Geist Mono for code |
+| **DM Sans** | Geometric, friendly | Marketing pages, creative products | [Google Fonts](https://fonts.google.com/specimen/DM+Sans) | Low contrast, optically corrected. Pairs well with DM Serif Display |
+| **Plus Jakarta Sans** | Warm, rounded, approachable | Consumer apps, fintech, health | [Google Fonts](https://fonts.google.com/specimen/Plus+Jakarta+Sans) | Indonesian design. Slightly playful but still professional |
+| **Outfit** | Clean, geometric, modern | Landing pages, startups | [Google Fonts](https://fonts.google.com/specimen/Outfit) | Variable weight 100-900. Geometric but not cold |
+| **Satoshi** | Premium, editorial | Brand-heavy products, agencies | [fontshare.com](https://www.fontshare.com/fonts/satoshi) | Free from Indian Type Foundry. Distinctive but readable |
+| **Manrope** | Soft, modern, versatile | SaaS, productivity tools | [Google Fonts](https://fonts.google.com/specimen/Manrope) | Semi-rounded terminals. Variable font |
+| **Albert Sans** | Neutral geometric | Corporate, enterprise apps | [Google Fonts](https://fonts.google.com/specimen/Albert+Sans) | Wide character set, very clean |
+| **Space Grotesk** | Techy, slightly quirky | Developer tools, crypto, gaming | [Google Fonts](https://fonts.google.com/specimen/Space+Grotesk) | Proportional counterpart to Space Mono |
+
+**Serif (headings & editorial accents only) — optional:**
+
+| Font | Personality | Best for | Get it |
+|---|---|---|---|
+| **DM Serif Display** | Elegant, high contrast | Hero headings over DM Sans body | [Google Fonts](https://fonts.google.com/specimen/DM+Serif+Display) |
+| **Fraunces** | Quirky, expressive, old-style | Playful brands, editorial | [Google Fonts](https://fonts.google.com/specimen/Fraunces) |
+| **Playfair Display** | Classic, refined | Luxury, fashion, editorial | [Google Fonts](https://fonts.google.com/specimen/Playfair+Display) |
+| **Lora** | Warm, balanced, calligraphic | Long-form reading, blogs | [Google Fonts](https://fonts.google.com/specimen/Lora) |
+| **Source Serif 4** | Clean, professional | Documentation, news | [Google Fonts](https://fonts.google.com/specimen/Source+Serif+4) |
+
+**Monospace (code blocks & technical data only):**
+
+| Font | Get it | Notes |
+|---|---|---|
+| **Geist Mono** | [Google Fonts](https://fonts.google.com/specimen/Geist+Mono) | Best all-rounder. Pairs with Geist Sans |
+| **JetBrains Mono** | [Google Fonts](https://fonts.google.com/specimen/JetBrains+Mono) | Ligatures, tall x-height. The dev favorite |
+| **Fira Code** | [Google Fonts](https://fonts.google.com/specimen/Fira+Code) | Great ligatures, Mozilla origin |
+| **IBM Plex Mono** | [Google Fonts](https://fonts.google.com/specimen/IBM+Plex+Mono) | Clean, corporate feel |
+
+**System font stacks (zero-download, instant load):**
+```css
+/* Modern system stack — best performance, looks native on each OS */
+--font-system: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+/* Mono system stack */
+--font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+```
+Use system fonts when performance is critical or you want zero layout shift.
+
+#### Font Pairing Rules
+
+Most apps need just ONE font family. But if you want more personality:
+
+**Safe pairings (all free, tested together):**
+
+| Heading font | Body font | Vibe |
+|---|---|---|
+| **DM Serif Display** | **DM Sans** | Elegant product page |
+| **Playfair Display** | **Inter** | Editorial, luxury feel |
+| **Fraunces** | **Plus Jakarta Sans** | Playful, distinctive brand |
+| **Source Serif 4** | **Inter** | Professional documentation |
+| **Space Grotesk** (bold) | **Inter** | Techy, developer-focused |
+
+**Pairing rules:**
+- Never pair two sans-serifs (too similar, creates confusion)
+- Never pair two serifs (too busy, fights for attention)
+- Serif headings + sans-serif body is the classic reliable pairing
+- Match x-height between heading and body fonts (they should feel balanced)
+- Use the heading font ONLY for h1/h2 — h3 and below should use the body font
+- When in doubt, use ONE font family with weight variation. It always works.
 
 ```css
 /* Font */
@@ -717,6 +779,278 @@ Only implement if the user asks for it. When you do:
 }
 ```
 
+### Step 11: Apply Motion & Micro-interactions
+
+Motion should be **purposeful, brief, and subtle** — never decorative. Apple HIG says:
+"Don't add motion for the sake of adding motion." Google M3 uses spring-based physics
+for natural feel. Both agree: less is more.
+
+```css
+/* Transition tokens — use these everywhere */
+--duration-fast:    100ms;    /* Hover color changes, opacity toggles */
+--duration-normal:  150ms;    /* Button state changes, border color */
+--duration-slow:    250ms;    /* Card expand/collapse, panel slides */
+--duration-enter:   200ms;    /* Elements appearing (slightly slower than exit) */
+--duration-exit:    150ms;    /* Elements disappearing (faster — feels snappier) */
+
+/* Easing curves */
+--ease-out:         cubic-bezier(0.16, 1, 0.3, 1);    /* Elements entering — decelerate */
+--ease-in:          cubic-bezier(0.5, 0, 1, 0.5);     /* Elements exiting — accelerate */
+--ease-in-out:      cubic-bezier(0.33, 0, 0.67, 1);   /* Position changes */
+--ease-spring:      cubic-bezier(0.34, 1.56, 0.64, 1); /* Playful bounce (use sparingly) */
+```
+
+**What gets transitions (ALWAYS add these):**
+```css
+/* Buttons, links, interactive elements */
+transition: background var(--duration-normal) var(--ease-out),
+            color var(--duration-normal) var(--ease-out),
+            border-color var(--duration-normal) var(--ease-out),
+            box-shadow var(--duration-normal) var(--ease-out);
+
+/* Cards on hover */
+transition: box-shadow var(--duration-slow) var(--ease-out),
+            transform var(--duration-slow) var(--ease-out);
+
+/* Don't transition these — they cause layout thrashing */
+/* NEVER: transition: all; — always name specific properties */
+```
+
+**What does NOT get transitions:**
+- `display`, `visibility` — use opacity instead
+- `width`, `height` on complex layouts — causes jank. Use `transform: scale()` instead
+- Anything on scroll — it's too laggy. Only use CSS scroll-snap or intersection observers
+
+**Hover micro-interactions (subtle is key):**
+```css
+/* Card lift — barely perceptible */
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);  /* Just 1px — not 4px or 8px */
+}
+
+/* Button press — instant feedback */
+.btn:active {
+  transform: scale(0.98);       /* Tiny shrink — feels tactile */
+  transition-duration: 50ms;    /* Instant on press */
+}
+
+/* Link underline reveal */
+.link {
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size var(--duration-normal) var(--ease-out);
+}
+.link:hover { background-size: 100% 1px; }
+```
+
+**Rules (from Apple & Google):**
+- Keep ALL UI transitions under 300ms. Animations over 500ms feel sluggish
+- Enter transitions are ~30% slower than exits (Apple pattern)
+- Never make users wait for an animation to complete before they can act
+- Reduced motion: respect `prefers-reduced-motion` — replace animations with instant state changes
+- No bounce/spring effects by default. Only use for celebratory moments (achievement, completion)
+- No parallax scrolling. It causes motion sickness (Apple HIG)
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+```
+
+### Step 12: Apply Iconography
+
+Icons should be **simple, consistent, and match the text weight**.
+
+**Recommended free icon sets (pick ONE per project):**
+
+| Icon Set | Style | Best for | Get it |
+|---|---|---|---|
+| **Lucide** | Clean, minimal strokes | App UIs, dashboards | [lucide.dev](https://lucide.dev/) |
+| **Phosphor** | Flexible, 6 weight variants | Projects needing weight-matching | [phosphoricons.com](https://phosphoricons.com/) |
+| **Heroicons** | Tailwind-native, clean | Tailwind CSS projects | [heroicons.com](https://heroicons.com/) |
+| **Radix Icons** | Minimal, 15px grid | Radix/shadcn UI projects | [icons.radix-ui.com](https://icons.radix-ui.com/) |
+| **Tabler Icons** | Rounded, friendly strokes | Consumer apps | [tabler.io/icons](https://tabler.io/icons) |
+
+**Icon rules:**
+- Size: 16px for inline text, 20px for buttons, 24px for standalone/nav
+- Stroke width should match your font weight: thin fonts = 1.5px stroke, medium = 2px
+- Color: inherit from text color. Icons follow the same color as adjacent text
+- Don't mix icon sets. Pick ONE and use it everywhere
+- Don't use colored icons in lists/navs. Gray only (same as text)
+- Accent color icons: only on the primary CTA or active nav item
+- Always pair an icon with a visible label in navigation. Icon-only buttons need tooltips
+- Don't use emoji as icons in professional UIs (emoji for content/personality is fine)
+
+### Step 13: Handle Loading & Empty States
+
+Modern apps NEVER show a blank white screen or a generic spinner.
+
+**Skeleton loading (preferred over spinners):**
+```css
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-subtle) 25%,
+    var(--bg-hover) 50%,
+    var(--bg-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Skeleton shapes */
+.skeleton-text {
+  height: 14px;
+  width: 80%;          /* Vary width for realism: 80%, 60%, 90% */
+  margin-bottom: 8px;
+}
+.skeleton-heading {
+  height: 20px;
+  width: 50%;
+  margin-bottom: 12px;
+}
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+}
+.skeleton-card {
+  height: 120px;
+  width: 100%;
+}
+```
+
+**When to use what:**
+- **Skeleton screens**: for initial page load, list items loading, card grids
+- **Inline spinner** (tiny, 16px): for button actions (save, submit) — show INSIDE the button
+- **Progress bar**: for uploads, multi-step processes with known duration
+- **NEVER**: full-page spinner overlay, spinning logo, "Loading..." text alone
+
+**Button loading state:**
+```css
+.btn-loading {
+  pointer-events: none;
+  opacity: 0.7;
+  position: relative;
+}
+.btn-loading::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-left: 8px;
+  display: inline-block;
+  vertical-align: middle;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+```
+
+**Empty states (Apple HIG: "Provide clear next steps on any blank screens"):**
+```css
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  min-height: 200px;
+}
+.empty-state-icon {
+  font-size: 40px;               /* Icon or illustration, muted */
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+}
+.empty-state-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.empty-state-description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 320px;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+```
+
+**Empty state content formula:**
+- Heading: acknowledge the emptiness briefly — "No projects yet"
+- Description: tell them what to do — "Create your first project to get started"
+- CTA button: the primary action — "Create project" (accent, compact)
+- Optional: subtle illustration or icon (muted gray, not giant)
+- NEVER: blame the user, use "Oops!", or leave the screen totally blank
+
+### Step 14: Accessibility Essentials
+
+Accessibility is not optional — it's how 15%+ of users navigate.
+Apple, Microsoft, and Google all treat this as a core design requirement.
+
+**Color contrast (WCAG 2.1 AA minimum):**
+- Normal text (under 18px): **4.5:1** contrast ratio minimum
+- Large text (18px+ bold or 24px+ regular): **3:1** minimum
+- UI components and graphical objects: **3:1** minimum
+- Our color system already passes: `#3C3C3C` on `#FFFFFF` = 10.3:1 ✓
+- `#787878` on `#FFFFFF` = 4.6:1 ✓ (barely passes — don't go lighter for text)
+- `#A0A0A0` on `#FFFFFF` = 2.9:1 ✗ — only for decorative/placeholder text, never for essential info
+
+**Focus indicators (keyboard navigation):**
+```css
+/* Visible focus ring — MUST be present on all interactive elements */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Remove ONLY the mouse-click focus ring, keep keyboard */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+```
+
+**Rules:**
+- NEVER remove focus outlines globally (`*:focus { outline: none }` is an anti-pattern)
+- Use `:focus-visible` so focus rings only show for keyboard users
+- Focus rings must have 3:1 contrast against the background
+- Tab order must follow visual order — don't rearrange with `tabindex` values > 0
+
+**Touch targets (Apple HIG + Material Design):**
+- Minimum touch target: **44x44px** (Apple) / **48x48px** (Google)
+- Even if the visible element is smaller, the tap area must be at least 44px
+- Spacing between touch targets: at least **8px** to prevent mis-taps
+
+**Reduced motion:**
+- Always include `@media (prefers-reduced-motion: reduce)` (see Step 11)
+- Replace animations with instant changes, not just removing them
+
+**Text:**
+- Don't convey meaning through color alone — add icons, text labels, or patterns
+- Ensure all images have `alt` text (empty `alt=""` for decorative images)
+- Use semantic HTML: `<button>` not `<div onclick>`, `<nav>` not `<div class="nav">`
+- Form inputs must have associated `<label>` elements
+
 ## Platform-Specific Details
 
 Read the relevant reference file only when needed:
@@ -742,6 +1076,11 @@ After applying changes, verify EVERY point. If ANY fails, go back and fix it.
 10. **Font weight audit**: Any body text using 600+? Any element using 700, 800, 900, or `bold`? → Reduce. Max 600 for page titles only.
 11. **Capitalization consistency check**: Are headings, buttons, labels, and titles using sentence case consistently? Are any using Title Case or ALL CAPS where they shouldn't be? → Fix to sentence case. Only category labels/tags and short badges should be UPPERCASE.
 12. **Text structure check**: Are button labels action-verb-first and 1-3 words? Are error messages specific and non-blaming? Are headings short (3-8 words) with no trailing periods? → Fix per text formatting rules.
+13. **Motion check**: Do all interactive elements (buttons, links, cards) have `transition` declarations? Are any transitions longer than 300ms? Is `prefers-reduced-motion` handled? → Add transitions, reduce durations, add reduced-motion media query.
+14. **Icon consistency check**: Are all icons from the same set? Same stroke width? Same size in similar contexts? → Standardize to one icon set.
+15. **Loading state check**: Does the app show skeleton loaders or inline spinners during data fetches? Or does it show a blank screen / full-page spinner? → Replace with skeletons. Buttons should show inline spinners during actions.
+16. **Empty state check**: When there's no data (empty list, no results, first use), is there a helpful message with a CTA? Or just a blank area? → Add empty state with heading, description, and action button.
+17. **Accessibility check**: Do all interactive elements have visible `:focus-visible` styles? Are touch targets at least 44px? Do text colors meet WCAG 4.5:1 contrast? → Fix per accessibility rules.
 
 If any check fails, go back and fix it before presenting the result.
 
