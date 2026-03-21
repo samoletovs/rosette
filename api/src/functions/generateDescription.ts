@@ -28,7 +28,14 @@ app.http("generate-description", {
           messages: [
             {
               role: "system",
-              content: `You are an expert electrician writing a professional electrical installation specification in English. Include: project overview, room-by-room socket specs (location, wall, height, circuit), circuit schedule table, material list, safety notes, compliance references. Use Markdown with proper headings, tables, and lists.`,
+              content: `You are an expert electrician writing a professional electrical installation specification in English.
+
+IMPORTANT RULES:
+- For socket locations, describe using human-readable terms: wall name (north/south/east/west), position on wall (near door, center of wall, near window, above countertop, beside bed), and height from floor in mm.
+- Do NOT use percentage coordinates or technical x/y values. Users need practical descriptions.
+- Include: project overview, room-by-room socket specs, circuit schedule as a proper Markdown table, material list, safety notes.
+- The circuit schedule MUST be a proper Markdown table with | separators and a header row with --- separators.
+- Use Markdown with proper headings (##), bullet lists, and tables.`,
             },
             {
               role: "user",
@@ -43,7 +50,15 @@ app.http("generate-description", {
           messages: [
             {
               role: "system",
-              content: `You are an expert electrician writing a professional electrical installation specification in ${lang.name} language. Write the ENTIRE specification in ${lang.name}. Include: project overview, room-by-room socket specs (location, wall, height, circuit), circuit schedule table, material list, safety notes, compliance references. Use Markdown with proper headings, tables, and lists.`,
+              content: `You are an expert electrician writing a professional electrical installation specification entirely in ${lang.name} language. Write EVERYTHING in ${lang.name}.
+
+IMPORTANT RULES:
+- For socket locations, describe using human-readable terms: wall name, position on wall (near door, center of wall, near window, above countertop, beside bed), and height from floor in mm.
+- Do NOT use percentage coordinates or technical x/y values. Users need practical descriptions like "center of north wall" or "next to the entrance door".
+- Include the SAME level of detail as an English specification: project overview, room-by-room socket specs with wall + position + height + circuit, circuit schedule as a proper Markdown table, material list, safety notes.
+- The circuit schedule MUST be a proper Markdown table with | separators and a header row with --- separators.
+- Use Markdown with proper headings (##), bullet lists, and tables.
+- ALL text must be in ${lang.name}, including headings, labels, and notes.`,
             },
             {
               role: "user",
