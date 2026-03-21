@@ -1,3 +1,8 @@
+// Escape text for safe SVG/XML embedding
+function xmlEsc(s: string): string {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 // IEC 60617-style socket symbol as SVG path
 const SOCKET_SYMBOL = (x: number, y: number, id: string, type: string, height: string) => {
   const isSpecial = type !== "standard_16a";
@@ -8,8 +13,8 @@ const SOCKET_SYMBOL = (x: number, y: number, id: string, type: string, height: s
     <line x1="${x - 3}" y1="${y}" x2="${x + 3}" y2="${y}" stroke="${fill}" stroke-width="1.5"/>
     <line x1="${x}" y1="${y - 3}" x2="${x}" y2="${y + 3}" stroke="${fill}" stroke-width="1.5"/>
     ${isSpecial ? `<line x1="${x - r - 2}" y1="${y + r + 2}" x2="${x + r + 2}" y2="${y - r - 2}" stroke="${fill}" stroke-width="1"/>` : ""}
-    <text x="${x}" y="${y - 13}" text-anchor="middle" font-size="8" font-weight="700" fill="${fill}">${id}</text>
-    <text x="${x}" y="${y + 18}" text-anchor="middle" font-size="6.5" fill="#6b7280">${height}</text>
+    <text x="${x}" y="${y - 13}" text-anchor="middle" font-size="8" font-weight="700" fill="${fill}">${xmlEsc(id)}</text>
+    <text x="${x}" y="${y + 18}" text-anchor="middle" font-size="6.5" fill="#6b7280">${xmlEsc(height)}</text>
   </g>`;
 };
 
@@ -59,8 +64,8 @@ export function generateRoomLayouts(rooms: any[], placements: any[]): string {
     const fill = ROOM_COLORS[type] || "#f1f5f9";
 
     // Room label
-    svg += `<text x="${rx + roomW / 2}" y="${oy + 16}" text-anchor="middle" font-size="10" font-weight="700" fill="#111827">${room.name || room.type}</text>`;
-    svg += `<text x="${rx + roomW / 2}" y="${oy + 26}" text-anchor="middle" font-size="7.5" fill="#6b7280">${room.area_m2 || "?"} m² · ${room.width_m || "?"}×${room.height_m || "?"}m</text>`;
+    svg += `<text x="${rx + roomW / 2}" y="${oy + 16}" text-anchor="middle" font-size="10" font-weight="700" fill="#111827">${xmlEsc(room.name || room.type)}</text>`;
+    svg += `<text x="${rx + roomW / 2}" y="${oy + 26}" text-anchor="middle" font-size="7.5" fill="#6b7280">${xmlEsc(`${room.area_m2 || "?"} m² · ${room.width_m || "?"}×${room.height_m || "?"}m`)}</text>`;
 
     // Room rectangle with wall labels
     svg += `<rect x="${rx}" y="${ry}" width="${roomW}" height="${roomH}" fill="${fill}" stroke="#94a3b8" stroke-width="1.5" rx="2"/>`;
@@ -209,7 +214,7 @@ export function generateCircuitDiagram(circuits: any[], totalSockets: number, rc
     svg += `<text x="${gCenterX}" y="${busY + 38}" text-anchor="middle" font-size="5.5" fill="#6b7280">30mA</text>`;
 
     // RCD label below
-    svg += `<text x="${gCenterX}" y="${busY + 58}" text-anchor="middle" font-size="6.5" font-weight="600" fill="${rcdColor}">${group.label}</text>`;
+    svg += `<text x="${gCenterX}" y="${busY + 58}" text-anchor="middle" font-size="6.5" font-weight="600" fill="${rcdColor}">${xmlEsc(group.label)}</text>`;
 
     // Sub-bus line from RCD to its circuits
     const subBusY = busY + 68;
@@ -233,12 +238,12 @@ export function generateCircuitDiagram(circuits: any[], totalSockets: number, rc
       svg += `<line x1="${cx}" y1="${subBusY}" x2="${cx}" y2="${subBusY + 30}" stroke="#374151" stroke-width="1.5"/>`;
 
       // Circuit ID label
-      svg += `<text x="${cx}" y="${subBusY + 22}" text-anchor="middle" font-size="7" font-weight="600" fill="#374151">${circuit.id || `C${ci + 1}`}</text>`;
+      svg += `<text x="${cx}" y="${subBusY + 22}" text-anchor="middle" font-size="7" font-weight="600" fill="#374151">${xmlEsc(circuit.id || `C${ci + 1}`)}</text>`;
 
       // MCB box
       const mcbY = subBusY + 30;
       svg += `<rect x="${cx - 14}" y="${mcbY}" width="28" height="22" fill="#fff" stroke="#4f46e5" stroke-width="1.5" rx="2"/>`;
-      svg += `<text x="${cx}" y="${mcbY + 10}" text-anchor="middle" font-size="6.5" font-weight="700" fill="#4f46e5">${circuit.breaker || "16A"}</text>`;
+      svg += `<text x="${cx}" y="${mcbY + 10}" text-anchor="middle" font-size="6.5" font-weight="700" fill="#4f46e5">${xmlEsc(circuit.breaker || "16A")}</text>`;
       svg += `<text x="${cx}" y="${mcbY + 19}" text-anchor="middle" font-size="5.5" fill="#6b7280">MCB</text>`;
 
       // Vertical line to sockets
@@ -260,10 +265,10 @@ export function generateCircuitDiagram(circuits: any[], totalSockets: number, rc
 
       // Socket count + cable
       svg += `<text x="${cx}" y="${sockY + 30}" text-anchor="middle" font-size="6" font-weight="600" fill="#4f46e5">${socketCount}× socket</text>`;
-      svg += `<text x="${cx}" y="${sockY + 44}" text-anchor="middle" font-size="5.5" fill="#6b7280">${circuit.cable || "3×2.5mm²"}</text>`;
+      svg += `<text x="${cx}" y="${sockY + 44}" text-anchor="middle" font-size="5.5" fill="#6b7280">${xmlEsc(circuit.cable || "3×2.5mm²")}</text>`;
 
       // Socket IDs
-      svg += `<text x="${cx}" y="${sockY + 54}" text-anchor="middle" font-size="5" fill="#9ca3af">${socketIds.join(", ")}</text>`;
+      svg += `<text x="${cx}" y="${sockY + 54}" text-anchor="middle" font-size="5" fill="#9ca3af">${xmlEsc(socketIds.join(", "))}</text>`;
     });
 
     curX += gWidth + groupGap;
@@ -362,7 +367,7 @@ export function generateWiringDiagram(
 
   // Switchboard location label
   const dbRoom = switchboard?.room_name || "Hallway";
-  svg += `<text x="${dbX + dbW / 2}" y="${dbY - 6}" text-anchor="middle" font-size="7.5" fill="#6b7280">📍 ${dbRoom}</text>`;
+  svg += `<text x="${dbX + dbW / 2}" y="${dbY - 6}" text-anchor="middle" font-size="7.5" fill="#6b7280">📍 ${xmlEsc(dbRoom)}</text>`;
 
   // Draw DIN rail slots (MCB breakers inside the DB box)
   const slotStartY = dbY + 32;
@@ -371,10 +376,10 @@ export function generateWiringDiagram(
     if (sy + 16 > dbY + dbH - 4) return;
     // MCB slot
     svg += `<rect x="${dbX + 6}" y="${sy}" width="30" height="14" fill="#eef2ff" stroke="#c7d2fe" stroke-width="0.8" rx="2"/>`;
-    svg += `<text x="${dbX + 21}" y="${sy + 10}" text-anchor="middle" font-size="5.5" font-weight="600" fill="#4f46e5">${w.circuit_id || `C${i + 1}`}</text>`;
+    svg += `<text x="${dbX + 21}" y="${sy + 10}" text-anchor="middle" font-size="5.5" font-weight="600" fill="#4f46e5">${xmlEsc(w.circuit_id || `C${i + 1}`)}</text>`;
     // Breaker rating
     const breaker = circuits.find((c: any) => c.id === w.circuit_id)?.breaker || "16A";
-    svg += `<text x="${dbX + 42}" y="${sy + 10}" font-size="5" fill="#6b7280">${breaker}</text>`;
+    svg += `<text x="${dbX + 42}" y="${sy + 10}" font-size="5" fill="#6b7280">${xmlEsc(breaker)}</text>`;
   });
 
   // Draw room boxes and cable lines
@@ -388,7 +393,7 @@ export function generateWiringDiagram(
     const rType = rooms.find((r: any) => r.id === room.id || r.name === room.name)?.type?.toLowerCase().replace(/[\s-]+/g, "_") || "other";
     const fill = ROOM_COLORS[rType] || "#f1f5f9";
     svg += `<rect x="${rx}" y="${ry}" width="120" height="36" fill="${fill}" stroke="#94a3b8" stroke-width="1.2" rx="4"/>`;
-    svg += `<text x="${rx + 60}" y="${ry + 15}" text-anchor="middle" font-size="9" font-weight="600" fill="#111827">${room.name}</text>`;
+    svg += `<text x="${rx + 60}" y="${ry + 15}" text-anchor="middle" font-size="9" font-weight="600" fill="#111827">${xmlEsc(room.name)}</text>`;
 
     // Show socket count from wiring entries for this room
     const roomWires = wiring.filter((w: any) => (w.to_room_id || w.to_room) === room.id || w.to_room === room.name);
@@ -433,7 +438,7 @@ export function generateWiringDiagram(
     // Cable label on the line
     const labelX = fromX + (toX - fromX) * 0.5;
     const labelY = (fromY + toY) / 2 - bundleSpread - 4;
-    svg += `<text x="${labelX}" y="${labelY}" text-anchor="middle" font-size="6" fill="#374151" font-weight="500">${w.cable_type || ""}</text>`;
+    svg += `<text x="${labelX}" y="${labelY}" text-anchor="middle" font-size="6" fill="#374151" font-weight="500">${xmlEsc(w.cable_type || "")}</text>`;
 
     // Length label
     if (w.estimated_length_m) {
