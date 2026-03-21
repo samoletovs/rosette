@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   uploadFile,
   analyzeFloorPlan,
@@ -63,6 +64,7 @@ export default function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasReady, setCanvasReady] = useState(false);
+  const [socketOverrides, setSocketOverrides] = useState<Record<string, number>>({});
 
   useEffect(() => {
     getCountries()
@@ -120,6 +122,14 @@ export default function App() {
       ]);
       setRooms(analysis.rooms || []);
       setStandards(std);
+      // Initialize socket overrides from standards
+      const overrides: Record<string, number> = {};
+      for (const room of (analysis.rooms || [])) {
+        const stdKey = mapRoomType(room.type);
+        const min = std?.room_rules?.[stdKey]?.minimum_sockets;
+        overrides[room.id] = min ?? 2;
+      }
+      setSocketOverrides(overrides);
       setStep("review");
     } catch (err: any) {
       setError(err.message || "Analysis failed");
@@ -131,7 +141,12 @@ export default function App() {
     setStep("calculating");
     setError("");
     try {
-      const result = await calculateSockets(rooms, countryCode, propertyType, standards);
+      // Augment rooms with user's socket overrides
+      const roomsWithOverrides = rooms.map((r: any) => ({
+        ...r,
+        requested_sockets: socketOverrides[r.id] ?? standards?.room_rules?.[mapRoomType(r.type)]?.minimum_sockets ?? 2,
+      }));
+      const result = await calculateSockets(roomsWithOverrides, countryCode, propertyType, standards);
       setPlacements(result);
       setSvgContent(generateSocketSVG(rooms, result.placements || [], 800, 600));
       const desc = await generateDescription(rooms, result, countryCode, propertyType);
@@ -156,7 +171,7 @@ export default function App() {
     setStep("upload"); setFile(null); setPreviewUrl(""); setBase64Url("");
     setRooms([]); setStandards(null); setPlacements(null);
     setDescEn(""); setDescLocal(""); setSvgContent("");
-    setError(""); setCanvasReady(false);
+    setError(""); setCanvasReady(false); setSocketOverrides({});
   };
 
   const stepsData: { key: Step; label: string }[] = [
@@ -233,14 +248,21 @@ export default function App() {
         {step === "review" && (
           <section className="card fade-in">
             <h2>Review Detected Rooms</h2>
-            <p className="muted">{rooms.length} rooms detected</p>
+            <p className="muted">{rooms.length} rooms detected — adjust socket counts if needed</p>
             <div className="room-list">
               {rooms.map((r: any) => {
                 const min = standards?.room_rules?.[mapRoomType(r.type)]?.minimum_sockets;
+                const count = socketOverrides[r.id] ?? min ?? 2;
                 return (
                   <div key={r.id} className="room-row">
                     <div><strong>{r.name || r.type}</strong><span className="muted sm"> {r.area_m2} m² · {r.width_m}×{r.height_m}m</span></div>
-                    <span className="chip">{min != null ? `${min} sockets` : "custom"}</span>
+                    <div className="socket-control">
+                      <button className="cnt-btn" onClick={() => setSocketOverrides(p => ({...p, [r.id]: Math.max(0, count - 1)}))} aria-label="Decrease">−</button>
+                      <span className="cnt-val">{count}</span>
+                      <button className="cnt-btn" onClick={() => setSocketOverrides(p => ({...p, [r.id]: count + 1}))} aria-label="Increase">+</button>
+                      <span className="cnt-label">sockets</span>
+                      {min != null && count < min && <span className="cnt-warn">below min ({min})</span>}
+                    </div>
                   </div>
                 );
               })}
@@ -284,7 +306,7 @@ export default function App() {
                   <button className={`toggle-btn ${specLang === "local" ? "on" : ""}`} onClick={() => setSpecLang("local")}>{FLAG[countryCode] || "🌍"} {langName}</button>
                 </div>
               </div>
-              <div className="spec-body"><Markdown>{specLang === "en" ? descEn : descLocal}</Markdown></div>
+              <div className="spec-body"><Markdown remarkPlugins={[remarkGfm]}>{specLang === "en" ? descEn : descLocal}</Markdown></div>
               <button className="btn outline" onClick={() => {
                 const c = specLang === "en" ? descEn : descLocal;
                 download(c, `rosette-spec-${specLang === "en" ? "en" : countryCode.toLowerCase()}.md`, "text/markdown");

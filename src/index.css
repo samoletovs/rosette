@@ -108,6 +108,16 @@ select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 .chip { padding: 3px 12px; border-radius: 20px; font-size: .75rem; font-weight: 600;
   background: var(--accent); color: #fff; white-space: nowrap; }
 
+/* Socket counter on Review */
+.socket-control { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.cnt-btn { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--surface-solid);
+  font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--accent); transition: all .15s; padding: 0; line-height: 1; }
+.cnt-btn:hover { border-color: var(--accent); background: var(--accent-bg); }
+.cnt-val { font-size: 1.1rem; font-weight: 700; min-width: 24px; text-align: center; color: var(--accent); }
+.cnt-label { font-size: .75rem; color: var(--muted); font-weight: 500; }
+.cnt-warn { font-size: .65rem; color: var(--amber); font-weight: 600; white-space: nowrap; }
+
 /* Results */
 .stats-bar { display: flex; align-items: center; justify-content: center; gap: 0; padding: 20px; }
 .stat { text-align: center; flex: 1; }
@@ -131,9 +141,9 @@ select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   max-height: 600px; overflow-y: auto; font-size: .9rem; line-height: 1.7; }
 .spec-body h1 { font-size: 1.3rem; margin: 16px 0 8px; } .spec-body h2 { font-size: 1.1rem; margin: 14px 0 6px; }
 .spec-body h3 { font-size: .95rem; margin: 12px 0 4px; }
-.spec-body table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: .85rem; }
-.spec-body th, .spec-body td { padding: 8px 10px; border: 1px solid var(--border); text-align: left; }
-.spec-body th { background: var(--accent-bg); font-weight: 600; }
+.spec-body table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: .85rem; display: block; overflow-x: auto; }
+.spec-body th, .spec-body td { padding: 8px 10px; border: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.spec-body th { background: var(--accent-bg); font-weight: 600; position: sticky; top: 0; }
 .spec-body li { margin-left: 20px; }
 .spec-body strong { color: var(--text); }
 

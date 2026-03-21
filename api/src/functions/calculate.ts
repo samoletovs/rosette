@@ -25,6 +25,8 @@ app.http("calculate", {
 
 Standards for ${body.countryCode}: ${JSON.stringify(body.standards?.room_rules || {}, null, 2)}
 
+IMPORTANT: Each room has a "requested_sockets" field — this is the number of sockets the user wants for that room. You MUST place exactly that many sockets in each room. Do not add fewer or more.
+
 Rules: Standard height 300mm, kitchen countertop 1000-1200mm, min 600mm from water, all circuits need 30mA RCD.
 
 Respond in JSON:
