@@ -22,51 +22,69 @@ app.http("generate-description", {
       const lang = COUNTRY_LANGUAGES[body.countryCode] || { name: "Latvian", code: "lv" };
       const client = new AzureOpenAI({ endpoint, apiKey, apiVersion: "2024-08-01-preview", deployment });
 
+      const specRules = `You are a certified master electrician writing a professional electrical installation specification.
+
+SOCKET LOCATION DESCRIPTION RULES (CRITICAL):
+For each socket, describe its location exactly as it would appear on an electrical blueprint:
+1. **Wall**: Which wall (e.g., "North wall", "Wall adjacent to hallway door", "Kitchen counter wall")
+2. **Position on wall**: Use landmarks — "200mm left of the entrance door", "centered between window and corner", "above the sink area", "at bedside table position (left)", "between the stove and refrigerator". NEVER use percentages.
+3. **Height**: Exact height from finished floor level in mm (300mm standard, 600mm bedside, 1100mm countertop, etc.)
+4. **Purpose/function**: What the socket is for — "general purpose", "refrigerator (dedicated)", "TV and peripherals", "bedside charging", "washing machine (dedicated)", "countertop appliances"
+5. **Distance from water**: If in kitchen or bathroom, note min distance from nearest water source
+
+ROOM DESCRIPTION RULES:
+- For each room, first state: room name, dimensions, area, door/window locations
+- Then list each socket with the format above
+- Note any dedicated circuits separately
+
+DOCUMENT STRUCTURE (use proper Markdown):
+1. ## Project Overview — property type, total rooms, total sockets, total circuits, standard reference
+2. ## Room Specifications — each room as ### with socket list
+3. ## Circuit Schedule — MUST be a proper Markdown table:
+   | Circuit | Type | Breaker | Cable | RCD | Connected Sockets |
+   |---------|------|---------|-------|-----|-------------------|
+4. ## Material Summary — quantities of each item type
+5. ## Safety & Compliance — RCD protection, bathroom zones, grounding, applicable standards
+6. ## Installation Notes — cable routing recommendations, testing requirements`;
+
+      const roomsClean = body.rooms.map((r: any) => ({ id: r.id, type: r.type, name: r.name, area_m2: r.area_m2, width_m: r.width_m, height_m: r.height_m, features: r.features }));
+      const placementsClean = {
+        placements: (body.placements.placements || []).map((p: any) => ({ socket_id: p.socket_id, room_id: p.room_id, room_name: p.room_name, wall: p.wall, height_mm: p.height_mm, type: p.type, circuit: p.circuit, notes: p.notes })),
+        circuits: body.placements.circuits || [],
+        total_sockets: body.placements.total_sockets,
+        total_circuits: body.placements.total_circuits,
+      };
+
       const [enResponse, localResponse] = await Promise.all([
         client.chat.completions.create({
           model: deployment,
           messages: [
             {
               role: "system",
-              content: `You are an expert electrician writing a professional electrical installation specification in English.
-
-IMPORTANT RULES:
-- For socket locations, describe using human-readable terms: wall name (north/south/east/west), position on wall (near door, center of wall, near window, above countertop, beside bed), and height from floor in mm.
-- Do NOT use percentage coordinates or technical x/y values. Users need practical descriptions.
-- Include: project overview, room-by-room socket specs, circuit schedule as a proper Markdown table, material list, safety notes.
-- The circuit schedule MUST be a proper Markdown table with | separators and a header row with --- separators.
-- Use Markdown with proper headings (##), bullet lists, and tables.`,
+              content: `${specRules}\n\nWrite the specification in English.`,
             },
             {
               role: "user",
-              content: `Generate a complete English electrical installation specification for this ${body.propertyType || "residential"} property in ${body.countryCode}.\nRooms: ${JSON.stringify(body.rooms)}\nSocket placements: ${JSON.stringify(body.placements)}`,
+              content: `Generate a complete electrical installation specification for this ${body.propertyType || "residential"} property (country: ${body.countryCode}).\n\nRooms:\n${JSON.stringify(roomsClean, null, 2)}\n\nSocket placements:\n${JSON.stringify(placementsClean, null, 2)}`,
             },
           ],
           max_tokens: 4000,
-          temperature: 0.3,
+          temperature: 0.2,
         }),
         client.chat.completions.create({
           model: deployment,
           messages: [
             {
               role: "system",
-              content: `You are an expert electrician writing a professional electrical installation specification entirely in ${lang.name} language. Write EVERYTHING in ${lang.name}.
-
-IMPORTANT RULES:
-- For socket locations, describe using human-readable terms: wall name, position on wall (near door, center of wall, near window, above countertop, beside bed), and height from floor in mm.
-- Do NOT use percentage coordinates or technical x/y values. Users need practical descriptions like "center of north wall" or "next to the entrance door".
-- Include the SAME level of detail as an English specification: project overview, room-by-room socket specs with wall + position + height + circuit, circuit schedule as a proper Markdown table, material list, safety notes.
-- The circuit schedule MUST be a proper Markdown table with | separators and a header row with --- separators.
-- Use Markdown with proper headings (##), bullet lists, and tables.
-- ALL text must be in ${lang.name}, including headings, labels, and notes.`,
+              content: `${specRules}\n\nWrite the ENTIRE specification in ${lang.name} language. ALL headings, labels, descriptions, and notes must be in ${lang.name}. Use the same structure and level of detail as described above.`,
             },
             {
               role: "user",
-              content: `Generate a complete ${lang.name} language electrical installation specification for this ${body.propertyType || "residential"} property in ${body.countryCode}.\nRooms: ${JSON.stringify(body.rooms)}\nSocket placements: ${JSON.stringify(body.placements)}`,
+              content: `Generate a complete ${lang.name} electrical installation specification for this ${body.propertyType || "residential"} property (country: ${body.countryCode}).\n\nRooms:\n${JSON.stringify(roomsClean, null, 2)}\n\nSocket placements:\n${JSON.stringify(placementsClean, null, 2)}`,
             },
           ],
           max_tokens: 4000,
-          temperature: 0.3,
+          temperature: 0.2,
         }),
       ]);
 
