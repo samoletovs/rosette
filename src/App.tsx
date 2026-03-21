@@ -252,7 +252,7 @@ export default function App() {
                 ? <><img src={previewUrl} alt="Preview" /><span className="pill">{file?.name}</span></>
                 : <><div className="drop-icon">📐</div><p><b>Drop floor plan here</b></p><p className="muted sm">PNG, JPEG, WebP or PDF — max 10 MB</p></>}
             </div>
-            <button className="btn primary full" disabled={!file} onClick={startAnalysis}>Analyze Floor Plan →</button>
+            <div className="btn-row" style={{justifyContent:'flex-end'}}><button className="btn primary" disabled={!file} onClick={startAnalysis}>Analyze Floor Plan →</button></div>
           </section>
         )}
 
@@ -351,7 +351,7 @@ export default function App() {
               }}>↓ Download .md</button>
             </section>
 
-            <div className="center-row"><button className="btn primary full" onClick={reset}>Plan Another Property</button></div>
+            <div className="center-row"><button className="btn primary" onClick={reset}>Plan Another Property</button></div>
           </div>
         )}
       </main>
