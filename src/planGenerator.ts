@@ -112,88 +112,165 @@ export function generateRoomLayouts(rooms: any[], placements: any[]): string {
   return svg;
 }
 
-// Generate single-line circuit diagram
-export function generateCircuitDiagram(circuits: any[], totalSockets: number): string {
+// Build RCD groups from circuit data. If the AI provided rcd_groups, use them;
+// otherwise auto-group circuits into chunks of max 3-4 per RCD.
+function buildRcdGroups(circuits: any[], rcdGroups?: any[]): { id: string; label: string; rcd: string; circuits: any[] }[] {
+  if (rcdGroups && rcdGroups.length > 0) {
+    const circuitMap = new Map(circuits.map(c => [c.id, c]));
+    return rcdGroups.map((g: any) => ({
+      id: g.id,
+      label: g.label || g.id,
+      rcd: g.rcd || "30mA Type A",
+      circuits: (g.circuits || []).map((cid: string) => circuitMap.get(cid)).filter(Boolean),
+    }));
+  }
+  // Fallback: group by rcd_group field on circuits, or auto-chunk max 4
+  const groupMap = new Map<string, any[]>();
+  circuits.forEach(c => {
+    const key = c.rcd_group || "auto";
+    if (!groupMap.has(key)) groupMap.set(key, []);
+    groupMap.get(key)!.push(c);
+  });
+  if (groupMap.size === 1 && groupMap.has("auto")) {
+    // No grouping info — split into chunks of 4
+    const groups: { id: string; label: string; rcd: string; circuits: any[] }[] = [];
+    const all = circuits.slice();
+    let idx = 1;
+    while (all.length > 0) {
+      groups.push({ id: `rcd_${idx}`, label: `RCD ${idx}`, rcd: "30mA Type A", circuits: all.splice(0, 4) });
+      idx++;
+    }
+    return groups;
+  }
+  let idx = 1;
+  return Array.from(groupMap.entries()).map(([key, circs]) => ({
+    id: key === "auto" ? `rcd_${idx}` : key,
+    label: key === "auto" ? `RCD ${idx++}` : key.replace(/_/g, " ").replace(/^rcd /i, "RCD "),
+    rcd: "30mA Type A",
+    circuits: circs,
+  }));
+}
+
+// Generate single-line circuit diagram with multiple RCD groups
+export function generateCircuitDiagram(circuits: any[], totalSockets: number, rcdGroups?: any[]): string {
+  const groups = buildRcdGroups(circuits, rcdGroups);
   const circuitCount = circuits.length || 1;
-  const svgW = Math.max(600, circuitCount * 100 + 120);
-  const svgH = 320;
+  const groupCount = groups.length || 1;
+  const circuitW = 80;
+  const groupGap = 28;
+  const svgW = Math.max(650, circuitCount * circuitW + groupCount * groupGap + 160);
+  const svgH = 360;
 
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" style="font-family:Inter,system-ui,sans-serif">`;
   svg += `<rect width="${svgW}" height="${svgH}" fill="#fafbfc" rx="6"/>`;
 
   // Title
   svg += `<text x="${svgW / 2}" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#111827">Single-Line Circuit Diagram</text>`;
-  svg += `<text x="${svgW / 2}" y="36" text-anchor="middle" font-size="9" fill="#6b7280">Distribution Board → RCD → MCB → Sockets</text>`;
+  svg += `<text x="${svgW / 2}" y="36" text-anchor="middle" font-size="9" fill="#6b7280">Distribution Board → RCDs (30mA, max 3–4 circuits each) → MCBs → Sockets</text>`;
 
-  // Supply line
+  // Supply box
   const topY = 55;
-  const dbX = 40, dbW = 50, dbH = 30;
+  const dbX = 30, dbW = 50, dbH = 30;
   svg += `<rect x="${dbX}" y="${topY}" width="${dbW}" height="${dbH}" fill="#4f46e5" rx="4"/>`;
   svg += `<text x="${dbX + dbW / 2}" y="${topY + 12}" text-anchor="middle" font-size="7" font-weight="700" fill="white">SUPPLY</text>`;
   svg += `<text x="${dbX + dbW / 2}" y="${topY + 22}" text-anchor="middle" font-size="6" fill="white">230V/400V</text>`;
 
-  // Main bus line
+  // Main bus bar from supply to end
   const busY = topY + dbH / 2;
   const busStartX = dbX + dbW;
-  const busEndX = svgW - 30;
-  svg += `<line x1="${busStartX}" y1="${busY}" x2="${busEndX}" y2="${busY}" stroke="#111827" stroke-width="2"/>`;
 
-  // RCD
-  const rcdX = busStartX + 30;
-  svg += `<rect x="${rcdX}" y="${busY - 14}" width="36" height="28" fill="#fff" stroke="#10b981" stroke-width="1.5" rx="3"/>`;
-  svg += `<text x="${rcdX + 18}" y="${busY - 2}" text-anchor="middle" font-size="7" font-weight="700" fill="#10b981">RCD</text>`;
-  svg += `<text x="${rcdX + 18}" y="${busY + 9}" text-anchor="middle" font-size="6" fill="#6b7280">30mA</text>`;
+  // Calculate total width needed for groups
+  let totalGroupW = 0;
+  groups.forEach(g => { totalGroupW += g.circuits.length * circuitW + groupGap; });
+  const groupStartX = busStartX + 20;
+  const busEndX = groupStartX + totalGroupW + 10;
 
-  // After RCD, draw circuits
-  const circuitStartX = rcdX + 56;
-  const circuitSpacing = Math.min(90, (busEndX - circuitStartX) / circuitCount);
+  svg += `<line x1="${busStartX}" y1="${busY}" x2="${busEndX}" y2="${busY}" stroke="#111827" stroke-width="2.5"/>`;
 
-  circuits.forEach((circuit: any, i: number) => {
-    const cx = circuitStartX + i * circuitSpacing;
-    const socketIds: string[] = circuit.sockets || [];
-    const socketCount = socketIds.length;
+  // Draw each RCD group
+  const rcdY = busY + 40;
+  let curX = groupStartX;
+  const rcdColors = ["#10b981", "#6366f1", "#f59e0b", "#ef4444", "#8b5cf6"];
 
-    // Vertical line from bus bar
-    svg += `<line x1="${cx}" y1="${busY}" x2="${cx}" y2="${busY + 40}" stroke="#374151" stroke-width="1.5"/>`;
+  groups.forEach((group, gi) => {
+    const gCircuits = group.circuits;
+    const gCount = gCircuits.length;
+    const gWidth = gCount * circuitW;
+    const gCenterX = curX + gWidth / 2;
+    const rcdColor = rcdColors[gi % rcdColors.length];
 
-    // MCB symbol (box with X)
-    const mcbY = busY + 40;
-    svg += `<rect x="${cx - 14}" y="${mcbY}" width="28" height="22" fill="#fff" stroke="#4f46e5" stroke-width="1.5" rx="2"/>`;
-    svg += `<text x="${cx}" y="${mcbY + 10}" text-anchor="middle" font-size="6.5" font-weight="700" fill="#4f46e5">${circuit.breaker || "16A"}</text>`;
-    svg += `<text x="${cx}" y="${mcbY + 19}" text-anchor="middle" font-size="5.5" fill="#6b7280">MCB</text>`;
+    // Vertical line from bus bar down to RCD
+    svg += `<line x1="${gCenterX}" y1="${busY}" x2="${gCenterX}" y2="${busY + 16}" stroke="#374151" stroke-width="2"/>`;
 
-    // Circuit ID
-    svg += `<text x="${cx}" y="${mcbY - 4}" text-anchor="middle" font-size="7" font-weight="600" fill="#374151">${circuit.id || `C${i + 1}`}</text>`;
+    // RCD box
+    const rcdBoxW = 44;
+    svg += `<rect x="${gCenterX - rcdBoxW / 2}" y="${busY + 16}" width="${rcdBoxW}" height="32" fill="#fff" stroke="${rcdColor}" stroke-width="1.5" rx="3"/>`;
+    svg += `<text x="${gCenterX}" y="${busY + 28}" text-anchor="middle" font-size="7" font-weight="700" fill="${rcdColor}">RCD</text>`;
+    svg += `<text x="${gCenterX}" y="${busY + 38}" text-anchor="middle" font-size="5.5" fill="#6b7280">30mA</text>`;
 
-    // Vertical line to sockets
-    svg += `<line x1="${cx}" y1="${mcbY + 22}" x2="${cx}" y2="${mcbY + 50}" stroke="#374151" stroke-width="1"/>`;
+    // RCD label below
+    svg += `<text x="${gCenterX}" y="${busY + 58}" text-anchor="middle" font-size="6.5" font-weight="600" fill="${rcdColor}">${group.label}</text>`;
 
-    // Socket group
-    const sockY = mcbY + 55;
-    const sockGroupW = Math.max(30, socketCount * 16);
-    svg += `<rect x="${cx - sockGroupW / 2}" y="${sockY}" width="${sockGroupW}" height="40" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1" rx="4"/>`;
+    // Sub-bus line from RCD to its circuits
+    const subBusY = busY + 68;
+    const subBusStartX = curX + circuitW / 2 - 10;
+    const subBusEndX = curX + gWidth - circuitW / 2 + 10;
+    svg += `<line x1="${gCenterX}" y1="${busY + 48}" x2="${gCenterX}" y2="${subBusY}" stroke="${rcdColor}" stroke-width="1.5"/>`;
+    if (gCount > 1) {
+      svg += `<line x1="${subBusStartX}" y1="${subBusY}" x2="${subBusEndX}" y2="${subBusY}" stroke="${rcdColor}" stroke-width="1.5"/>`;
+    }
 
-    // Socket symbols in group
-    const startX = cx - (socketCount - 1) * 7;
-    socketIds.forEach((sid: string, j: number) => {
-      const ssx = startX + j * 14;
-      const ssy = sockY + 14;
-      svg += `<circle cx="${ssx}" cy="${ssy}" r="5" fill="none" stroke="#4f46e5" stroke-width="1"/>`;
-      svg += `<line x1="${ssx - 2}" y1="${ssy}" x2="${ssx + 2}" y2="${ssy}" stroke="#4f46e5" stroke-width="1"/>`;
+    // Background group area
+    svg += `<rect x="${curX - 4}" y="${subBusY - 4}" width="${gWidth + 8}" height="${svgH - subBusY - 30}" fill="${rcdColor}08" stroke="${rcdColor}30" stroke-width="1" rx="6" stroke-dasharray="4 2"/>`;
+
+    // Draw circuits within this group
+    gCircuits.forEach((circuit: any, ci: number) => {
+      const cx = curX + ci * circuitW + circuitW / 2;
+      const socketIds: string[] = circuit.sockets || [];
+      const socketCount = socketIds.length;
+
+      // Vertical line from sub-bus to MCB
+      svg += `<line x1="${cx}" y1="${subBusY}" x2="${cx}" y2="${subBusY + 30}" stroke="#374151" stroke-width="1.5"/>`;
+
+      // Circuit ID label
+      svg += `<text x="${cx}" y="${subBusY + 22}" text-anchor="middle" font-size="7" font-weight="600" fill="#374151">${circuit.id || `C${ci + 1}`}</text>`;
+
+      // MCB box
+      const mcbY = subBusY + 30;
+      svg += `<rect x="${cx - 14}" y="${mcbY}" width="28" height="22" fill="#fff" stroke="#4f46e5" stroke-width="1.5" rx="2"/>`;
+      svg += `<text x="${cx}" y="${mcbY + 10}" text-anchor="middle" font-size="6.5" font-weight="700" fill="#4f46e5">${circuit.breaker || "16A"}</text>`;
+      svg += `<text x="${cx}" y="${mcbY + 19}" text-anchor="middle" font-size="5.5" fill="#6b7280">MCB</text>`;
+
+      // Vertical line to sockets
+      svg += `<line x1="${cx}" y1="${mcbY + 22}" x2="${cx}" y2="${mcbY + 42}" stroke="#374151" stroke-width="1"/>`;
+
+      // Socket group box
+      const sockY = mcbY + 46;
+      const sockGroupW = Math.max(30, socketCount * 14 + 4);
+      svg += `<rect x="${cx - sockGroupW / 2}" y="${sockY}" width="${sockGroupW}" height="36" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1" rx="4"/>`;
+
+      // Socket symbols
+      const startSX = cx - (socketCount - 1) * 6;
+      socketIds.forEach((_sid: string, j: number) => {
+        const ssx = startSX + j * 12;
+        const ssy = sockY + 12;
+        svg += `<circle cx="${ssx}" cy="${ssy}" r="4.5" fill="none" stroke="#4f46e5" stroke-width="1"/>`;
+        svg += `<line x1="${ssx - 2}" y1="${ssy}" x2="${ssx + 2}" y2="${ssy}" stroke="#4f46e5" stroke-width="1"/>`;
+      });
+
+      // Socket count + cable
+      svg += `<text x="${cx}" y="${sockY + 30}" text-anchor="middle" font-size="6" font-weight="600" fill="#4f46e5">${socketCount}× socket</text>`;
+      svg += `<text x="${cx}" y="${sockY + 44}" text-anchor="middle" font-size="5.5" fill="#6b7280">${circuit.cable || "3×2.5mm²"}</text>`;
+
+      // Socket IDs
+      svg += `<text x="${cx}" y="${sockY + 54}" text-anchor="middle" font-size="5" fill="#9ca3af">${socketIds.join(", ")}</text>`;
     });
 
-    // Socket count + cable
-    svg += `<text x="${cx}" y="${sockY + 35}" text-anchor="middle" font-size="6.5" font-weight="600" fill="#4f46e5">${socketCount}× socket</text>`;
-    svg += `<text x="${cx}" y="${sockY + 52}" text-anchor="middle" font-size="6" fill="#6b7280">${circuit.cable || "3×2.5mm²"}</text>`;
-
-    // Room label
-    const roomName = typeof circuit.sockets === "object" ? "" : "";
-    const label = circuit.id || `Circuit ${i + 1}`;
-    svg += `<text x="${cx}" y="${sockY + 62}" text-anchor="middle" font-size="6" fill="#9ca3af">${socketIds.join(", ")}</text>`;
+    curX += gWidth + groupGap;
   });
 
   // Legend
-  svg += `<text x="20" y="${svgH - 12}" font-size="7" fill="#9ca3af">Standard: IEC 60364 | All circuits RCD protected (30mA Type A)</text>`;
+  svg += `<text x="20" y="${svgH - 12}" font-size="7" fill="#9ca3af">Standard: IEC 60364 | Each RCD protects max 3–4 circuits (30mA Type A) | Selectivity: fault trips one RCD, rest stays live</text>`;
 
   svg += `</svg>`;
   return svg;
