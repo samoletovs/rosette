@@ -8,6 +8,7 @@ import {
   getCountries,
   calculateSockets,
   generateDescription,
+  submitFeedback,
 } from "./api";
 import { generateRoomLayouts, generateCircuitDiagram, drawReferencePlan } from "./planGenerator";
 
@@ -68,6 +69,13 @@ export default function App() {
   const [canvasReady, setCanvasReady] = useState(false);
   const [socketOverrides, setSocketOverrides] = useState<Record<string, number>>({});
   const [theme, setTheme] = useState(() => localStorage.getItem("rosette-theme") || "ocean");
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [fbType, setFbType] = useState("improvement");
+  const [fbTitle, setFbTitle] = useState("");
+  const [fbDesc, setFbDesc] = useState("");
+  const [fbSending, setFbSending] = useState(false);
+  const [fbSuccess, setFbSuccess] = useState(false);
+  const [fbError, setFbError] = useState("");
 
   // Apply theme to document
   useEffect(() => {
@@ -191,6 +199,20 @@ export default function App() {
     setRooms([]); setStandards(null); setPlacements(null);
     setDescEn(""); setDescLocal(""); setSvgRoomLayouts(""); setSvgCircuitDiagram("");
     setError(""); setCanvasReady(false); setSocketOverrides({});
+  };
+
+  const handleFeedbackSubmit = async () => {
+    if (!fbTitle.trim() || !fbDesc.trim()) { setFbError("Title and description are required"); return; }
+    setFbSending(true); setFbError("");
+    try {
+      await submitFeedback({ type: fbType, title: fbTitle, description: fbDesc, page: step });
+      setFbSuccess(true);
+      setTimeout(() => { setShowFeedback(false); setFbSuccess(false); setFbTitle(""); setFbDesc(""); setFbType("improvement"); }, 1800);
+    } catch (err: any) {
+      setFbError(err.message || "Failed to submit");
+    } finally {
+      setFbSending(false);
+    }
   };
 
   const stepsData: { key: Step; label: string }[] = [
@@ -363,8 +385,58 @@ export default function App() {
               onClick={() => setTheme(t)} title={t.charAt(0).toUpperCase() + t.slice(1)} />
           ))}
         </div>
+        <button className="btn ghost feedback-btn" onClick={() => setShowFeedback(true)}>💬 Send feedback</button>
         <p>Rosette © 2026 · Baltic electrical standards (LBN · STR · EVS)</p>
       </footer>
+
+      {showFeedback && (
+        <div className="modal-overlay" onClick={() => !fbSending && setShowFeedback(false)}>
+          <div className="modal fade-in" onClick={(e) => e.stopPropagation()}>
+            {fbSuccess ? (
+              <div className="center-content" style={{padding: "40px 24px"}}>
+                <div style={{fontSize: "1.5rem", marginBottom: 12}}>✓</div>
+                <h3>Thank you!</h3>
+                <p className="muted">Your feedback has been submitted.</p>
+              </div>
+            ) : (
+              <>
+                <div className="modal-head">
+                  <h3>Send feedback</h3>
+                  <button className="modal-close" onClick={() => setShowFeedback(false)}>×</button>
+                </div>
+                <div className="modal-body">
+                  <label className="form-field">
+                    <span>Type</span>
+                    <select value={fbType} onChange={(e) => setFbType(e.target.value)}>
+                      <option value="bug">Bug report</option>
+                      <option value="feature">Feature request</option>
+                      <option value="improvement">Improvement</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </label>
+                  <label className="form-field">
+                    <span>Title</span>
+                    <input type="text" className="fb-input" placeholder="Brief summary" value={fbTitle}
+                      onChange={(e) => setFbTitle(e.target.value)} maxLength={200} />
+                  </label>
+                  <label className="form-field">
+                    <span>Description</span>
+                    <textarea className="fb-textarea" placeholder="Describe in detail…" value={fbDesc}
+                      onChange={(e) => setFbDesc(e.target.value)} rows={4} maxLength={2000} />
+                  </label>
+                  {fbError && <p className="fb-error">{fbError}</p>}
+                </div>
+                <div className="modal-foot">
+                  <button className="btn ghost" onClick={() => setShowFeedback(false)}>Cancel</button>
+                  <button className="btn primary" disabled={fbSending || !fbTitle.trim() || !fbDesc.trim()} onClick={handleFeedbackSubmit}>
+                    {fbSending ? "Sending…" : "Submit"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
