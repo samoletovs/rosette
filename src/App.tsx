@@ -206,7 +206,7 @@ export default function App() {
     <div className="app">
       <header>
         <div className="brand"><span className="brand-icon">⚡</span><h1>Rosette</h1></div>
-        <p className="tagline">Electric Socket Planner — Baltic Standards</p>
+        <p className="tagline">Electric socket planner — Baltic standards</p>
       </header>
 
       <nav className="stepper">
@@ -224,7 +224,7 @@ export default function App() {
       <main>
         {step === "upload" && (
           <section className="card fade-in">
-            <h2>Upload Floor Plan</h2>
+            <h2>Upload floor plan</h2>
             <p className="muted">Select country, property type, and upload your plan</p>
             <div className="form-row">
               <label className="form-field">
@@ -236,7 +236,7 @@ export default function App() {
                 </select>
               </label>
               <label className="form-field">
-                <span>Property Type</span>
+                <span>Property type</span>
                 <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)}>
                   {PROPERTY_TYPES.map((t) => (<option key={t.value} value={t.value}>{t.label}</option>))}
                 </select>
@@ -250,23 +250,23 @@ export default function App() {
                 onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
               {previewUrl
                 ? <><img src={previewUrl} alt="Preview" /><span className="pill">{file?.name}</span></>
-                : <><div className="drop-icon">📐</div><p><b>Drop floor plan here</b></p><p className="muted sm">PNG, JPEG, WebP or PDF — max 10 MB</p></>}
+                : <><div className="drop-icon">📐</div><p>Drop floor plan here</p><p className="muted sm">PNG, JPEG, WebP or PDF — max 10 MB</p></>}
             </div>
-            <div className="btn-row" style={{justifyContent:'flex-end'}}><button className="btn primary" disabled={!file} onClick={startAnalysis}>Analyze Floor Plan →</button></div>
+            <div className="btn-row" style={{justifyContent:'flex-end'}}><button className="btn primary" disabled={!file} onClick={startAnalysis}>Analyze floor plan →</button></div>
           </section>
         )}
 
         {(step === "analyzing" || step === "calculating") && (
           <section className="card fade-in center-content">
             <div className="pulse-ring" /><div className="pulse-icon">⚡</div>
-            <h3>{step === "analyzing" ? "Analyzing Floor Plan" : "Calculating Placements"}</h3>
+            <h3>{step === "analyzing" ? "Analyzing floor plan" : "Calculating placements"}</h3>
             <p className="muted">{step === "analyzing" ? "AI is identifying rooms…" : `Applying ${countryCode} standards…`}</p>
           </section>
         )}
 
         {step === "review" && (
           <section className="card fade-in">
-            <h2>Review Detected Rooms</h2>
+            <h2>Review detected rooms</h2>
             <p className="muted">{rooms.length} rooms detected — adjust socket counts if needed</p>
             <div className="room-list">
               {rooms.map((r: any) => {
@@ -288,7 +288,7 @@ export default function App() {
             </div>
             <div className="btn-row">
               <button className="btn ghost" onClick={reset}>← Back</button>
-              <button className="btn primary" onClick={startCalculation}>Calculate Placements →</button>
+              <button className="btn primary" onClick={startCalculation}>Calculate placements →</button>
             </div>
           </section>
         )}
@@ -307,38 +307,38 @@ export default function App() {
             {/* Electrical Diagrams with tabs */}
             <section className="card">
               <div className="spec-head">
-                <h3>Electrical Diagrams</h3>
+                <h3>Electrical diagrams</h3>
                 <div className="toggle-group">
-                  <button className={`toggle-btn ${diagramTab === "rooms" ? "on" : ""}`} onClick={() => setDiagramTab("rooms")}>Room Layouts</button>
-                  <button className={`toggle-btn ${diagramTab === "circuits" ? "on" : ""}`} onClick={() => setDiagramTab("circuits")}>Circuit Diagram</button>
-                  <button className={`toggle-btn ${diagramTab === "plan" ? "on" : ""}`} onClick={() => setDiagramTab("plan")}>Floor Plan</button>
+                  <button className={`toggle-btn ${diagramTab === "rooms" ? "on" : ""}`} onClick={() => setDiagramTab("rooms")}>Room layouts</button>
+                  <button className={`toggle-btn ${diagramTab === "circuits" ? "on" : ""}`} onClick={() => setDiagramTab("circuits")}>Circuit diagram</button>
+                  <button className={`toggle-btn ${diagramTab === "plan" ? "on" : ""}`} onClick={() => setDiagramTab("plan")}>Floor plan</button>
                 </div>
               </div>
 
               {diagramTab === "rooms" && (
                 <>
                   <div className="plan-box svg-box" dangerouslySetInnerHTML={{ __html: svgRoomLayouts }} />
-                  <button className="btn outline" onClick={() => download(svgRoomLayouts, "rosette-room-layouts.svg", "image/svg+xml")}>↓ Download Room Layouts (SVG)</button>
+                  <button className="btn outline" onClick={() => download(svgRoomLayouts, "rosette-room-layouts.svg", "image/svg+xml")}>↓ Download room layouts</button>
                 </>
               )}
               {diagramTab === "circuits" && (
                 <>
                   <div className="plan-box svg-box" dangerouslySetInnerHTML={{ __html: svgCircuitDiagram }} />
-                  <button className="btn outline" onClick={() => download(svgCircuitDiagram, "rosette-circuit-diagram.svg", "image/svg+xml")}>↓ Download Circuit Diagram (SVG)</button>
+                  <button className="btn outline" onClick={() => download(svgCircuitDiagram, "rosette-circuit-diagram.svg", "image/svg+xml")}>↓ Download circuit diagram</button>
                 </>
               )}
               {diagramTab === "plan" && (
                 <>
                   <div className="plan-box"><canvas ref={canvasRef} /></div>
                   <p className="muted sm" style={{textAlign:"center", margin:"8px 0"}}>Original floor plan for reference — socket positions are in the specification above</p>
-                  <button className="btn outline" disabled={!canvasReady} onClick={() => canvasRef.current && download(canvasRef.current.toDataURL("image/png"), "rosette-reference-plan.png", "image/png")}>↓ Download Reference Plan (PNG)</button>
+                  <button className="btn outline" disabled={!canvasReady} onClick={() => canvasRef.current && download(canvasRef.current.toDataURL("image/png"), "rosette-reference-plan.png", "image/png")}>↓ Download reference plan</button>
                 </>
               )}
             </section>
 
             <section className="card">
               <div className="spec-head">
-                <h3>Installation Specification</h3>
+                <h3>Installation specification</h3>
                 <div className="toggle-group">
                   <button className={`toggle-btn ${specLang === "en" ? "on" : ""}`} onClick={() => setSpecLang("en")}>🇬🇧 English</button>
                   <button className={`toggle-btn ${specLang === "local" ? "on" : ""}`} onClick={() => setSpecLang("local")}>{FLAG[countryCode] || "🌍"} {langName}</button>
@@ -348,10 +348,10 @@ export default function App() {
               <button className="btn outline" onClick={() => {
                 const c = specLang === "en" ? descEn : descLocal;
                 download(c, `rosette-spec-${specLang === "en" ? "en" : countryCode.toLowerCase()}.md`, "text/markdown");
-              }}>↓ Download .md</button>
+              }}>↓ Download specification</button>
             </section>
 
-            <div className="center-row"><button className="btn primary" onClick={reset}>Plan Another Property</button></div>
+            <div className="center-row"><button className="btn primary" onClick={reset}>Plan another property</button></div>
           </div>
         )}
       </main>

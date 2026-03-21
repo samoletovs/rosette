@@ -30,6 +30,23 @@ interface should feel like a calm, well-lit room — not a crowded dashboard.
 - **Arc Browser** — Soft colors, rounded but not bubbly
 - **Raycast** — Extremely clean command-palette aesthetic
 - **Stripe Dashboard** — Professional, data-dense but still clean
+- **claude.ai** — Anthropic's UI is a perfect reference: warm grays, minimal accent, sentence case everywhere
+
+**Key insights from testing (learned through iterations):**
+- **Toggle/segmented controls**: Apple-style white selected tab on gray bg with tiny shadow 
+  is better than dark filled tab. It feels lighter.
+- **Navigation steppers**: Active dots should use near-black (#1C1C1C), NOT accent blue. 
+  Accent is only for CTAs.
+- **Card shadows**: Use `0 1px 2px rgba(0,0,0,0.03)` — barely visible. Most cards should 
+  rely on border, not shadow.
+- **Form labels**: Uppercase at 11px, weight 500, color #A0A0A0 — they should barely be 
+  noticed.
+- **Drop zones**: Should look almost invisible by default. Gray dashed border, #FAFAFA bg. 
+  Content in dark gray, not bold.
+- **Disabled buttons**: opacity 0.35, pointer-events none. They shouldn't draw the eye.
+- **Text rendering**: Add `text-rendering: optimizeLegibility` for crisper Inter font.
+- **Always deploy with API**: When deploying to SWA or similar, include the API backend 
+  (`--api-location api`). Frontend-only deploys can overwrite the API.
 
 ## Step-by-Step: How to Redesign a UI
 
