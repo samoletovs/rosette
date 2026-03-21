@@ -18,6 +18,57 @@ const PROPERTY_TYPES = [
   { value: "commercial", label: "Commercial" },
 ];
 
+// Maps AI-detected room types to standard keys
+const ROOM_TYPE_MAP: Record<string, string> = {
+  kitchen: "kitchen",
+  living_room: "living_room",
+  living_area: "living_room",
+  lounge: "living_room",
+  sitting_room: "living_room",
+  dining_room: "dining_room",
+  dining_area: "dining_room",
+  dining: "dining_room",
+  bedroom: "bedroom",
+  bedroom_1: "bedroom",
+  bedroom_2: "bedroom",
+  bedroom_3: "bedroom",
+  master_bedroom: "bedroom",
+  bathroom: "bathroom",
+  bath: "bathroom",
+  shower_room: "bathroom",
+  hallway: "hallway",
+  corridor: "hallway",
+  entrance: "hallway",
+  foyer: "hallway",
+  hall: "hallway",
+  home_office: "home_office",
+  study: "home_office",
+  office: "home_office",
+  wc: "wc",
+  toilet: "wc",
+  "c.r.": "wc",
+  cr: "wc",
+  comfort_room: "wc",
+  restroom: "wc",
+  utility_room: "utility_room",
+  laundry: "utility_room",
+  storage: "utility_room",
+  pantry: "utility_room",
+  garage: "garage",
+  carport: "garage",
+  balcony: "balcony",
+  terrace: "balcony",
+  patio: "balcony",
+  porch: "balcony",
+  veranda: "balcony",
+  loggia: "balcony",
+};
+
+function mapRoomType(type: string): string {
+  const normalized = type.toLowerCase().replace(/[\s-]+/g, "_").replace(/[^a-z0-9_]/g, "");
+  return ROOM_TYPE_MAP[normalized] || ROOM_TYPE_MAP[type.toLowerCase()] || normalized;
+}
+
 export default function App() {
   const [step, setStep] = useState<Step>("upload");
   const [file, setFile] = useState<File | null>(null);
@@ -304,7 +355,7 @@ export default function App() {
                   </span>
                 </div>
                 <span className="room-sockets">
-                  Min: {standards?.room_rules?.[room.type]?.minimum_sockets || "?"} sockets
+                  Min: {standards?.room_rules?.[mapRoomType(room.type)]?.minimum_sockets || "?"} sockets
                 </span>
               </li>
             ))}
