@@ -216,3 +216,178 @@ export function drawReferencePlan(
   ctx.textAlign = "right";
   ctx.fillText("Reference Floor Plan", canvas.width - 12, canvas.height - 12);
 }
+
+// IEC 60446 wire colors for SVG rendering
+const WIRE_COLORS: Record<string, string> = {
+  "Brown (L)": "#8B4513", "Blue (N)": "#1E90FF", "Green-Yellow (PE)": "#228B22",
+  "Black (L2)": "#1a1a1a", "Grey (L3)": "#808080",
+  Brown: "#8B4513", Blue: "#1E90FF", "Green-Yellow": "#228B22",
+  Black: "#1a1a1a", Grey: "#808080",
+};
+
+const CABLE_THICKNESS: Record<string, number> = {
+  "1.5": 1, "2.5": 1.5, "4": 2, "6": 2.5,
+};
+
+function getCableSize(cableType: string): string {
+  const m = cableType.match(/(\d+(?:\.\d+)?)\s*mm/);
+  return m ? m[1] : "2.5";
+}
+
+// Generate wiring diagram showing cables from switchboard to rooms
+export function generateWiringDiagram(
+  wiring: any[],
+  rooms: any[],
+  circuits: any[],
+  switchboard?: any
+): string {
+  if (!wiring || wiring.length === 0) {
+    // Fallback: no wiring data
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200" width="600" height="200" style="font-family:Inter,system-ui,sans-serif">
+      <rect width="600" height="200" fill="#fafbfc" rx="6"/>
+      <text x="300" y="100" text-anchor="middle" font-size="13" fill="#6b7280">No wiring data available</text>
+    </svg>`;
+  }
+
+  // Collect unique destination rooms from wiring
+  const destRooms = new Map<string, { name: string; id: string }>();
+  for (const w of wiring) {
+    const key = w.to_room_id || w.to_room || w.circuit_id;
+    if (!destRooms.has(key)) {
+      destRooms.set(key, { name: w.to_room || key, id: w.to_room_id || key });
+    }
+  }
+  const roomList = Array.from(destRooms.values());
+  const roomCount = roomList.length;
+
+  // Layout calculations
+  const dbX = 60, dbY = 80;
+  const dbW = 100, dbH = Math.max(120, wiring.length * 22 + 40);
+  const roomStartX = 320;
+  const roomSpacingY = Math.max(52, dbH / Math.max(roomCount, 1));
+  const roomStartY = dbY + 10;
+  const svgW = 700;
+  const svgH = Math.max(dbY + dbH + 100, roomStartY + roomCount * roomSpacingY + 80);
+
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" style="font-family:Inter,system-ui,sans-serif">`;
+  svg += `<rect width="${svgW}" height="${svgH}" fill="#fafbfc" rx="6"/>`;
+
+  // Title
+  svg += `<text x="${svgW / 2}" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#111827">Wiring Plan — Switchboard to Rooms</text>`;
+  svg += `<text x="${svgW / 2}" y="36" text-anchor="middle" font-size="9" fill="#6b7280">Cable routes from distribution board · IEC 60446 wire colors</text>`;
+
+  // Switchboard / Distribution Board box
+  svg += `<rect x="${dbX}" y="${dbY}" width="${dbW}" height="${dbH}" fill="#fff" stroke="#4f46e5" stroke-width="2" rx="4"/>`;
+  svg += `<rect x="${dbX}" y="${dbY}" width="${dbW}" height="24" fill="#4f46e5" rx="4"/>`;
+  svg += `<rect x="${dbX}" y="${dbY + 12}" width="${dbW}" height="12" fill="#4f46e5"/>`;
+  svg += `<text x="${dbX + dbW / 2}" y="${dbY + 15}" text-anchor="middle" font-size="8" font-weight="700" fill="white">DISTRIBUTION</text>`;
+  svg += `<text x="${dbX + dbW / 2}" y="${dbY + 23}" text-anchor="middle" font-size="7" fill="white">BOARD</text>`;
+
+  // Switchboard location label
+  const dbRoom = switchboard?.room_name || "Hallway";
+  svg += `<text x="${dbX + dbW / 2}" y="${dbY - 6}" text-anchor="middle" font-size="7.5" fill="#6b7280">📍 ${dbRoom}</text>`;
+
+  // Draw DIN rail slots (MCB breakers inside the DB box)
+  const slotStartY = dbY + 32;
+  wiring.forEach((w: any, i: number) => {
+    const sy = slotStartY + i * 20;
+    if (sy + 16 > dbY + dbH - 4) return;
+    // MCB slot
+    svg += `<rect x="${dbX + 6}" y="${sy}" width="30" height="14" fill="#eef2ff" stroke="#c7d2fe" stroke-width="0.8" rx="2"/>`;
+    svg += `<text x="${dbX + 21}" y="${sy + 10}" text-anchor="middle" font-size="5.5" font-weight="600" fill="#4f46e5">${w.circuit_id || `C${i + 1}`}</text>`;
+    // Breaker rating
+    const breaker = circuits.find((c: any) => c.id === w.circuit_id)?.breaker || "16A";
+    svg += `<text x="${dbX + 42}" y="${sy + 10}" font-size="5" fill="#6b7280">${breaker}</text>`;
+  });
+
+  // Draw room boxes and cable lines
+  const roomPositions: { x: number; y: number; name: string }[] = [];
+  roomList.forEach((room, i) => {
+    const rx = roomStartX;
+    const ry = roomStartY + i * roomSpacingY;
+    roomPositions.push({ x: rx, y: ry, name: room.name });
+
+    // Room box
+    const rType = rooms.find((r: any) => r.id === room.id || r.name === room.name)?.type?.toLowerCase().replace(/[\s-]+/g, "_") || "other";
+    const fill = ROOM_COLORS[rType] || "#f1f5f9";
+    svg += `<rect x="${rx}" y="${ry}" width="120" height="36" fill="${fill}" stroke="#94a3b8" stroke-width="1.2" rx="4"/>`;
+    svg += `<text x="${rx + 60}" y="${ry + 15}" text-anchor="middle" font-size="9" font-weight="600" fill="#111827">${room.name}</text>`;
+
+    // Show socket count from wiring entries for this room
+    const roomWires = wiring.filter((w: any) => (w.to_room_id || w.to_room) === room.id || w.to_room === room.name);
+    const socketCount = roomWires.reduce((sum: number, w: any) => {
+      const circuit = circuits.find((c: any) => c.id === w.circuit_id);
+      return sum + (circuit?.sockets?.length || 0);
+    }, 0);
+    if (socketCount > 0) {
+      svg += `<text x="${rx + 60}" y="${ry + 28}" text-anchor="middle" font-size="7" fill="#6b7280">${socketCount} sockets</text>`;
+    }
+  });
+
+  // Draw cable lines from DB to rooms
+  wiring.forEach((w: any, i: number) => {
+    const roomTarget = roomPositions.find((r) => r.name === w.to_room) ||
+      roomPositions.find((r) => r.name === destRooms.get(w.to_room_id || w.to_room)?.name);
+    if (!roomTarget) return;
+
+    const fromX = dbX + dbW;
+    const fromY = slotStartY + i * 20 + 7;
+    const toX = roomTarget.x;
+    const toY = roomTarget.y + 18;
+
+    // Cable size determines thickness
+    const cableSize = getCableSize(w.cable_type || "3×2.5mm²");
+    const thickness = CABLE_THICKNESS[cableSize] || 1.5;
+    const wireColors = w.wire_colors || ["Brown (L)", "Blue (N)", "Green-Yellow (PE)"];
+    const wireCount = wireColors.length;
+
+    // Draw multi-wire bundle: parallel lines offset vertically
+    const bundleSpread = wireCount * 2;
+    const midX = fromX + (toX - fromX) * 0.5 + (i % 2 === 0 ? 10 : -10);
+
+    wireColors.forEach((color: string, wi: number) => {
+      const offset = (wi - (wireCount - 1) / 2) * 2;
+      const svgColor = WIRE_COLORS[color] || WIRE_COLORS[color.split(" ")[0]] || "#374151";
+      const fy = fromY + offset;
+      const ty = toY + offset;
+      svg += `<path d="M${fromX},${fy} C${midX},${fy} ${midX},${ty} ${toX},${ty}" fill="none" stroke="${svgColor}" stroke-width="${thickness * 0.6}" opacity="0.85"/>`;
+    });
+
+    // Cable label on the line
+    const labelX = fromX + (toX - fromX) * 0.5;
+    const labelY = (fromY + toY) / 2 - bundleSpread - 4;
+    svg += `<text x="${labelX}" y="${labelY}" text-anchor="middle" font-size="6" fill="#374151" font-weight="500">${w.cable_type || ""}</text>`;
+
+    // Length label
+    if (w.estimated_length_m) {
+      svg += `<text x="${labelX}" y="${labelY + 8}" text-anchor="middle" font-size="5.5" fill="#9ca3af">~${w.estimated_length_m}m</text>`;
+    }
+  });
+
+  // Total cable length
+  const totalCable = wiring.reduce((sum: number, w: any) => sum + (w.estimated_length_m || 0), 0);
+  if (totalCable > 0) {
+    svg += `<text x="${svgW / 2}" y="${svgH - 50}" text-anchor="middle" font-size="9" font-weight="600" fill="#374151">Total estimated cable: ~${totalCable}m</text>`;
+  }
+
+  // Wire color legend
+  const legendY = svgH - 36;
+  const legendItems = [
+    { color: "#8B4513", label: "Brown (L)" },
+    { color: "#1E90FF", label: "Blue (N)" },
+    { color: "#228B22", label: "GY (PE)" },
+    { color: "#1a1a1a", label: "Black (L2)" },
+    { color: "#808080", label: "Grey (L3)" },
+  ];
+  const legendStartX = svgW / 2 - (legendItems.length * 65) / 2;
+  legendItems.forEach((item, i) => {
+    const lx = legendStartX + i * 65;
+    svg += `<line x1="${lx}" y1="${legendY}" x2="${lx + 16}" y2="${legendY}" stroke="${item.color}" stroke-width="2.5"/>`;
+    svg += `<text x="${lx + 20}" y="${legendY + 3}" font-size="6.5" fill="#6b7280">${item.label}</text>`;
+  });
+
+  svg += `<text x="${svgW / 2}" y="${svgH - 8}" text-anchor="middle" font-size="6.5" fill="#9ca3af">IEC 60446 / HD 308 S2 wire colors · NYM-J cable · Verify lengths on-site</text>`;
+
+  svg += `</svg>`;
+  return svg;
+}

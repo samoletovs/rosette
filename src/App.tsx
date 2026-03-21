@@ -10,7 +10,7 @@ import {
   generateDescription,
   submitFeedback,
 } from "./api";
-import { generateRoomLayouts, generateCircuitDiagram, drawReferencePlan } from "./planGenerator";
+import { generateRoomLayouts, generateCircuitDiagram, generateWiringDiagram, drawReferencePlan } from "./planGenerator";
 
 type Step = "upload" | "analyzing" | "review" | "calculating" | "results";
 
@@ -61,7 +61,8 @@ export default function App() {
   const [langName, setLangName] = useState("Latvian");
   const [svgRoomLayouts, setSvgRoomLayouts] = useState("");
   const [svgCircuitDiagram, setSvgCircuitDiagram] = useState("");
-  const [diagramTab, setDiagramTab] = useState<"rooms" | "circuits" | "plan">("rooms");
+  const [svgWiringDiagram, setSvgWiringDiagram] = useState("");
+  const [diagramTab, setDiagramTab] = useState<"rooms" | "circuits" | "wiring" | "plan">("rooms");
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -175,6 +176,7 @@ export default function App() {
       // Generate professional diagrams
       setSvgRoomLayouts(generateRoomLayouts(rooms, result.placements || []));
       setSvgCircuitDiagram(generateCircuitDiagram(result.circuits || [], result.total_sockets || 0));
+      setSvgWiringDiagram(generateWiringDiagram(result.wiring || [], rooms, result.circuits || []));
 
       const desc = await generateDescription(roomsWithOverrides, result, countryCode, propertyType);
       setDescEn(desc.description_en || "");
@@ -197,7 +199,7 @@ export default function App() {
   const reset = () => {
     setStep("upload"); setFile(null); setPreviewUrl(""); setBase64Url("");
     setRooms([]); setStandards(null); setPlacements(null);
-    setDescEn(""); setDescLocal(""); setSvgRoomLayouts(""); setSvgCircuitDiagram("");
+    setDescEn(""); setDescLocal(""); setSvgRoomLayouts(""); setSvgCircuitDiagram(""); setSvgWiringDiagram("");
     setError(""); setCanvasReady(false); setSocketOverrides({});
   };
 
@@ -323,6 +325,10 @@ export default function App() {
               <div className="stat"><span className="stat-n">{placements.total_circuits || placements.circuits?.length || 0}</span><span className="stat-l">Circuits</span></div>
               <div className="stat-sep" />
               <div className="stat"><span className="stat-n">{rooms.length}</span><span className="stat-l">Rooms</span></div>
+              {placements.total_cable_m > 0 && <>
+                <div className="stat-sep" />
+                <div className="stat"><span className="stat-n">~{placements.total_cable_m}</span><span className="stat-l">Cable (m)</span></div>
+              </>}
             </section>
             {placements.summary && <p className="summary-text">{placements.summary}</p>}
 
@@ -333,6 +339,7 @@ export default function App() {
                 <div className="toggle-group">
                   <button className={`toggle-btn ${diagramTab === "rooms" ? "on" : ""}`} onClick={() => setDiagramTab("rooms")}>Room layouts</button>
                   <button className={`toggle-btn ${diagramTab === "circuits" ? "on" : ""}`} onClick={() => setDiagramTab("circuits")}>Circuit diagram</button>
+                  <button className={`toggle-btn ${diagramTab === "wiring" ? "on" : ""}`} onClick={() => setDiagramTab("wiring")}>Wiring plan</button>
                   <button className={`toggle-btn ${diagramTab === "plan" ? "on" : ""}`} onClick={() => setDiagramTab("plan")}>Floor plan</button>
                 </div>
               </div>
@@ -347,6 +354,12 @@ export default function App() {
                 <>
                   <div className="plan-box svg-box" dangerouslySetInnerHTML={{ __html: svgCircuitDiagram }} />
                   <button className="btn outline" onClick={() => download(svgCircuitDiagram, "rosette-circuit-diagram.svg", "image/svg+xml")}>↓ Download circuit diagram</button>
+                </>
+              )}
+              {diagramTab === "wiring" && (
+                <>
+                  <div className="plan-box svg-box" dangerouslySetInnerHTML={{ __html: svgWiringDiagram }} />
+                  <button className="btn outline" onClick={() => download(svgWiringDiagram, "rosette-wiring-plan.svg", "image/svg+xml")}>↓ Download wiring plan</button>
                 </>
               )}
               {diagramTab === "plan" && (

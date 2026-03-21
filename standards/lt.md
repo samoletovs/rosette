@@ -116,3 +116,36 @@
 - **system**: TN-C-S or TN-S
 - **main_earth**: Minimum 16 mm² copper
 - **equipotential_bonding**: Required in bathrooms
+
+## Wiring
+
+### Wire Colors (per IEC 60446 / HD 308 S2, adopted via LST HD 308 S2)
+- **L (Line)**: Brown
+- **N (Neutral)**: Blue
+- **PE (Protective Earth)**: Green-Yellow
+- **L2 (Line 2, three-phase)**: Black
+- **L3 (Line 3, three-phase)**: Grey
+
+### Cable Types
+- **Primary**: NYM-J (copper, PVC-insulated, per LST EN 50575)
+- **Alternative**: VVGng (commonly used in Lithuanian installations)
+- **Outdoor/damp**: NYM-J in protective conduit or NYY-J direct burial
+
+### Cable Sizing by Circuit
+- **Standard 16A socket circuit**: 3×2.5 mm² NYM-J (3 wires: L, N, PE)
+- **Lighting 10A circuit**: 3×1.5 mm² NYM-J
+- **Oven 32A dedicated**: 3×6 mm² NYM-J
+- **Three-phase hob**: 5×4 mm² NYM-J (5 wires: L1, L2, L3, N, PE)
+- **EV charger 32A three-phase**: 5×6 mm² NYM-J
+
+### Maximum Cable Run Lengths (voltage drop ≤3% per IEC 60364-5-52)
+- **3×2.5 mm² @ 16A**: ~27 m maximum
+- **3×1.5 mm² @ 10A**: ~27 m maximum
+- **3×6 mm² @ 32A**: ~27 m maximum
+- **5×4 mm² @ 32A (three-phase)**: ~36 m maximum
+
+### Distribution Board Placement
+- **Preferred locations**: Hallway near entrance, utility room, or garage
+- **Height**: 1400–1800 mm from finished floor level (center of board)
+- **Access**: Must be easily accessible, dry location, minimum 600 mm clearance in front
+- **Reference**: STR 2.09.02:2005 adapted to IEC 60364-5-52
