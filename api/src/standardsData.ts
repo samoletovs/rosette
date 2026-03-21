@@ -10,6 +10,7 @@ export const STANDARDS_DATA: Record<string, any> = {
     room_rules: {
       kitchen: { minimum_sockets: 6, dedicated_circuits: "Oven (32A), dishwasher, refrigerator", countertop_sockets: "Minimum 4 above worktop (1000–1200 mm)", notes: "One double socket per 1.5m worktop. 600mm min from water source." },
       living_room: { minimum_sockets: 5, per_wall: "At least 1 double socket per wall", tv_wall: "3 sockets recommended", notes: "Consider floor sockets for center-room arrangements." },
+      dining_room: { minimum_sockets: 3, notes: "At least 1 double socket near table area. Consider floor socket for center table." },
       bedroom: { minimum_sockets: 4, bedside: "1 double socket each side of bed (600mm height)", notes: "USB-integrated sockets recommended." },
       bathroom: { minimum_sockets: 1, shaver_socket: "1 in Zone 2 with isolation transformer", notes: "All sockets RCD protected (30mA). IP44 in Zone 2. No sockets in Zones 0/1." },
       hallway: { minimum_sockets: 2, notes: "1 near entrance, 1 per 5m length." },
@@ -36,6 +37,7 @@ export const STANDARDS_DATA: Record<string, any> = {
     room_rules: {
       kitchen: { minimum_sockets: 6, dedicated_circuits: "Oven (32A), dishwasher, refrigerator", countertop_sockets: "Minimum 4 above worktop (1000–1200 mm)", notes: "One double socket per 1.5m worktop. 600mm min from water source." },
       living_room: { minimum_sockets: 5, per_wall: "At least 1 double socket per wall", notes: "For rooms over 20m², add 1 socket per additional 5m²." },
+      dining_room: { minimum_sockets: 3, notes: "At least 1 double socket near table area. Consider floor socket for center table." },
       bedroom: { minimum_sockets: 4, bedside: "1 double socket each side", notes: "USB-integrated sockets recommended." },
       bathroom: { minimum_sockets: 1, shaver_socket: "1 in Zone 2", notes: "All sockets RCD protected (30mA). IP44 in Zone 2." },
       hallway: { minimum_sockets: 2, notes: "1 near entrance, 1 per 5m length." },
@@ -62,6 +64,7 @@ export const STANDARDS_DATA: Record<string, any> = {
     room_rules: {
       kitchen: { minimum_sockets: 6, dedicated_circuits: "Oven (32A), dishwasher, refrigerator", countertop_sockets: "Minimum 4 above worktop (1000–1200 mm)", notes: "One double socket per 1.5m worktop. 600mm min from sink." },
       living_room: { minimum_sockets: 5, per_wall: "At least 1 double socket per wall", notes: "For rooms over 20m², add 1 socket per additional 5m²." },
+      dining_room: { minimum_sockets: 3, notes: "At least 1 double socket near table area." },
       bedroom: { minimum_sockets: 4, bedside: "1 double socket each side", notes: "USB sockets recommended." },
       bathroom: { minimum_sockets: 1, shaver_socket: "1 in Zone 2", notes: "RCD protected (30mA). IP44 in Zone 2." },
       hallway: { minimum_sockets: 2, notes: "1 near entrance, 1 per 5m length." },
