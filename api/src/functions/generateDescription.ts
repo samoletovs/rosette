@@ -114,9 +114,21 @@ NEVER use percentage coordinates or abstract positions.
 
 ## 3. Circuit Schedule
 
-| Circuit | Room(s) | Breaker | Cable | RCD | Sockets | Load Est. |
-|---------|---------|---------|-------|-----|---------|-----------|
-| C1 | Kitchen | 16A MCB Type B | 3×2.5mm² NYM-J | 30mA Type A | S1-S6 | ~3.5kW |
+IMPORTANT: Circuits are grouped by RCD. Each RCD (30mA) protects a maximum of 3–4 circuits. Show the grouping clearly.
+
+### RCD 1 — [Group Label, e.g. "Kitchen & Dining"]
+
+| Circuit | Room(s) | Breaker | Cable | Sockets | Load Est. |
+|---------|---------|---------|-------|---------|-----------|
+| C1 | Kitchen | 16A MCB Type B | 3×2.5mm² NYM-J | S1-S6 | ~3.5kW |
+
+### RCD 2 — [Group Label]
+
+| Circuit | Room(s) | Breaker | Cable | Sockets | Load Est. |
+|---------|---------|---------|-------|---------|-----------|
+| C4 | Bedroom 1 | 16A MCB Type B | 3×2.5mm² NYM-J | S15-S18 | ~2kW |
+
+Repeat for each RCD group. A single fault on one RCD must NOT cut power to the entire property.
 
 ## 4. Wiring Schedule
 
@@ -155,7 +167,7 @@ Include cable quantities (meters of each cable type: 3×2.5mm², 3×1.5mm², 3×
 Explain zones 0, 1, 2 and what's allowed in each.
 
 ### RCD Protection
-All socket circuits protected by 30mA RCD. Explain Type A vs Type AC.
+All socket circuits protected by 30mA RCD (Type A recommended). Each RCD protects a maximum of 3–4 circuits for selectivity — a fault on one group does not affect other groups. Explain Type A vs Type AC.
 
 ### Earthing & Bonding
 Equipotential bonding requirements for bathroom, kitchen.

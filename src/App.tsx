@@ -175,7 +175,7 @@ export default function App() {
 
       // Generate professional diagrams
       setSvgRoomLayouts(generateRoomLayouts(rooms, result.placements || []));
-      setSvgCircuitDiagram(generateCircuitDiagram(result.circuits || [], result.total_sockets || 0));
+      setSvgCircuitDiagram(generateCircuitDiagram(result.circuits || [], result.total_sockets || 0, result.rcd_groups));
       setSvgWiringDiagram(generateWiringDiagram(result.wiring || [], rooms, result.circuits || []));
 
       const desc = await generateDescription(roomsWithOverrides, result, countryCode, propertyType);
