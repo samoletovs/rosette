@@ -9,7 +9,7 @@ import {
   calculateSockets,
   generateDescription,
 } from "./api";
-import { generateSocketSVG, drawAnnotatedPlan } from "./planGenerator";
+import { generateRoomLayouts, generateCircuitDiagram, drawReferencePlan } from "./planGenerator";
 
 type Step = "upload" | "analyzing" | "review" | "calculating" | "results";
 
@@ -58,7 +58,9 @@ export default function App() {
   const [descLocal, setDescLocal] = useState("");
   const [specLang, setSpecLang] = useState<"en" | "local">("en");
   const [langName, setLangName] = useState("Latvian");
-  const [svgContent, setSvgContent] = useState("");
+  const [svgRoomLayouts, setSvgRoomLayouts] = useState("");
+  const [svgCircuitDiagram, setSvgCircuitDiagram] = useState("");
+  const [diagramTab, setDiagramTab] = useState<"rooms" | "circuits" | "plan">("rooms");
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -78,22 +80,22 @@ export default function App() {
       );
   }, []);
 
-  // Draw annotated plan only after canvas is in the DOM (results step)
+  // Draw reference plan (no socket dots) when results tab shows the floor plan
   useEffect(() => {
-    if (step !== "results" || !base64Url || !placements?.placements) return;
+    if (step !== "results" || !base64Url || diagramTab !== "plan") return;
     const timer = setTimeout(() => {
       if (!canvasRef.current) return;
       const img = new Image();
       img.onload = () => {
         if (canvasRef.current) {
-          drawAnnotatedPlan(canvasRef.current, img, placements.placements);
+          drawReferencePlan(canvasRef.current, img);
           setCanvasReady(true);
         }
       };
       img.src = base64Url;
-    }, 100); // small delay so React has rendered the canvas
+    }, 100);
     return () => clearTimeout(timer);
-  }, [step, base64Url, placements]);
+  }, [step, base64Url, diagramTab]);
 
   const handleFile = useCallback((f: File) => {
     setFile(f);
@@ -148,8 +150,12 @@ export default function App() {
       }));
       const result = await calculateSockets(roomsWithOverrides, countryCode, propertyType, standards);
       setPlacements(result);
-      setSvgContent(generateSocketSVG(rooms, result.placements || [], 800, 600));
-      const desc = await generateDescription(rooms, result, countryCode, propertyType);
+
+      // Generate professional diagrams
+      setSvgRoomLayouts(generateRoomLayouts(rooms, result.placements || []));
+      setSvgCircuitDiagram(generateCircuitDiagram(result.circuits || [], result.total_sockets || 0));
+
+      const desc = await generateDescription(roomsWithOverrides, result, countryCode, propertyType);
       setDescEn(desc.description_en || "");
       setDescLocal(desc.description_local || "");
       setLangName(desc.language?.name || "Local");
@@ -170,7 +176,7 @@ export default function App() {
   const reset = () => {
     setStep("upload"); setFile(null); setPreviewUrl(""); setBase64Url("");
     setRooms([]); setStandards(null); setPlacements(null);
-    setDescEn(""); setDescLocal(""); setSvgContent("");
+    setDescEn(""); setDescLocal(""); setSvgRoomLayouts(""); setSvgCircuitDiagram("");
     setError(""); setCanvasReady(false); setSocketOverrides({});
   };
 
@@ -285,18 +291,37 @@ export default function App() {
             </section>
             {placements.summary && <p className="summary-text">{placements.summary}</p>}
 
-            <div className="grid-2">
-              <section className="card">
-                <h3>Annotated Plan</h3>
-                <div className="plan-box"><canvas ref={canvasRef} /></div>
-                <button className="btn outline" disabled={!canvasReady} onClick={() => canvasRef.current && download(canvasRef.current.toDataURL("image/png"), "rosette-plan.png", "image/png")}>↓ Download PNG</button>
-              </section>
-              <section className="card">
-                <h3>Socket Diagram</h3>
-                <div className="plan-box svg-box" dangerouslySetInnerHTML={{ __html: svgContent }} />
-                <button className="btn outline" onClick={() => download(svgContent, "rosette-sockets.svg", "image/svg+xml")}>↓ Download SVG</button>
-              </section>
-            </div>
+            {/* Electrical Diagrams with tabs */}
+            <section className="card">
+              <div className="spec-head">
+                <h3>Electrical Diagrams</h3>
+                <div className="toggle-group">
+                  <button className={`toggle-btn ${diagramTab === "rooms" ? "on" : ""}`} onClick={() => setDiagramTab("rooms")}>Room Layouts</button>
+                  <button className={`toggle-btn ${diagramTab === "circuits" ? "on" : ""}`} onClick={() => setDiagramTab("circuits")}>Circuit Diagram</button>
+                  <button className={`toggle-btn ${diagramTab === "plan" ? "on" : ""}`} onClick={() => setDiagramTab("plan")}>Floor Plan</button>
+                </div>
+              </div>
+
+              {diagramTab === "rooms" && (
+                <>
+                  <div className="plan-box svg-box" dangerouslySetInnerHTML={{ __html: svgRoomLayouts }} />
+                  <button className="btn outline" onClick={() => download(svgRoomLayouts, "rosette-room-layouts.svg", "image/svg+xml")}>↓ Download Room Layouts (SVG)</button>
+                </>
+              )}
+              {diagramTab === "circuits" && (
+                <>
+                  <div className="plan-box svg-box" dangerouslySetInnerHTML={{ __html: svgCircuitDiagram }} />
+                  <button className="btn outline" onClick={() => download(svgCircuitDiagram, "rosette-circuit-diagram.svg", "image/svg+xml")}>↓ Download Circuit Diagram (SVG)</button>
+                </>
+              )}
+              {diagramTab === "plan" && (
+                <>
+                  <div className="plan-box"><canvas ref={canvasRef} /></div>
+                  <p className="muted sm" style={{textAlign:"center", margin:"8px 0"}}>Original floor plan for reference — socket positions are in the specification above</p>
+                  <button className="btn outline" disabled={!canvasReady} onClick={() => canvasRef.current && download(canvasRef.current.toDataURL("image/png"), "rosette-reference-plan.png", "image/png")}>↓ Download Reference Plan (PNG)</button>
+                </>
+              )}
+            </section>
 
             <section className="card">
               <div className="spec-head">
