@@ -60,7 +60,7 @@ export async function generateDescription(
   placements: any,
   countryCode: string,
   propertyType: string
-): Promise<{ description: string }> {
+): Promise<{ description_en: string; description_local: string; language: { name: string; code: string } }> {
   const res = await fetch(`${API_BASE}/generate-description`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

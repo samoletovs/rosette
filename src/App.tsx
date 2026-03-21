@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import Markdown from "react-markdown";
 import {
   uploadFile,
   analyzeFloorPlan,
@@ -18,75 +19,50 @@ const PROPERTY_TYPES = [
   { value: "commercial", label: "Commercial" },
 ];
 
-// Maps AI-detected room types to standard keys
 const ROOM_TYPE_MAP: Record<string, string> = {
-  kitchen: "kitchen",
-  living_room: "living_room",
-  living_area: "living_room",
-  lounge: "living_room",
-  sitting_room: "living_room",
-  dining_room: "dining_room",
-  dining_area: "dining_room",
-  dining: "dining_room",
-  bedroom: "bedroom",
-  bedroom_1: "bedroom",
-  bedroom_2: "bedroom",
-  bedroom_3: "bedroom",
-  master_bedroom: "bedroom",
-  bathroom: "bathroom",
-  bath: "bathroom",
-  shower_room: "bathroom",
-  hallway: "hallway",
-  corridor: "hallway",
-  entrance: "hallway",
-  foyer: "hallway",
-  hall: "hallway",
-  home_office: "home_office",
-  study: "home_office",
-  office: "home_office",
-  wc: "wc",
-  toilet: "wc",
-  "c.r.": "wc",
-  cr: "wc",
-  comfort_room: "wc",
-  restroom: "wc",
-  utility_room: "utility_room",
-  laundry: "utility_room",
-  storage: "utility_room",
-  pantry: "utility_room",
-  garage: "garage",
-  carport: "garage",
-  balcony: "balcony",
-  terrace: "balcony",
-  patio: "balcony",
-  porch: "balcony",
-  veranda: "balcony",
-  loggia: "balcony",
+  kitchen: "kitchen", living_room: "living_room", living_area: "living_room",
+  lounge: "living_room", sitting_room: "living_room", dining_room: "dining_room",
+  dining_area: "dining_room", dining: "dining_room", bedroom: "bedroom",
+  bedroom_1: "bedroom", bedroom_2: "bedroom", bedroom_3: "bedroom",
+  master_bedroom: "bedroom", bathroom: "bathroom", bath: "bathroom",
+  shower_room: "bathroom", hallway: "hallway", corridor: "hallway",
+  entrance: "hallway", foyer: "hallway", hall: "hallway",
+  home_office: "home_office", study: "home_office", office: "home_office",
+  wc: "wc", toilet: "wc", "c.r.": "wc", cr: "wc", comfort_room: "wc",
+  restroom: "wc", utility_room: "utility_room", laundry: "utility_room",
+  storage: "utility_room", pantry: "utility_room", garage: "garage",
+  carport: "garage", balcony: "balcony", terrace: "balcony", patio: "balcony",
+  porch: "balcony", veranda: "balcony", loggia: "balcony",
 };
 
 function mapRoomType(type: string): string {
-  const normalized = type.toLowerCase().replace(/[\s-]+/g, "_").replace(/[^a-z0-9_]/g, "");
-  return ROOM_TYPE_MAP[normalized] || ROOM_TYPE_MAP[type.toLowerCase()] || normalized;
+  const n = type.toLowerCase().replace(/[\s-]+/g, "_").replace(/[^a-z0-9_]/g, "");
+  return ROOM_TYPE_MAP[n] || ROOM_TYPE_MAP[type.toLowerCase()] || n;
 }
+
+const FLAG: Record<string, string> = { LV: "\u{1F1F1}\u{1F1FB}", LT: "\u{1F1F1}\u{1F1F9}", EE: "\u{1F1EA}\u{1F1EA}" };
 
 export default function App() {
   const [step, setStep] = useState<Step>("upload");
   const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>("");
-  const [uploadedUrl, setUploadedUrl] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [base64Url, setBase64Url] = useState("");
   const [countryCode, setCountryCode] = useState("LV");
   const [propertyType, setPropertyType] = useState("apartment");
   const [countries, setCountries] = useState<{ code: string; country: string }[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const [standards, setStandards] = useState<any>(null);
   const [placements, setPlacements] = useState<any>(null);
-  const [description, setDescription] = useState("");
+  const [descEn, setDescEn] = useState("");
+  const [descLocal, setDescLocal] = useState("");
+  const [specLang, setSpecLang] = useState<"en" | "local">("en");
+  const [langName, setLangName] = useState("Latvian");
   const [svgContent, setSvgContent] = useState("");
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imageRef = useRef<HTMLImageElement | null>(null);
+  const [canvasReady, setCanvasReady] = useState(false);
 
   useEffect(() => {
     getCountries()
@@ -100,46 +76,48 @@ export default function App() {
       );
   }, []);
 
+  // Draw annotated plan only after canvas is in the DOM (results step)
+  useEffect(() => {
+    if (step !== "results" || !base64Url || !placements?.placements) return;
+    const timer = setTimeout(() => {
+      if (!canvasRef.current) return;
+      const img = new Image();
+      img.onload = () => {
+        if (canvasRef.current) {
+          drawAnnotatedPlan(canvasRef.current, img, placements.placements);
+          setCanvasReady(true);
+        }
+      };
+      img.src = base64Url;
+    }, 100); // small delay so React has rendered the canvas
+    return () => clearTimeout(timer);
+  }, [step, base64Url, placements]);
+
   const handleFile = useCallback((f: File) => {
     setFile(f);
     setPreviewUrl(URL.createObjectURL(f));
     setError("");
+    const reader = new FileReader();
+    reader.onload = () => setBase64Url(reader.result as string);
+    reader.readAsDataURL(f);
   }, []);
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setDragging(false);
-      const f = e.dataTransfer.files[0];
-      if (f) handleFile(f);
-    },
-    [handleFile]
-  );
-
-  const fileToBase64 = (f: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(f);
-    });
-  };
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  }, [handleFile]);
 
   const startAnalysis = async () => {
-    if (!file) return;
+    if (!file || !base64Url) return;
     setStep("analyzing");
     setError("");
     try {
-      // Convert to base64 data URL for AI analysis (avoids blob storage access issues)
-      const base64Url = await fileToBase64(file);
-
-      // Upload to storage in parallel (for record keeping)
       const [analysis, std] = await Promise.all([
         analyzeFloorPlan(base64Url, propertyType),
         getStandards(countryCode),
-        uploadFile(file).then(u => setUploadedUrl(u.url)).catch(() => {}),
+        uploadFile(file).catch(() => {}),
       ]);
-
       setRooms(analysis.rooms || []);
       setStandards(std);
       setStep("review");
@@ -155,27 +133,11 @@ export default function App() {
     try {
       const result = await calculateSockets(rooms, countryCode, propertyType, standards);
       setPlacements(result);
-
-      const svg = generateSocketSVG(rooms, result.placements || [], 800, 600);
-      setSvgContent(svg);
-
-      // Draw annotated image
-      if (previewUrl && canvasRef.current) {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          imageRef.current = img;
-          if (canvasRef.current) {
-            drawAnnotatedPlan(canvasRef.current, img, result.placements || []);
-          }
-        };
-        img.src = previewUrl;
-      }
-
-      // Generate description
+      setSvgContent(generateSocketSVG(rooms, result.placements || [], 800, 600));
       const desc = await generateDescription(rooms, result, countryCode, propertyType);
-      setDescription(desc.description || "");
-
+      setDescEn(desc.description_en || "");
+      setDescLocal(desc.description_local || "");
+      setLangName(desc.language?.name || "Local");
       setStep("results");
     } catch (err: any) {
       setError(err.message || "Calculation failed");
@@ -183,254 +145,158 @@ export default function App() {
     }
   };
 
-  const downloadCanvas = () => {
-    if (!canvasRef.current) return;
-    const link = document.createElement("a");
-    link.download = "rosette-annotated-plan.png";
-    link.href = canvasRef.current.toDataURL("image/png");
-    link.click();
-  };
-
-  const downloadSVG = () => {
-    const blob = new Blob([svgContent], { type: "image/svg+xml" });
-    const link = document.createElement("a");
-    link.download = "rosette-socket-plan.svg";
-    link.href = URL.createObjectURL(blob);
-    link.click();
-  };
-
-  const downloadSpec = () => {
-    const blob = new Blob([description], { type: "text/markdown" });
-    const link = document.createElement("a");
-    link.download = "rosette-specification.md";
-    link.href = URL.createObjectURL(blob);
-    link.click();
+  const download = (data: string, name: string, mime: string) => {
+    const a = document.createElement("a");
+    a.download = name;
+    a.href = data.startsWith("data:") ? data : URL.createObjectURL(new Blob([data], { type: mime }));
+    a.click();
   };
 
   const reset = () => {
-    setStep("upload");
-    setFile(null);
-    setPreviewUrl("");
-    setUploadedUrl("");
-    setRooms([]);
-    setStandards(null);
-    setPlacements(null);
-    setDescription("");
-    setSvgContent("");
-    setError("");
+    setStep("upload"); setFile(null); setPreviewUrl(""); setBase64Url("");
+    setRooms([]); setStandards(null); setPlacements(null);
+    setDescEn(""); setDescLocal(""); setSvgContent("");
+    setError(""); setCanvasReady(false);
   };
 
-  const steps: { key: Step; label: string }[] = [
-    { key: "upload", label: "1. Upload" },
-    { key: "analyzing", label: "2. Analyze" },
-    { key: "review", label: "3. Review" },
-    { key: "calculating", label: "4. Calculate" },
-    { key: "results", label: "5. Results" },
+  const stepsData: { key: Step; label: string }[] = [
+    { key: "upload", label: "Upload" },
+    { key: "analyzing", label: "Analyze" },
+    { key: "review", label: "Review" },
+    { key: "calculating", label: "Calculate" },
+    { key: "results", label: "Results" },
   ];
-
-  const stepOrder: Step[] = ["upload", "analyzing", "review", "calculating", "results"];
-  const currentIdx = stepOrder.indexOf(step);
+  const stepIdx = ["upload", "analyzing", "review", "calculating", "results"].indexOf(step);
 
   return (
     <div className="app">
       <header>
-        <h1>⚡ Rosette</h1>
-        <p>Electric Socket Planner — Baltic Construction Standards</p>
+        <div className="brand"><span className="brand-icon">⚡</span><h1>Rosette</h1></div>
+        <p className="tagline">Electric Socket Planner — Baltic Standards</p>
       </header>
 
-      <div className="step-indicator">
-        {steps.map((s, i) => (
-          <div
-            key={s.key}
-            className={`step ${i === currentIdx ? "active" : i < currentIdx ? "completed" : ""}`}
-          >
-            {s.label}
+      <nav className="stepper">
+        {stepsData.map((s, i) => (
+          <div key={s.key} className={`s-item ${i === stepIdx ? "current" : i < stepIdx ? "done" : ""}`}>
+            <div className="s-dot">{i < stepIdx ? "✓" : i + 1}</div>
+            <span className="s-label">{s.label}</span>
           </div>
         ))}
-      </div>
+        <div className="s-track"><div className="s-fill" style={{ width: `${(stepIdx / 4) * 100}%` }} /></div>
+      </nav>
 
-      {error && <div className="error-message">{error}</div>}
+      {error && <div className="alert">{error}<button onClick={() => setError("")}>×</button></div>}
 
-      {/* STEP 1: Upload */}
-      {step === "upload" && (
-        <div className="card">
-          <h2>Upload Floor Plan</h2>
-          <div className="config-row" style={{ marginTop: 16 }}>
-            <label>
-              <span>Country</span>
-              <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)}>
-                {(countries.length > 0
-                  ? countries
-                  : [
-                      { code: "LV", country: "Latvia" },
-                      { code: "LT", country: "Lithuania" },
-                      { code: "EE", country: "Estonia" },
-                    ]
-                ).map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.country}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Property Type</span>
-              <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)}>
-                {PROPERTY_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+      <main>
+        {step === "upload" && (
+          <section className="card fade-in">
+            <h2>Upload Floor Plan</h2>
+            <p className="muted">Select country, property type, and upload your plan</p>
+            <div className="form-row">
+              <label className="form-field">
+                <span>Country</span>
+                <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)}>
+                  {(countries.length > 0 ? countries : [{ code: "LV", country: "Latvia" }, { code: "LT", country: "Lithuania" }, { code: "EE", country: "Estonia" }]).map((c) => (
+                    <option key={c.code} value={c.code}>{c.country}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="form-field">
+                <span>Property Type</span>
+                <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)}>
+                  {PROPERTY_TYPES.map((t) => (<option key={t.value} value={t.value}>{t.label}</option>))}
+                </select>
+              </label>
+            </div>
+            <div className={`drop ${dragging ? "over" : ""} ${file ? "filled" : ""}`}
+              onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+              onDragLeave={() => setDragging(false)} onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}>
+              <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,application/pdf"
+                onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+              {previewUrl
+                ? <><img src={previewUrl} alt="Preview" /><span className="pill">{file?.name}</span></>
+                : <><div className="drop-icon">📐</div><p><b>Drop floor plan here</b></p><p className="muted sm">PNG, JPEG, WebP or PDF — max 10 MB</p></>}
+            </div>
+            <button className="btn primary full" disabled={!file} onClick={startAnalysis}>Analyze Floor Plan →</button>
+          </section>
+        )}
 
-          <div
-            className={`upload-zone ${dragging ? "dragging" : ""}`}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragging(true);
-            }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp,application/pdf"
-              onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-            />
-            {previewUrl ? (
-              <>
-                <img src={previewUrl} alt="Floor plan preview" className="preview-image" />
-                <p>{file?.name}</p>
-              </>
-            ) : (
-              <>
-                <h3>📋 Drop your floor plan here</h3>
-                <p>or click to browse — PNG, JPEG, WebP, or PDF (max 10MB)</p>
-              </>
-            )}
-          </div>
+        {(step === "analyzing" || step === "calculating") && (
+          <section className="card fade-in center-content">
+            <div className="pulse-ring" /><div className="pulse-icon">⚡</div>
+            <h3>{step === "analyzing" ? "Analyzing Floor Plan" : "Calculating Placements"}</h3>
+            <p className="muted">{step === "analyzing" ? "AI is identifying rooms…" : `Applying ${countryCode} standards…`}</p>
+          </section>
+        )}
 
-          <button
-            className="primary"
-            style={{ marginTop: 16 }}
-            disabled={!file}
-            onClick={startAnalysis}
-          >
-            Analyze Floor Plan
-          </button>
-        </div>
-      )}
+        {step === "review" && (
+          <section className="card fade-in">
+            <h2>Review Detected Rooms</h2>
+            <p className="muted">{rooms.length} rooms detected</p>
+            <div className="room-list">
+              {rooms.map((r: any) => {
+                const min = standards?.room_rules?.[mapRoomType(r.type)]?.minimum_sockets;
+                return (
+                  <div key={r.id} className="room-row">
+                    <div><strong>{r.name || r.type}</strong><span className="muted sm"> {r.area_m2} m² · {r.width_m}×{r.height_m}m</span></div>
+                    <span className="chip">{min != null ? `${min} sockets` : "custom"}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="btn-row">
+              <button className="btn ghost" onClick={reset}>← Back</button>
+              <button className="btn primary" onClick={startCalculation}>Calculate Placements →</button>
+            </div>
+          </section>
+        )}
 
-      {/* STEP 2: Analyzing */}
-      {step === "analyzing" && (
-        <div className="card">
-          <div className="loading">
-            <div className="spinner" />
-            <p>Analyzing floor plan with AI...</p>
-            <p style={{ fontSize: "0.85rem", color: "var(--text-light)" }}>
-              Identifying rooms, dimensions, and features
-            </p>
-          </div>
-        </div>
-      )}
+        {step === "results" && placements && (
+          <div className="results fade-in">
+            <section className="card stats-bar">
+              <div className="stat"><span className="stat-n">{placements.total_sockets || placements.placements?.length || 0}</span><span className="stat-l">Sockets</span></div>
+              <div className="stat-sep" />
+              <div className="stat"><span className="stat-n">{placements.total_circuits || placements.circuits?.length || 0}</span><span className="stat-l">Circuits</span></div>
+              <div className="stat-sep" />
+              <div className="stat"><span className="stat-n">{rooms.length}</span><span className="stat-l">Rooms</span></div>
+            </section>
+            {placements.summary && <p className="summary-text">{placements.summary}</p>}
 
-      {/* STEP 3: Review */}
-      {step === "review" && (
-        <div className="card">
-          <h2>Review Detected Rooms</h2>
-          <p style={{ color: "var(--text-light)", marginBottom: 16 }}>
-            {rooms.length} rooms detected. Verify and adjust if needed.
-          </p>
-          <ul className="room-list">
-            {rooms.map((room: any) => (
-              <li key={room.id} className="room-item">
-                <div>
-                  <span className="room-type">{room.name || room.type}</span>
-                  <span style={{ color: "var(--text-light)", marginLeft: 8, fontSize: "0.85rem" }}>
-                    {room.area_m2} m² ({room.width_m}×{room.height_m}m)
-                  </span>
+            <div className="grid-2">
+              <section className="card">
+                <h3>Annotated Plan</h3>
+                <div className="plan-box"><canvas ref={canvasRef} /></div>
+                <button className="btn outline" disabled={!canvasReady} onClick={() => canvasRef.current && download(canvasRef.current.toDataURL("image/png"), "rosette-plan.png", "image/png")}>↓ Download PNG</button>
+              </section>
+              <section className="card">
+                <h3>Socket Diagram</h3>
+                <div className="plan-box svg-box" dangerouslySetInnerHTML={{ __html: svgContent }} />
+                <button className="btn outline" onClick={() => download(svgContent, "rosette-sockets.svg", "image/svg+xml")}>↓ Download SVG</button>
+              </section>
+            </div>
+
+            <section className="card">
+              <div className="spec-head">
+                <h3>Installation Specification</h3>
+                <div className="toggle-group">
+                  <button className={`toggle-btn ${specLang === "en" ? "on" : ""}`} onClick={() => setSpecLang("en")}>🇬🇧 English</button>
+                  <button className={`toggle-btn ${specLang === "local" ? "on" : ""}`} onClick={() => setSpecLang("local")}>{FLAG[countryCode] || "🌍"} {langName}</button>
                 </div>
-                <span className="room-sockets">
-                  Min: {standards?.room_rules?.[mapRoomType(room.type)]?.minimum_sockets || "?"} sockets
-                </span>
-              </li>
-            ))}
-          </ul>
-          <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
-            <button onClick={reset}>← Start Over</button>
-            <button className="primary" onClick={startCalculation}>
-              Calculate Socket Placements →
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 4: Calculating */}
-      {step === "calculating" && (
-        <div className="card">
-          <div className="loading">
-            <div className="spinner" />
-            <p>Calculating socket placements...</p>
-            <p style={{ fontSize: "0.85rem", color: "var(--text-light)" }}>
-              Applying {countryCode} construction standards
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 5: Results */}
-      {step === "results" && placements && (
-        <>
-          <div className="card">
-            <h2>Results</h2>
-            <p style={{ color: "var(--text-light)" }}>
-              {placements.total_sockets || placements.placements?.length || 0} sockets across{" "}
-              {placements.total_circuits || placements.circuits?.length || 0} circuits
-            </p>
-            {placements.summary && (
-              <p style={{ marginTop: 8 }}>{placements.summary}</p>
-            )}
-          </div>
-
-          <div className="results-grid">
-            <div className="card">
-              <h3>Annotated Floor Plan</h3>
-              <div className="plan-canvas-container">
-                <canvas ref={canvasRef} />
               </div>
-              <div className="download-buttons">
-                <button onClick={downloadCanvas}>📥 Download Annotated Plan (PNG)</button>
-              </div>
-            </div>
+              <div className="spec-body"><Markdown>{specLang === "en" ? descEn : descLocal}</Markdown></div>
+              <button className="btn outline" onClick={() => {
+                const c = specLang === "en" ? descEn : descLocal;
+                download(c, `rosette-spec-${specLang === "en" ? "en" : countryCode.toLowerCase()}.md`, "text/markdown");
+              }}>↓ Download .md</button>
+            </section>
 
-            <div className="card">
-              <h3>Socket Layout Diagram</h3>
-              <div className="svg-output" dangerouslySetInnerHTML={{ __html: svgContent }} />
-              <div className="download-buttons">
-                <button onClick={downloadSVG}>📥 Download SVG Diagram</button>
-              </div>
-            </div>
+            <div className="center-row"><button className="btn primary full" onClick={reset}>Plan Another Property</button></div>
           </div>
+        )}
+      </main>
 
-          <div className="card">
-            <h3>Installation Specification</h3>
-            <div className="description-content">{description}</div>
-            <div className="download-buttons">
-              <button onClick={downloadSpec}>📥 Download Specification (Markdown)</button>
-            </div>
-          </div>
-
-          <div className="card" style={{ textAlign: "center" }}>
-            <button className="primary" onClick={reset}>
-              ← Plan Another Property
-            </button>
-          </div>
-        </>
-      )}
+      <footer><p>Rosette © 2026 · Baltic electrical standards (LBN · STR · EVS)</p></footer>
     </div>
   );
 }
