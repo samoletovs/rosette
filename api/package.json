@@ -1,0 +1,26 @@
+{
+  "name": "rosette-api",
+  "version": "1.0.0",
+  "description": "Rosette API - Electric socket planning backend",
+  "main": "dist/functions/*.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "start": "func start",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [],
+  "author": "samoletovs",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@azure/functions": "^4.11.2",
+    "@azure/openai": "^2.0.0",
+    "@azure/storage-blob": "^12.31.0",
+    "dotenv": "^17.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3"
+  }
+}
