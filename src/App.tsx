@@ -67,6 +67,13 @@ export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasReady, setCanvasReady] = useState(false);
   const [socketOverrides, setSocketOverrides] = useState<Record<string, number>>({});
+  const [theme, setTheme] = useState(() => localStorage.getItem("rosette-theme") || "violet");
+
+  // Apply theme to document
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("rosette-theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     getCountries()
@@ -194,6 +201,13 @@ export default function App() {
       <header>
         <div className="brand"><span className="brand-icon">⚡</span><h1>Rosette</h1></div>
         <p className="tagline">Electric Socket Planner — Baltic Standards</p>
+        <div className="theme-bar">
+          <span className="theme-bar-label">Theme</span>
+          {["violet", "ocean", "emerald", "rose", "midnight"].map((t) => (
+            <div key={t} className={`theme-dot ${theme === t ? "active" : ""}`} data-t={t}
+              onClick={() => setTheme(t)} title={t.charAt(0).toUpperCase() + t.slice(1)} />
+          ))}
+        </div>
       </header>
 
       <nav className="stepper">
