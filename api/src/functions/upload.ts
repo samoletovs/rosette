@@ -36,6 +36,17 @@ app.http("upload", {
       const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
       const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+
+      // Validate file magic bytes
+      const isPng = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47;
+      const isJpeg = bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
+      const isPdf = bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46;
+      const isWebp = bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && bytes[8] === 0x57 && bytes[9] === 0x45;
+      if (!isPng && !isJpeg && !isPdf && !isWebp) {
+        return { status: 400, jsonBody: { error: "Invalid file content. Only PNG, JPEG, WebP, and PDF are accepted." } };
+      }
+
       await blockBlobClient.upload(arrayBuffer, arrayBuffer.byteLength, {
         blobHTTPHeaders: { blobContentType: file.type },
       });
