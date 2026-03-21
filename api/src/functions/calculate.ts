@@ -49,8 +49,9 @@ Respond in JSON:
           },
           { role: "user", content: `Plan sockets and wiring for ${body.propertyType || "residential"} property:\n${JSON.stringify(body.rooms, null, 2)}` },
         ],
-        max_tokens: 4000,
+        max_tokens: 8000,
         temperature: 0.2,
+        response_format: { type: "json_object" },
       });
 
       const content = response.choices[0]?.message?.content || "";
