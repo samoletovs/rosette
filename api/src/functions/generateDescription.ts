@@ -54,8 +54,10 @@ app.http("generate-description", {
           wall: p.wall, height_mm: p.height_mm, type: p.type, circuit: p.circuit, notes: p.notes,
         })),
         circuits: body.placements.circuits || [],
+        wiring: body.placements.wiring || [],
         total_sockets: body.placements.total_sockets,
         total_circuits: body.placements.total_circuits,
+        total_cable_m: body.placements.total_cable_m,
       };
 
       const specPrompt = `You are a certified master electrician creating a professional electrical installation specification document. This document will be used by both licensed electricians AND homeowners.
@@ -116,17 +118,38 @@ NEVER use percentage coordinates or abstract positions.
 |---------|---------|---------|-------|-----|---------|-----------|
 | C1 | Kitchen | 16A MCB Type B | 3×2.5mm² NYM-J | 30mA Type A | S1-S6 | ~3.5kW |
 
-## 4. Distribution Board Layout
+## 4. Wiring Schedule
+
+For EACH circuit, show the cable route from the distribution board to the destination room(s).
+
+| Circuit | From | To | Cable | Wires | Est. Length | Max Length | Via | Notes |
+|---------|------|----|-------|-------|-------------|-----------|-----|-------|
+| C1 | DB | Kitchen | NYM-J 3×2.5mm² | Brown(L), Blue(N), Green-Yellow(PE) | 12m | 27m | Hallway | Standard socket circuit |
+
+### Wire Color Legend (per IEC 60446 / ${info.standards})
+- **Brown** — Line (L) / Phase
+- **Blue** — Neutral (N)
+- **Green-Yellow** — Protective Earth (PE)
+- **Black** — Line 2 (L2) — three-phase circuits only
+- **Grey** — Line 3 (L3) — three-phase circuits only
+
+Cable type: NYM-J (copper, PVC-insulated). Voltage drop must not exceed 3% per IEC 60364-5-52.
+
+> **Note:** Cable lengths are estimates based on room positions. Verify all cable runs on-site before purchasing materials.
+
+## 5. Distribution Board Layout
 List the recommended order of circuits in the consumer unit/distribution board.
 
-## 5. Material List
+## 6. Material List
 
 | Item | Specification | Quantity |
 |------|--------------|----------|
 | Socket outlets | ${info.socketType} | X |
 | MCB 16A Type B | Per ${info.standards} | X |
 
-## 6. Safety & Compliance
+Include cable quantities (meters of each cable type: 3×2.5mm², 3×1.5mm², 3×6mm², etc.)
+
+## 7. Safety & Compliance
 
 ### Bathroom Zones (per IEC 60364-7-701)
 Explain zones 0, 1, 2 and what's allowed in each.
@@ -142,7 +165,7 @@ Equipotential bonding requirements for bathroom, kitchen.
 - IEC 60364-7-701 (Bathroom installations)
 - IEC 60364-5-52 (Wiring systems)
 
-## 7. User Guide (for Homeowners)
+## 8. User Guide (for Homeowners)
 Write 5-8 practical tips in simple language:
 - How to identify which circuit a socket belongs to
 - When to call an electrician vs DIY

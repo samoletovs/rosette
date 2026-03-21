@@ -36,9 +36,15 @@ app.http("analyze", {
 4. Position on the plan (as percentage coordinates: x%, y% from top-left)
 5. Notable features (windows, doors, water sources)
 
+Also propose the best location for the distribution board (switchboard/consumer unit). Rules:
+- Prefer hallway near the main entrance, utility room, or garage
+- Must be in a dry, accessible location
+- Height: 1400-1800mm from finished floor level per IEC 60364
+- Consider shortest cable runs to all rooms
+
 Property type: ${body.propertyType || "residential"}
 
-Respond in JSON: { "rooms": [{ "id": "room_1", "type": "kitchen", "name": "Kitchen", "width_m": 3.5, "height_m": 4.0, "area_m2": 14.0, "position": { "x_pct": 10, "y_pct": 20, "w_pct": 25, "h_pct": 30 }, "features": ["window_south", "sink", "door_to_hallway"] }], "total_area_m2": 75, "property_type": "apartment" }`,
+Respond in JSON: { "rooms": [{ "id": "room_1", "type": "kitchen", "name": "Kitchen", "width_m": 3.5, "height_m": 4.0, "area_m2": 14.0, "position": { "x_pct": 10, "y_pct": 20, "w_pct": 25, "h_pct": 30 }, "features": ["window_south", "sink", "door_to_hallway"] }], "switchboard": { "room_id": "room_3", "room_name": "Hallway", "wall": "north", "height_mm": 1600, "reason": "Near main entrance, central location for shortest cable runs" }, "total_area_m2": 75, "property_type": "apartment" }`,
           },
           {
             role: "user",
