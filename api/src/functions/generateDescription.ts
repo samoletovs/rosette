@@ -195,7 +195,7 @@ Write 5-8 practical tips in simple language:
           { role: "system", content: `${specPrompt}\n\nWrite in English.` },
           { role: "user", content: `Generate the specification.\n\nRooms:\n${JSON.stringify(roomsClean, null, 2)}\n\nPlacements:\n${JSON.stringify(placementsClean, null, 2)}` },
         ],
-        max_tokens: 4096,
+        max_tokens: 10000,
         temperature: 0.15,
       });
 
@@ -226,7 +226,7 @@ CRITICAL RULES:
             content: `Translate this specification to ${info.lang}. Keep every detail:\n\n${englishSpec}`,
           },
         ],
-        max_tokens: 4096,
+        max_tokens: 10000,
         temperature: 0.1,
       });
 
