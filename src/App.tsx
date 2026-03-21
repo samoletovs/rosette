@@ -65,17 +65,28 @@ export default function App() {
     [handleFile]
   );
 
+  const fileToBase64 = (f: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(f);
+    });
+  };
+
   const startAnalysis = async () => {
     if (!file) return;
     setStep("analyzing");
     setError("");
     try {
-      const upload = await uploadFile(file);
-      setUploadedUrl(upload.url);
+      // Convert to base64 data URL for AI analysis (avoids blob storage access issues)
+      const base64Url = await fileToBase64(file);
 
+      // Upload to storage in parallel (for record keeping)
       const [analysis, std] = await Promise.all([
-        analyzeFloorPlan(upload.url, propertyType),
+        analyzeFloorPlan(base64Url, propertyType),
         getStandards(countryCode),
+        uploadFile(file).then(u => setUploadedUrl(u.url)).catch(() => {}),
       ]);
 
       setRooms(analysis.rooms || []);
