@@ -79,3 +79,50 @@ export async function generateDescription(
   if (!res.ok) throw new Error(await safeJsonError(res, "Description generation failed"));
   return res.json();
 }
+
+// ── Feedback API ──
+
+export interface FeedbackItem {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  page?: string;
+  status: string;
+  createdAt: string;
+}
+
+export async function submitFeedback(data: {
+  type: string;
+  title: string;
+  description: string;
+  page?: string;
+}): Promise<{ id: string; message: string }> {
+  const res = await fetch(`${API_BASE}/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    signal: withTimeout(15000),
+  });
+  if (!res.ok) throw new Error(await safeJsonError(res, "Failed to submit feedback"));
+  return res.json();
+}
+
+export async function listFeedback(status: string = "open"): Promise<{ items: FeedbackItem[]; count: number }> {
+  const res = await fetch(`${API_BASE}/feedback/list?status=${encodeURIComponent(status)}`, {
+    signal: withTimeout(15000),
+  });
+  if (!res.ok) throw new Error(await safeJsonError(res, "Failed to load feedback"));
+  return res.json();
+}
+
+export async function updateFeedbackStatus(id: string, status: string): Promise<{ message: string }> {
+  const res = await fetch(`${API_BASE}/feedback/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+    signal: withTimeout(15000),
+  });
+  if (!res.ok) throw new Error(await safeJsonError(res, "Failed to update feedback"));
+  return res.json();
+}

@@ -173,6 +173,31 @@ footer p{color:#B8B8B8;font-size:.66rem;font-weight:400;margin-top:2px}
 /* Theme dots — hidden since single theme now */
 .theme-bar{display:none}
 
+/* ── Feedback button ── */
+.feedback-btn{margin-bottom:4px;font-size:.76rem;color:#A0A0A0}
+.feedback-btn:hover{color:var(--tx)}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:100;display:grid;place-items:center;
+  backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.modal{background:#fff;border-radius:var(--r);width:min(440px,calc(100% - 32px));
+  box-shadow:0 16px 48px rgba(0,0,0,.12);overflow:hidden}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px 0}
+.modal-head h3{font-size:.95rem;font-weight:600;color:var(--tx)}
+.modal-close{background:none;border:none;font-size:1.2rem;color:var(--tx2);cursor:pointer;padding:4px;line-height:1}
+.modal-close:hover{color:var(--tx)}
+.modal-body{padding:14px 20px;display:flex;flex-direction:column;gap:12px}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px 18px}
+
+/* Feedback inputs */
+.fb-input{width:100%;padding:9px 12px;border:1px solid var(--bd);border-radius:var(--r2);font-size:.84rem;
+  font-family:var(--font);color:var(--tx);background:#fff;transition:.15s}
+.fb-input:focus{outline:none;border-color:var(--a);box-shadow:0 0 0 3px rgba(10,132,255,.08)}
+.fb-textarea{width:100%;padding:9px 12px;border:1px solid var(--bd);border-radius:var(--r2);font-size:.84rem;
+  font-family:var(--font);color:var(--tx);background:#fff;resize:vertical;min-height:80px;transition:.15s}
+.fb-textarea:focus{outline:none;border-color:var(--a);box-shadow:0 0 0 3px rgba(10,132,255,.08)}
+.fb-error{color:var(--err);font-size:.76rem;margin:0}
+
 /* ── Animations ── */
 .fade-in{animation:up .3s ease both}
 @keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}

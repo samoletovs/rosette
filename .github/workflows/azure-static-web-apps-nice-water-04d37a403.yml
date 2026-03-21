@@ -34,6 +34,13 @@ jobs:
           api_build_command: "npm install && npm run build"
           ###### End of Repository/Build Configurations ######
 
+      - name: Telegram Notification
+        if: success()
+        run: |
+          curl -s -X POST "${{ secrets.TELEGRAM_NOTIFY_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"message\": \"✅ Rosette deployed to Azure Static Web Apps.\nBranch: ${{ github.ref_name }}\nCommit: ${{ github.event.head_commit.message }}\nSHA: ${{ github.sha }}\"}"
+
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
