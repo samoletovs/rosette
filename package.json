@@ -1,0 +1,35 @@
+{
+  "name": "rosette",
+  "version": "1.0.0",
+  "description": "Electric Socket Planner - Baltic Construction Standards",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "echo \"tests pending\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://samoletovs@github.com/samoletovs/rosette.git"
+  },
+  "keywords": [],
+  "author": "samoletovs",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/samoletovs/rosette/issues"
+  },
+  "homepage": "https://github.com/samoletovs/rosette#readme",
+  "dependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.1"
+  }
+}
