@@ -129,11 +129,17 @@ export default function App() {
         getStandards(countryCode),
         uploadFile(file).catch(() => {}),
       ]);
-      setRooms(analysis.rooms || []);
+      const analysisRooms = analysis.rooms || [];
+      if (analysisRooms.length === 0) {
+        setError("No rooms detected in the floor plan. Please upload a clearer image with visible room labels.");
+        setStep("upload");
+        return;
+      }
+      setRooms(analysisRooms);
       setStandards(std);
       // Initialize socket overrides from standards
       const overrides: Record<string, number> = {};
-      for (const room of (analysis.rooms || [])) {
+      for (const room of analysisRooms) {
         const stdKey = mapRoomType(room.type);
         const min = std?.room_rules?.[stdKey]?.minimum_sockets;
         overrides[room.id] = min ?? 2;
@@ -141,7 +147,7 @@ export default function App() {
       setSocketOverrides(overrides);
       setStep("review");
     } catch (err: any) {
-      setError(err.message || "Analysis failed");
+      setError(err.name === "AbortError" ? "Request timed out — please try again." : (err.message || "Analysis failed"));
       setStep("upload");
     }
   };
@@ -168,7 +174,7 @@ export default function App() {
       setLangName(desc.language?.name || "Local");
       setStep("results");
     } catch (err: any) {
-      setError(err.message || "Calculation failed");
+      setError(err.name === "AbortError" ? "Calculation timed out — please try again." : (err.message || "Calculation failed"));
       setStep("review");
     }
   };

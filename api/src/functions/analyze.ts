@@ -15,6 +15,12 @@ app.http("analyze", {
       if (!body.imageUrl) {
         return { status: 400, jsonBody: { error: "imageUrl is required" } };
       }
+      if (!body.imageUrl.startsWith("data:") && !body.imageUrl.startsWith("https://")) {
+        return { status: 400, jsonBody: { error: "Invalid image URL format" } };
+      }
+      if (body.imageUrl.length > 15 * 1024 * 1024) {
+        return { status: 413, jsonBody: { error: "Image data too large (max 10MB)" } };
+      }
 
       const client = new AzureOpenAI({ endpoint, apiKey, apiVersion: "2024-08-01-preview", deployment });
 
@@ -48,9 +54,17 @@ Respond in JSON: { "rooms": [{ "id": "room_1", "type": "kitchen", "name": "Kitch
 
       const content = response.choices[0]?.message?.content || "";
       const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return { status: 500, jsonBody: { error: "Failed to parse room analysis" } };
+      if (!jsonMatch) return { status: 500, jsonBody: { error: "Failed to parse room analysis from AI response" } };
 
-      return { status: 200, jsonBody: JSON.parse(jsonMatch[0]) };
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (!parsed.rooms || !Array.isArray(parsed.rooms)) {
+          return { status: 500, jsonBody: { error: "AI did not return valid room data" } };
+        }
+        return { status: 200, jsonBody: parsed };
+      } catch {
+        return { status: 500, jsonBody: { error: "AI returned malformed data. Please try again." } };
+      }
     } catch (error: any) {
       return { status: 500, jsonBody: { error: error.message || "Analysis failed" } };
     }

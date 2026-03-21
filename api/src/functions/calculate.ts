@@ -40,8 +40,12 @@ Respond in JSON:
 
       const content = response.choices[0]?.message?.content || "";
       const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return { status: 500, jsonBody: { error: "Failed to generate placements" } };
-      return { status: 200, jsonBody: JSON.parse(jsonMatch[0]) };
+      if (!jsonMatch) return { status: 500, jsonBody: { error: "Failed to generate socket placements" } };
+      try {
+        return { status: 200, jsonBody: JSON.parse(jsonMatch[0]) };
+      } catch {
+        return { status: 500, jsonBody: { error: "AI returned malformed placement data. Please try again." } };
+      }
     } catch (error: any) {
       return { status: 500, jsonBody: { error: error.message || "Calculation failed" } };
     }
