@@ -242,7 +242,7 @@ export default function App() {
         {user && (
           <div className="user-bar">
             <span className="user-name">{user.userDetails}</span>
-            <a href="/.auth/logout?post_logout_redirect_uri=/" className="btn ghost sm">Sign out</a>
+            <a href="/.auth/logout?post_logout_redirect_uri=/signedout.html" className="btn ghost sm">Sign out</a>
           </div>
         )}
       </header>

@@ -17,6 +17,10 @@
       "allowedRoles": ["anonymous"]
     },
     {
+      "route": "/signedout.html",
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/api/*",
       "allowedRoles": ["user"]
     },
