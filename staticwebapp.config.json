@@ -13,6 +13,10 @@
       "statusCode": 404
     },
     {
+      "route": "/assets/*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/api/*",
       "allowedRoles": ["user"]
     },
