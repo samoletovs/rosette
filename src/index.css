@@ -26,11 +26,14 @@ body{font-family:var(--font);color:var(--tx);line-height:1.55;background:var(--b
 main{flex:1;padding-bottom:20px}
 
 /* ── Header ── */
-header{padding:24px 0 0;text-align:center}
+header{padding:24px 0 0;text-align:center;position:relative}
 .brand{display:inline-flex;align-items:center;gap:6px}
 .brand-icon{font-size:1rem;opacity:.7}
 .brand h1{font-size:1.15rem;font-weight:600;letter-spacing:-.02em;color:var(--tx)}
 .tagline{color:#A0A0A0;font-size:.7rem;font-weight:400;margin-top:1px}
+.user-bar{position:absolute;top:16px;right:0;display:flex;align-items:center;gap:8px;font-size:.75rem}
+.user-name{color:var(--tx2);font-weight:500}
+.btn.sm{padding:4px 10px;font-size:.72rem}
 
 /* ── Stepper ── */
 .stepper{display:flex;align-items:flex-start;justify-content:center;padding:12px 0 20px;position:relative}
