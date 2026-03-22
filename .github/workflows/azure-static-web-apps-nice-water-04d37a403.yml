@@ -34,12 +34,23 @@ jobs:
           api_build_command: "npm install && npm run build"
           ###### End of Repository/Build Configurations ######
 
-      - name: Telegram Notification
-        if: success()
+      - name: Notify Telegram (success)
+        if: success() && secrets.TELEGRAM_NOTIFY_URL != ''
         run: |
-          curl -s -X POST "${{ secrets.TELEGRAM_NOTIFY_URL }}" \
+          COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" | head -1)
+          curl -sf -X POST "${{ secrets.TELEGRAM_NOTIFY_URL }}" \
             -H "Content-Type: application/json" \
-            -d "{\"message\": \"✅ Rosette deployed to Azure Static Web Apps.\nBranch: ${{ github.ref_name }}\nCommit: ${{ github.event.head_commit.message }}\nSHA: ${{ github.sha }}\"}"
+            -d "{\"message\": \"✅ Rosette deployed\\n\\nBranch: ${{ github.ref_name }}\\nCommit: ${COMMIT_MSG}\\nSHA: ${{ github.sha }}\\nURL: https://nice-water-04d37a403.3.azurestaticapps.net\"}" \
+            || echo "::warning::Telegram notification failed"
+
+      - name: Notify Telegram (failure)
+        if: failure() && secrets.TELEGRAM_NOTIFY_URL != ''
+        run: |
+          COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" | head -1)
+          curl -sf -X POST "${{ secrets.TELEGRAM_NOTIFY_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"message\": \"❌ Rosette deploy FAILED\\n\\nBranch: ${{ github.ref_name }}\\nCommit: ${COMMIT_MSG}\\nSHA: ${{ github.sha }}\\nCheck: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+            || echo "::warning::Telegram notification failed"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
