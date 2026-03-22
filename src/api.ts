@@ -1,6 +1,25 @@
 const API_BASE = "/api";
 const TIMEOUT = 90000; // 90 seconds for AI calls
 
+export interface AuthUser {
+  identityProvider: string;
+  userId: string;
+  userDetails: string;
+  userRoles: string[];
+}
+
+export async function getAuthUser(): Promise<AuthUser | null> {
+  try {
+    const res = await fetch("/.auth/me");
+    if (!res.ok) return null;
+    const data = await res.json();
+    const principal = data.clientPrincipal;
+    return principal || null;
+  } catch {
+    return null;
+  }
+}
+
 function withTimeout(ms: number): AbortSignal {
   const controller = new AbortController();
   setTimeout(() => controller.abort(), ms);

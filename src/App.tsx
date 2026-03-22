@@ -9,6 +9,8 @@ import {
   calculateSockets,
   generateDescription,
   submitFeedback,
+  getAuthUser,
+  AuthUser,
 } from "./api";
 import { generateRoomLayouts, generateCircuitDiagram, generateWiringDiagram, drawReferencePlan } from "./planGenerator";
 
@@ -77,6 +79,12 @@ export default function App() {
   const [fbSending, setFbSending] = useState(false);
   const [fbSuccess, setFbSuccess] = useState(false);
   const [fbError, setFbError] = useState("");
+  const [user, setUser] = useState<AuthUser | null>(null);
+
+  // Fetch authenticated user
+  useEffect(() => {
+    getAuthUser().then(setUser);
+  }, []);
 
   // Apply theme to document
   useEffect(() => {
@@ -231,6 +239,12 @@ export default function App() {
       <header>
         <div className="brand"><span className="brand-icon">⚡</span><h1>Rosette</h1></div>
         <p className="tagline">Electric socket planner — Baltic standards</p>
+        {user && (
+          <div className="user-bar">
+            <span className="user-name">{user.userDetails}</span>
+            <a href="/.auth/logout?post_logout_redirect_uri=/" className="btn ghost sm">Sign out</a>
+          </div>
+        )}
       </header>
 
       <nav className="stepper">
