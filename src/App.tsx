@@ -81,9 +81,12 @@ export default function App() {
   const [fbError, setFbError] = useState("");
   const [user, setUser] = useState<AuthUser | null>(null);
 
-  // Fetch authenticated user
+  // Fetch authenticated user and log login
   useEffect(() => {
-    getAuthUser().then(setUser);
+    getAuthUser().then((u) => {
+      setUser(u);
+      if (u) fetch("/api/log-login", { method: "POST" }).catch(() => {});
+    });
   }, []);
 
   // Apply theme to document
