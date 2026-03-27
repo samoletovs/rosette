@@ -1,4 +1,4 @@
-name: Azure Static Web Apps CI/CD
+name: CI/CD
 
 on:
   push:
@@ -10,7 +10,30 @@ on:
       - main
 
 jobs:
+  # ── Quality Gate ────────────────────────────────────────────────────
+  quality:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+  # ── Build & Deploy ─────────────────────────────────────────────────
   build_and_deploy_job:
+    needs: quality
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
@@ -24,18 +47,15 @@ jobs:
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_NICE_WATER_04D37A403 }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "/" # App source code path
-          api_location: "api" # Api source code path - optional
-          output_location: "dist" # Built app content directory - optional
+          app_location: "/"
+          api_location: "api"
+          output_location: "dist"
           api_build_command: "npm install && npm run build"
-          ###### End of Repository/Build Configurations ######
 
       - name: Notify Telegram (success)
-        if: success() && secrets.TELEGRAM_NOTIFY_URL != ''
+        if: success() && github.event_name == 'push'
         run: |
           COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" | head -1)
           curl -sf -X POST "${{ secrets.TELEGRAM_NOTIFY_URL }}" \
@@ -44,12 +64,12 @@ jobs:
             || echo "::warning::Telegram notification failed"
 
       - name: Notify Telegram (failure)
-        if: failure() && secrets.TELEGRAM_NOTIFY_URL != ''
+        if: failure() && github.event_name == 'push'
         run: |
           COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" | head -1)
           curl -sf -X POST "${{ secrets.TELEGRAM_NOTIFY_URL }}" \
             -H "Content-Type: application/json" \
-            -d "{\"message\": \"❌ Rosette deploy FAILED\\n\\nBranch: ${{ github.ref_name }}\\nCommit: ${COMMIT_MSG}\\nSHA: ${{ github.sha }}\\nCheck: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+            -d "{\"message\": \"❌ Rosette deploy FAILED\\n\\nBranch: ${{ github.ref_name }}\\nCommit: ${COMMIT_MSG}\\nCheck: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
             || echo "::warning::Telegram notification failed"
 
   close_pull_request_job:

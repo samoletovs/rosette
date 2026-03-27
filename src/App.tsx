@@ -321,7 +321,7 @@ export default function App() {
                       <span className="cnt-val">{count}</span>
                       <button className="cnt-btn" onClick={() => setSocketOverrides(p => ({...p, [r.id]: count + 1}))} aria-label="Increase">+</button>
                       <span className="cnt-label">sockets</span>
-                      {min != null && count < min && <span className="cnt-warn">below min ({min})</span>}
+                      {min !== null && min !== undefined && count < min && <span className="cnt-warn">below min ({min})</span>}
                     </div>
                   </div>
                 );
