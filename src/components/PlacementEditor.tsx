@@ -377,11 +377,18 @@ export function PlacementEditor({
   return (
     <section className="card fade-in placement-editor">
       <h2>Place sockets &amp; distribution board</h2>
-      <p className="muted">
-        {placingSocket
-          ? <strong style={{ color: "var(--ac)" }}>Click on the floor plan to place {placingSocket}</strong>
-          : "Pick sockets from the tray and click on the map. Drag to reposition."}
-      </p>
+
+      {/* Placement mode banner */}
+      {placingSocket && (
+        <div className="placing-banner">
+          <span>👆 Click anywhere on the floor plan to place <strong>{placingSocket}</strong></span>
+          <button className="btn ghost" onClick={() => setPlacingSocket(null)} style={{ color: '#fff', padding: '4px 10px' }}>Cancel</button>
+        </div>
+      )}
+
+      {!placingSocket && (
+        <p className="muted">Click <strong>Place</strong> on a socket in the tray, then click on the map. Or use Auto-place.</p>
+      )}
 
       <div className="placement-toolbar">
         <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
@@ -569,19 +576,17 @@ export function PlacementEditor({
                 {roomTray.map((s) => (
                   <div key={s.socket_id}
                     className={`tray-chip unplaced ${placingSocket === s.socket_id ? "placing" : ""}`}>
-                    <div className="tray-chip-main" onClick={() => startPlacing(s.socket_id)}>
-                      <span className="tray-chip-id">{s.socket_id}</span>
-                      <span className="tray-chip-action">place →</span>
-                    </div>
-                    <div className="tray-chip-actions">
-                      <select className="tray-outlet-select" value={s.gang || 1}
-                        onChange={(e) => updateTraySocket(s.socket_id, { gang: parseInt(e.target.value) })}
-                        onClick={(e) => e.stopPropagation()} title="Outlets">
-                        {OUTLET_OPTIONS.map((g) => <option key={g} value={g}>{g}×</option>)}
-                      </select>
-                      <button className="tray-chip-del"
-                        onClick={() => deleteFromTray(s.socket_id)} title="Remove">✕</button>
-                    </div>
+                    <span className="tray-chip-id">{s.socket_id}</span>
+                    <select className="tray-outlet-select" value={s.gang || 1}
+                      onChange={(e) => updateTraySocket(s.socket_id, { gang: parseInt(e.target.value) })}
+                      onClick={(e) => e.stopPropagation()} title="Outlets">
+                      {OUTLET_OPTIONS.map((g) => <option key={g} value={g}>{g}×</option>)}
+                    </select>
+                    <button className="tray-place-btn" onClick={() => startPlacing(s.socket_id)}>
+                      {placingSocket === s.socket_id ? "Click map ▸" : "Place ▸"}
+                    </button>
+                    <button className="tray-chip-del"
+                      onClick={() => deleteFromTray(s.socket_id)} title="Remove">✕</button>
                   </div>
                 ))}
                 <button className="tray-add-btn" onClick={() => addSocketToTray(room.id)}>+ Add</button>
