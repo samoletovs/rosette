@@ -111,16 +111,31 @@ function constrainSwitchboard(sb: Switchboard, rooms: Room[]): Switchboard {
   };
 }
 
-/** Re-assign socket IDs with room-prefix: K1, K2, B1, B2, etc. */
+/** Match a socket to a room by room_id first, then by room_name fallback */
+function matchRoom(s: SocketPlacement, rooms: Room[]): Room | undefined {
+  return rooms.find((r) => r.id === s.room_id)
+    || rooms.find((r) => r.name === s.room_name)
+    || rooms.find((r) => r.name.toLowerCase() === (s.room_name || "").toLowerCase())
+    || rooms.find((r) => (s.room_id || "").toLowerCase().includes(r.type.toLowerCase()));
+}
+
+/** Re-assign socket IDs with room-prefix AND normalize room_id to match actual rooms.
+ *  This handles the case where the AI returns room_ids that don't match the analysis. */
 function assignPrefixedIds(sockets: SocketPlacement[], rooms: Room[]): SocketPlacement[] {
   const counters = new Map<string, number>();
-  const roomMap = new Map(rooms.map((r) => [r.id, r]));
   return sockets.map((s) => {
-    const room = roomMap.get(s.room_id);
+    const room = matchRoom(s, rooms);
     const prefix = room ? roomPrefix(room) : "S";
     const count = (counters.get(prefix) || 0) + 1;
     counters.set(prefix, count);
-    return { ...s, socket_id: `${prefix}${count}`, gang: s.gang || 1 };
+    return {
+      ...s,
+      socket_id: `${prefix}${count}`,
+      // Normalize room_id/room_name to match actual room data
+      room_id: room?.id ?? s.room_id,
+      room_name: room?.name ?? s.room_name,
+      gang: s.gang || 1,
+    };
   });
 }
 
@@ -314,8 +329,14 @@ export function PlacementEditor({
       byRoom.get(s.room_id)!.push(s);
     }
     for (const [roomId, roomSockets] of byRoom) {
-      const room = rooms.find((r) => r.id === roomId);
-      if (!room) continue;
+      const room = rooms.find((r) => r.id === roomId) || rooms.find((r) => r.name === roomSockets[0]?.room_name);
+      if (!room) {
+        // Fallback: place at center of the image if room not found
+        roomSockets.forEach((s, i) => {
+          newPlaced.push({ ...s, x_pct: 30 + (i % 5) * 10, y_pct: 30 + Math.floor(i / 5) * 10, wall: 'north' });
+        });
+        continue;
+      }
       const p = room.position, m = 3;
       const walls = ['north', 'east', 'south', 'west'];
       roomSockets.forEach((s, i) => {
