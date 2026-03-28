@@ -90,6 +90,7 @@ export const ROOM_COLORS: Record<string, string> = {
  * @param type - "standard_16a" | "dedicated" | "ip44" | other
  * @param height - mounting height label (e.g. "300mm")
  * @param gang - number of connections (1-5, default 1)
+ * @param wall - wall direction for rotation: "N" | "S" | "E" | "W" (default "N")
  */
 export function socketOutlet(
   x: number,
@@ -98,6 +99,7 @@ export function socketOutlet(
   type: string,
   height: string,
   gang = 1,
+  wall = 'N',
 ): string {
   const isSpecial = type !== 'standard_16a';
   const isIP44 = type === 'ip44' || type === 'waterproof';
@@ -105,7 +107,15 @@ export function socketOutlet(
   const r = 9; // semicircle radius
   const gangCount = Math.max(1, Math.min(5, gang));
 
-  let symbol = `<g class="iec-socket">`;
+  // Rotation: semicircle opens away from the wall (into the room)
+  // Default (N): semicircle opens upward (into room from north wall) — 0°
+  // S: opens downward — 180°
+  // E: opens left — 270°
+  // W: opens right — 90°
+  const wallRotation: Record<string, number> = { N: 0, S: 180, E: 270, W: 90 };
+  const rot = wallRotation[wall] ?? 0;
+
+  let symbol = `<g class="iec-socket" transform="rotate(${rot},${x},${y})">`;
 
   // IP44 outer circle (weather-protected)
   if (isIP44) {
@@ -137,14 +147,15 @@ export function socketOutlet(
     symbol += `<text x="${x + r + 4}" y="${y - r + 5}" text-anchor="middle" font-size="6" font-weight="700" fill="#fff">${gangCount}</text>`;
   }
 
+  symbol += `</g>`;
+
+  // Labels outside the rotation group so they stay horizontal
   // ID label above
   symbol += `<text x="${x}" y="${y - r - 5}" text-anchor="middle" font-size="7.5" font-weight="700" fill="${color}">${xmlEsc(id)}</text>`;
   // Height label below
   if (height) {
     symbol += `<text x="${x}" y="${y + 14}" text-anchor="middle" font-size="6" fill="${COLORS.muted}">${xmlEsc(height)}</text>`;
   }
-
-  symbol += `</g>`;
   return symbol;
 }
 
