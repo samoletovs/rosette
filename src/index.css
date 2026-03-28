@@ -127,6 +127,22 @@ select:focus{outline:none;border-color:var(--a);box-shadow:0 0 0 3px rgba(10,132
 .cnt-label{font-size:.65rem;color:#A0A0A0;font-weight:400}
 .cnt-warn{font-size:.56rem;color:var(--warn);font-weight:500}
 
+/* Room row layout */
+.room-row-info{flex:1;min-width:0}
+.room-row-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.btn-remove{width:26px;height:26px;border-radius:50%;border:1px solid var(--bd);background:#fff;
+  font-size:.8rem;cursor:pointer;display:grid;place-items:center;color:#A0A0A0;
+  transition:all .15s ease;padding:0;line-height:1}
+.btn-remove:hover{background:#fef2f2;border-color:#fca5a5;color:#ef4444}
+
+/* Add room form */
+.add-room-trigger{margin-top:4px;width:100%}
+.add-room-form{border:1px dashed var(--bd);border-radius:var(--r2);padding:14px;margin-top:6px}
+.add-room-fields{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.add-room-fields .form-field{flex:1;min-width:120px}
+.add-room-fields input,.add-room-fields select{font-size:.82rem}
+.add-room-btns{display:flex;gap:8px}
+
 /* ── Results ── */
 .stats-bar{display:flex;align-items:center;justify-content:center;padding:20px 16px}
 .stat{text-align:center;flex:1}

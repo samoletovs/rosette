@@ -47,6 +47,22 @@ function mapRoomType(type: string): string {
   return ROOM_TYPE_MAP[n] || ROOM_TYPE_MAP[type.toLowerCase()] || n;
 }
 
+const ROOM_TYPES = [
+  { value: "kitchen", label: "Kitchen" },
+  { value: "living_room", label: "Living Room" },
+  { value: "dining_room", label: "Dining Room" },
+  { value: "bedroom", label: "Bedroom" },
+  { value: "bathroom", label: "Bathroom" },
+  { value: "hallway", label: "Hallway" },
+  { value: "home_office", label: "Home Office" },
+  { value: "wc", label: "WC / Toilet" },
+  { value: "utility_room", label: "Utility Room" },
+  { value: "garage", label: "Garage" },
+  { value: "balcony", label: "Balcony / Terrace" },
+];
+
+let nextRoomCounter = 50;
+
 const FLAG: Record<string, string> = { LV: "\u{1F1F1}\u{1F1FB}", LT: "\u{1F1F1}\u{1F1F9}", EE: "\u{1F1EA}\u{1F1EA}" };
 
 export default function App() {
@@ -89,6 +105,11 @@ export default function App() {
   const [fbError, setFbError] = useState("");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [addRoomOpen, setAddRoomOpen] = useState(false);
+  const [newRoomType, setNewRoomType] = useState("bedroom");
+  const [newRoomName, setNewRoomName] = useState("");
+  const [newRoomWidth, setNewRoomWidth] = useState("3.0");
+  const [newRoomHeight, setNewRoomHeight] = useState("3.0");
 
   // Fetch authenticated user and log login
   useEffect(() => {
@@ -406,28 +427,117 @@ export default function App() {
         {step === "review" && (
           <section className="card fade-in">
             <h2>Review detected rooms</h2>
-            <p className="muted">{rooms.length} rooms detected — adjust socket counts if needed</p>
+            <p className="muted">{rooms.length} rooms detected — add, remove, or adjust socket counts</p>
             <div className="room-list">
               {rooms.map((r: any) => {
                 const min = standards?.room_rules?.[mapRoomType(r.type)]?.minimum_sockets;
                 const count = socketOverrides[r.id] ?? min ?? 2;
                 return (
                   <div key={r.id} className="room-row">
-                    <div><strong>{r.name || r.type}</strong><span className="muted sm"> {r.area_m2} m² · {r.width_m}×{r.height_m}m</span></div>
-                    <div className="socket-control">
-                      <button className="cnt-btn" onClick={() => setSocketOverrides(p => ({...p, [r.id]: Math.max(0, count - 1)}))} aria-label="Decrease">−</button>
-                      <span className="cnt-val">{count}</span>
-                      <button className="cnt-btn" onClick={() => setSocketOverrides(p => ({...p, [r.id]: count + 1}))} aria-label="Increase">+</button>
-                      <span className="cnt-label">sockets</span>
-                      {min !== null && min !== undefined && count < min && <span className="cnt-warn">below min ({min})</span>}
+                    <div className="room-row-info">
+                      <strong>{r.name || r.type}</strong>
+                      <span className="muted sm"> {r.area_m2} m² · {r.width_m}×{r.height_m}m</span>
+                    </div>
+                    <div className="room-row-actions">
+                      <div className="socket-control">
+                        <button className="cnt-btn" onClick={() => setSocketOverrides(p => ({...p, [r.id]: Math.max(0, count - 1)}))} aria-label="Decrease">−</button>
+                        <span className="cnt-val">{count}</span>
+                        <button className="cnt-btn" onClick={() => setSocketOverrides(p => ({...p, [r.id]: count + 1}))} aria-label="Increase">+</button>
+                        <span className="cnt-label">sockets</span>
+                        {min !== null && min !== undefined && count < min && <span className="cnt-warn">below min ({min})</span>}
+                      </div>
+                      <button
+                        className="btn-remove"
+                        onClick={() => {
+                          setRooms(prev => prev.filter(rm => rm.id !== r.id));
+                          setSocketOverrides(prev => { const next = { ...prev }; delete next[r.id]; return next; });
+                        }}
+                        aria-label={`Remove ${r.name || r.type}`}
+                        title="Remove room"
+                      >✕</button>
                     </div>
                   </div>
                 );
               })}
             </div>
+
+            {/* Add room */}
+            {!addRoomOpen ? (
+              <button className="btn outline add-room-trigger" onClick={() => {
+                setAddRoomOpen(true);
+                setNewRoomName("");
+                setNewRoomType("bedroom");
+                setNewRoomWidth("3.0");
+                setNewRoomHeight("3.0");
+              }}>+ Add missing room</button>
+            ) : (
+              <div className="add-room-form">
+                <div className="add-room-fields">
+                  <label className="form-field">
+                    <span>Type</span>
+                    <select value={newRoomType} onChange={(e) => {
+                      setNewRoomType(e.target.value);
+                      if (!newRoomName) setNewRoomName(ROOM_TYPES.find(t => t.value === e.target.value)?.label || "");
+                    }}>
+                      {ROOM_TYPES.map((t) => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="form-field">
+                    <span>Name</span>
+                    <input type="text" value={newRoomName} onChange={(e) => setNewRoomName(e.target.value)}
+                      placeholder={ROOM_TYPES.find(t => t.value === newRoomType)?.label || "Room name"}
+                    />
+                  </label>
+                  <label className="form-field">
+                    <span>Width (m)</span>
+                    <input type="number" value={newRoomWidth} onChange={(e) => setNewRoomWidth(e.target.value)}
+                      min="1" max="20" step="0.1" style={{ width: "70px" }}
+                    />
+                  </label>
+                  <label className="form-field">
+                    <span>Height (m)</span>
+                    <input type="number" value={newRoomHeight} onChange={(e) => setNewRoomHeight(e.target.value)}
+                      min="1" max="20" step="0.1" style={{ width: "70px" }}
+                    />
+                  </label>
+                </div>
+                <div className="add-room-btns">
+                  <button className="btn primary" onClick={() => {
+                    nextRoomCounter += 1;
+                    const w = parseFloat(newRoomWidth) || 3;
+                    const h = parseFloat(newRoomHeight) || 3;
+                    const label = newRoomName || ROOM_TYPES.find(t => t.value === newRoomType)?.label || newRoomType;
+                    const id = `room_${nextRoomCounter}`;
+                    // Place new room in an available area (simple grid offset)
+                    const existingCount = rooms.length;
+                    const col = existingCount % 3;
+                    const row = Math.floor(existingCount / 3);
+                    const newRoom = {
+                      id,
+                      type: newRoomType,
+                      name: label,
+                      width_m: w,
+                      height_m: h,
+                      area_m2: Math.round(w * h * 100) / 100,
+                      position: { x_pct: 5 + col * 32, y_pct: 5 + row * 35, w_pct: 28, h_pct: 30 },
+                      features: [],
+                    };
+                    setRooms(prev => [...prev, newRoom]);
+                    const stdKey = mapRoomType(newRoomType);
+                    const min = standards?.room_rules?.[stdKey]?.minimum_sockets;
+                    setSocketOverrides(prev => ({ ...prev, [id]: min ?? 2 }));
+                    setAddRoomOpen(false);
+                  }}>Add room</button>
+                  <button className="btn ghost" onClick={() => setAddRoomOpen(false)}>Cancel</button>
+                </div>
+              </div>
+            )}
+
             <div className="btn-row">
               <button className="btn ghost" onClick={reset}>← Back</button>
-              <button className="btn primary" onClick={startProposal}>Place sockets →</button>
+              <button className="btn primary" disabled={rooms.length === 0} onClick={startProposal}>Place sockets →</button>
             </div>
           </section>
         )}
