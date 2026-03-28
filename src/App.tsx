@@ -15,7 +15,6 @@ import {
 } from "./api";
 import { generateRoomLayouts, generateCircuitDiagram, generateWiringDiagram, drawReferencePlan } from "./planGenerator";
 import { PlacementEditor } from "./components/PlacementEditor";
-import { exportPdf } from "./pdfExport";
 import type { SocketPlacement, Switchboard } from "./types";
 
 type Step = "upload" | "analyzing" | "review" | "proposing" | "placement" | "calculating" | "results";
@@ -283,6 +282,7 @@ export default function App() {
     if (!placements || !svgRoomLayouts || !svgCircuitDiagram) return;
     setPdfGenerating(true);
     try {
+      const { exportPdf } = await import('./pdfExport');
       const stdMap: Record<string, string> = {
         LV: 'LBN 261-23', LT: 'STR 2.09.02:2005', EE: 'EVS-HD 60364',
       };
