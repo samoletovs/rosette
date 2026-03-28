@@ -7,14 +7,17 @@ import {
   getStandards,
   getCountries,
   calculateSockets,
+  proposePlacements,
   generateDescription,
   submitFeedback,
   getAuthUser,
   AuthUser,
 } from "./api";
 import { generateRoomLayouts, generateCircuitDiagram, generateWiringDiagram, drawReferencePlan } from "./planGenerator";
+import { PlacementEditor } from "./components/PlacementEditor";
+import type { SocketPlacement, Switchboard } from "./types";
 
-type Step = "upload" | "analyzing" | "review" | "calculating" | "results";
+type Step = "upload" | "analyzing" | "review" | "proposing" | "placement" | "calculating" | "results";
 
 const PROPERTY_TYPES = [
   { value: "house", label: "House" },
@@ -71,6 +74,11 @@ export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasReady, setCanvasReady] = useState(false);
   const [socketOverrides, setSocketOverrides] = useState<Record<string, number>>({});
+  const [proposedPlacements, setProposedPlacements] = useState<SocketPlacement[]>([]);
+  const [proposedSwitchboard, setProposedSwitchboard] = useState<Switchboard | null>(null);
+  const [analysisData, setAnalysisData] = useState<any>(null);
+  const [_confirmedPlacements, setConfirmedPlacements] = useState<SocketPlacement[]>([]);
+  const [_confirmedSwitchboard, setConfirmedSwitchboard] = useState<Switchboard | null>(null);
   const [theme, setTheme] = useState(() => localStorage.getItem("rosette-theme") || "ocean");
   const [showFeedback, setShowFeedback] = useState(false);
   const [fbType, setFbType] = useState("improvement");
@@ -157,6 +165,7 @@ export default function App() {
       }
       setRooms(analysisRooms);
       setStandards(std);
+      setAnalysisData(analysis);
       // Initialize socket overrides from standards
       const overrides: Record<string, number> = {};
       for (const room of analysisRooms) {
@@ -172,7 +181,40 @@ export default function App() {
     }
   };
 
-  const startCalculation = async () => {
+  const startProposal = async () => {
+    setStep("proposing");
+    setError("");
+    try {
+      const roomsWithOverrides = rooms.map((r: any) => ({
+        ...r,
+        requested_sockets: socketOverrides[r.id] ?? standards?.room_rules?.[mapRoomType(r.type)]?.minimum_sockets ?? 2,
+      }));
+      const result = await proposePlacements(
+        roomsWithOverrides,
+        countryCode,
+        propertyType,
+        standards,
+        analysisData?.switchboard,
+      );
+      setProposedPlacements(result.placements || []);
+      setProposedSwitchboard(result.switchboard || analysisData?.switchboard || null);
+      setStep("placement");
+    } catch (err: any) {
+      setError(err.name === "AbortError" ? "Request timed out — please try again." : (err.message || "Proposal failed"));
+      setStep("review");
+    }
+  };
+
+  const handlePlacementConfirm = (placements: SocketPlacement[], switchboard: Switchboard) => {
+    setConfirmedPlacements(placements);
+    setConfirmedSwitchboard(switchboard);
+    startCalculation(placements, switchboard);
+  };
+
+  const startCalculation = async (
+    confirmedSockets?: SocketPlacement[],
+    confirmedDb?: Switchboard | null,
+  ) => {
     setStep("calculating");
     setError("");
     try {
@@ -181,7 +223,14 @@ export default function App() {
         ...r,
         requested_sockets: socketOverrides[r.id] ?? standards?.room_rules?.[mapRoomType(r.type)]?.minimum_sockets ?? 2,
       }));
-      const result = await calculateSockets(roomsWithOverrides, countryCode, propertyType, standards);
+      const result = await calculateSockets(
+        roomsWithOverrides,
+        countryCode,
+        propertyType,
+        standards,
+        confirmedSockets,
+        confirmedDb,
+      );
       setPlacements(result);
 
       // Generate professional diagrams
@@ -196,7 +245,7 @@ export default function App() {
       setStep("results");
     } catch (err: any) {
       setError(err.name === "AbortError" ? "Calculation timed out — please try again." : (err.message || "Calculation failed"));
-      setStep("review");
+      setStep("placement");
     }
   };
 
@@ -209,9 +258,11 @@ export default function App() {
 
   const reset = () => {
     setStep("upload"); setFile(null); setPreviewUrl(""); setBase64Url("");
-    setRooms([]); setStandards(null); setPlacements(null);
+    setRooms([]); setStandards(null); setPlacements(null); setAnalysisData(null);
     setDescEn(""); setDescLocal(""); setSvgRoomLayouts(""); setSvgCircuitDiagram(""); setSvgWiringDiagram("");
     setError(""); setCanvasReady(false); setSocketOverrides({});
+    setProposedPlacements([]); setProposedSwitchboard(null);
+    setConfirmedPlacements([]); setConfirmedSwitchboard(null);
   };
 
   const handleFeedbackSubmit = async () => {
@@ -247,10 +298,13 @@ export default function App() {
     { key: "upload", label: "Upload" },
     { key: "analyzing", label: "Analyze" },
     { key: "review", label: "Review" },
+    { key: "placement", label: "Place" },
     { key: "calculating", label: "Calculate" },
     { key: "results", label: "Results" },
   ];
-  const stepIdx = ["upload", "analyzing", "review", "calculating", "results"].indexOf(step);
+  const stepOrder = ["upload", "analyzing", "review", "proposing", "placement", "calculating", "results"];
+  const _stepIdx = stepOrder.indexOf(step);
+  const displayIdx = stepsData.findIndex((s) => s.key === (step === "proposing" ? "placement" : step));
 
   return (
     <div className="app">
@@ -267,12 +321,12 @@ export default function App() {
 
       <nav className="stepper">
         {stepsData.map((s, i) => (
-          <div key={s.key} className={`s-item ${i === stepIdx ? "current" : i < stepIdx ? "done" : ""}`}>
-            <div className="s-dot">{i < stepIdx ? "✓" : i + 1}</div>
+          <div key={s.key} className={`s-item ${i === displayIdx ? "current" : i < displayIdx ? "done" : ""}`}>
+            <div className="s-dot">{i < displayIdx ? "✓" : i + 1}</div>
             <span className="s-label">{s.label}</span>
           </div>
         ))}
-        <div className="s-track"><div className="s-fill" style={{ width: `${(stepIdx / 4) * 100}%` }} /></div>
+        <div className="s-track"><div className="s-fill" style={{ width: `${(displayIdx / (stepsData.length - 1)) * 100}%` }} /></div>
       </nav>
 
       {error && <div className="alert">{error}<button onClick={() => setError("")}>×</button></div>}
@@ -312,11 +366,11 @@ export default function App() {
           </section>
         )}
 
-        {(step === "analyzing" || step === "calculating") && (
+        {(step === "analyzing" || step === "calculating" || step === "proposing") && (
           <section className="card fade-in center-content">
             <div className="pulse-ring" /><div className="pulse-icon">⚡</div>
-            <h3>{step === "analyzing" ? "Analyzing floor plan" : "Calculating placements"}</h3>
-            <p className="muted">{step === "analyzing" ? "AI is identifying rooms…" : `Applying ${countryCode} standards…`}</p>
+            <h3>{step === "analyzing" ? "Analyzing floor plan" : step === "proposing" ? "Proposing placements" : "Calculating placements"}</h3>
+            <p className="muted">{step === "analyzing" ? "AI is identifying rooms…" : step === "proposing" ? "AI is proposing socket positions…" : `Applying ${countryCode} standards…`}</p>
           </section>
         )}
 
@@ -344,9 +398,20 @@ export default function App() {
             </div>
             <div className="btn-row">
               <button className="btn ghost" onClick={reset}>← Back</button>
-              <button className="btn primary" onClick={startCalculation}>Calculate placements →</button>
+              <button className="btn primary" onClick={startProposal}>Place sockets →</button>
             </div>
           </section>
+        )}
+
+        {step === "placement" && proposedSwitchboard && (
+          <PlacementEditor
+            imageUrl={base64Url}
+            rooms={rooms}
+            placements={proposedPlacements}
+            switchboard={proposedSwitchboard}
+            onConfirm={handlePlacementConfirm}
+            onBack={() => setStep("review")}
+          />
         )}
 
         {step === "results" && placements && (

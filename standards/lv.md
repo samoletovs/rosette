@@ -149,3 +149,35 @@
 - **Height**: 1400–1800 mm from finished floor level (center of board)
 - **Access**: Must be easily accessible, dry location, minimum 600 mm clearance in front
 - **Reference**: LBN 261-23 §52 (wiring methods and distribution board requirements)
+
+## Diagram Symbols & Drawing Standards
+
+Latvia adopts European harmonized standards for electrical diagram symbols and drawing conventions. There is no separate Latvian symbol standard — all professional documentation must use IEC/EN symbols.
+
+### Symbol Standard: IEC 60617 (adopted as EN 60617 / LVS EN 60617)
+- **Scope**: Graphical symbols for all electrotechnical diagrams
+- **Socket outlets**: Semicircle with vertical line(s) + earth bar
+  - Single socket: semicircle + one line
+  - Double socket: semicircle + two lines
+  - Dedicated/special: additional diagonal marker
+  - IP44 (waterproof): symbol inside dashed circle
+- **MCB (circuit breaker)**: Rectangle with angled switch contact + overload "x"
+- **RCD/RCCB**: Rectangle with delta (Δ) symbol — the defining IEC RCD marker
+- **Main switch/isolator**: Knife-switch contact symbol
+- **Distribution board**: Rectangle with internal bus bars
+- **Cable runs**: Single line with hash marks indicating conductor count (2, 3, 5)
+- **Light switch**: Circle with angled line
+- **Ceiling light**: Circle with cross
+
+### Drawing Conventions: IEC 61082 / EN ISO 7519
+- **Title block**: Required on every drawing (project name, date, scale, drawing number)
+- **Symbol legend**: Mandatory — every diagram must include a key of all symbols used
+- **Scale**: 1:50 or 1:100 for floor plans
+- **North arrow**: Required for orientation
+- **Circuit references**: Each socket labeled with circuit ID (e.g., C1, C2)
+- **Height annotations**: Socket mounting heights in mm
+- **Wire colors**: Per IEC 60446 (Brown=L, Blue=N, Green-Yellow=PE, Black=L2, Grey=L3)
+
+### Reference Designations: IEC 81346
+- Equipment labeling follows IEC 81346 (successor to IEC 61346)
+- Example: =DB+RCD1, =DB+MCB-C1, =K1+S1 (Kitchen socket 1)
