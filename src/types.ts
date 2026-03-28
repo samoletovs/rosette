@@ -38,6 +38,7 @@ export interface SocketPlacement {
   wall: string;
   height_mm: number;
   type: string;
+  gang?: number; // 1-5 connections (default 1)
   circuit?: string;
   notes?: string;
 }
