@@ -253,11 +253,36 @@ footer p{color:#B8B8B8;font-size:.66rem;font-weight:400;margin-top:2px}
 
 /* ── Placement Editor ── */
 .placement-editor{position:relative}
-.placement-toolbar{display:flex;align-items:center;justify-content:space-between;margin:12px 0 8px}
+.placement-toolbar{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}
 
-/* Two-column layout: plan + tray */
-.placement-layout{display:flex;gap:14px;margin-bottom:12px}
-.placement-plan-col{flex:1;min-width:0;position:relative}
+/* Room strip — horizontal cards above plan */
+.room-strip{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px;margin-bottom:4px;-webkit-overflow-scrolling:touch}
+.room-card{flex-shrink:0;border:1px solid var(--bd);border-radius:var(--r2);padding:8px 12px;
+  background:#fff;text-align:center;min-width:100px;transition:all .15s ease}
+.room-card.done{border-color:#10b981;background:#ecfdf5}
+.room-card.active{border-color:#4f46e5;background:#eef2ff;box-shadow:0 0 0 2px #4f46e540}
+.room-card.db-card{border-left:3px solid #1e293b}
+.room-card-name{font-size:.76rem;font-weight:600;color:var(--tx);white-space:nowrap}
+.room-card-count{font-size:.62rem;color:var(--tx2);margin:2px 0 6px}
+.room-card-btn{padding:4px 12px;border:1px solid #4f46e5;border-radius:4px;
+  background:#eef2ff;color:#4f46e5;font-size:.68rem;font-weight:600;
+  cursor:pointer;transition:all .15s ease;white-space:nowrap}
+.room-card-btn:hover{background:#4f46e5;color:#fff}
+.room-card-btn.active{background:#4f46e5;color:#fff;animation:pulse-bg 1.5s ease-in-out infinite}
+.room-card-btn.add{border-color:var(--bd);background:#fff;color:var(--tx2);font-weight:400}
+.room-card-btn.add:hover{border-color:#4f46e5;color:#4f46e5;background:#eef2ff}
+.room-card-check{font-size:.82rem;color:#10b981}
+
+/* Placement mode banner */
+.placing-banner{background:#4f46e5;color:#fff;padding:10px 16px;border-radius:var(--r2);
+  display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;
+  font-size:.82rem;animation:pulse-bg 1.5s ease-in-out infinite}
+.banner-cancel{background:none;border:1px solid rgba(255,255,255,.4);color:#fff;padding:4px 10px;
+  border-radius:4px;font-size:.72rem;cursor:pointer}
+.banner-cancel:hover{background:rgba(255,255,255,.15)}
+@keyframes pulse-bg{0%,100%{background:#4f46e5}50%{background:#6366f1}}
+
+/* Canvas */
 .placement-canvas-wrap{background:#FAFAFA;border:1px solid var(--bd);border-radius:var(--r2);overflow:hidden;
   position:relative;min-height:200px}
 .placement-canvas-wrap canvas{display:block;max-width:100%;cursor:grab}
@@ -265,16 +290,17 @@ footer p{color:#B8B8B8;font-size:.66rem;font-weight:400;margin-top:2px}
 .placement-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;
   min-height:300px;gap:12px;position:relative}
 
-/* Socket / DB detail panel */
+/* Socket / DB detail panel (below plan) */
 .placement-panel{background:#fff;border:1px solid var(--bd);
   border-radius:var(--r2);box-shadow:0 8px 24px rgba(0,0,0,.1);width:100%;z-index:10;overflow:hidden;margin-top:10px}
 .placement-panel-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--bd)}
 .placement-panel-head strong{font-size:.88rem;font-weight:600}
 .placement-panel-head .modal-close{margin-left:auto}
 .placement-panel-body{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.panel-row{display:flex;gap:12px}
 
 /* Outlet grid */
-.outlet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.outlet-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
 .outlet-btn{display:flex;flex-direction:column;align-items:center;padding:6px 4px;border:1px solid var(--bd);
   border-radius:6px;background:#fff;cursor:pointer;transition:all .15s ease}
 .outlet-btn:hover{border-color:#c7d2fe;background:#eef2ff}
@@ -286,48 +312,6 @@ footer p{color:#B8B8B8;font-size:.66rem;font-weight:400;margin-top:2px}
 .height-presets{display:flex;gap:6px}
 .height-presets .btn{padding:5px 10px;font-size:.72rem;flex:1}
 
-/* Socket tray (right sidebar) */
-.placement-tray{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:6px;
-  max-height:700px;overflow-y:auto;padding-right:2px}
-.tray-header{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
-.tray-header strong{font-size:.82rem;font-weight:600;color:var(--tx)}
-
-/* Room card in tray */
-.tray-room{border:1px solid var(--bd);border-left:3px solid #94a3b8;border-radius:var(--r2);
-  padding:8px 10px;background:#fff}
-.tray-room-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.tray-room-name{font-size:.78rem;font-weight:600;color:var(--tx)}
-
-/* Placement mode banner */
-.placing-banner{background:#4f46e5;color:#fff;padding:10px 16px;border-radius:var(--r2);
-  display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;
-  font-size:.82rem;animation:pulse-bg 1.5s ease-in-out infinite}
-@keyframes pulse-bg{0%,100%{background:#4f46e5}50%{background:#6366f1}}
-
-/* Socket chip */
-.tray-chip{border-radius:6px;padding:5px 8px;font-size:.72rem;margin-bottom:4px;
-  transition:all .15s ease;display:flex;align-items:center;gap:6px}
-.tray-chip.placed{background:#f1f5f9;color:var(--tx2);cursor:pointer}
-.tray-chip.placed.selected{background:#eef2ff;outline:2px solid #4f46e5;outline-offset:-1px}
-.tray-chip.unplaced{background:#fff;border:1px solid var(--bd)}
-.tray-chip.unplaced.placing{background:#eef2ff;border-color:#4f46e5;box-shadow:0 0 0 2px #4f46e540}
-.tray-chip-id{font-weight:600;white-space:nowrap;min-width:28px}
-.tray-chip-meta{font-size:.62rem;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
-.tray-place-btn{padding:3px 10px;border:1px solid #4f46e5;border-radius:4px;background:#eef2ff;
-  color:#4f46e5;font-size:.68rem;font-weight:600;cursor:pointer;white-space:nowrap;
-  transition:all .15s ease;flex-shrink:0}
-.tray-place-btn:hover{background:#4f46e5;color:#fff}
-.tray-chip.placing .tray-place-btn{background:#4f46e5;color:#fff;animation:pulse-bg 1.5s ease-in-out infinite}
-.tray-chip-actions{display:flex;gap:3px;align-items:center;flex-shrink:0}
-.tray-outlet-select{font-size:.68rem;padding:2px 4px;border:1px solid var(--bd);border-radius:4px;
-  background:#fff;cursor:pointer;width:42px}
-.tray-chip-del{width:20px;height:20px;border:none;background:none;cursor:pointer;font-size:.68rem;
-  color:#a0a0a0;border-radius:4px;display:grid;place-items:center;padding:0}
-.tray-chip-del:hover{background:#fef2f2;color:#ef4444}
-.tray-add-btn{width:100%;padding:4px 0;border:1px dashed var(--bd);border-radius:4px;background:none;
-  font-size:.68rem;color:var(--tx2);cursor:pointer;margin-top:4px;transition:all .15s ease}
-.tray-add-btn:hover{border-color:#4f46e5;color:#4f46e5;background:#eef2ff}
-
 /* Legend */
 .placement-legend{display:flex;flex-wrap:wrap;gap:12px;padding:6px 0;margin-bottom:8px}
 .placement-legend-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--tx2);font-weight:400}
@@ -335,12 +319,13 @@ footer p{color:#B8B8B8;font-size:.66rem;font-weight:400;margin-top:2px}
 .placement-legend-swatch{width:16px;height:10px;border-radius:2px;flex-shrink:0}
 
 @media(max-width:640px){
-  .placement-layout{flex-direction:column}
-  .placement-tray{width:100%;max-height:300px;overflow-y:auto;flex-direction:column}
+  .room-strip{gap:6px}
+  .room-card{min-width:80px;padding:6px 8px}
+  .room-card-name{font-size:.68rem}
+  .room-card-btn{padding:3px 8px;font-size:.62rem}
   .placement-panel{width:100%}
   .placement-toolbar{flex-direction:column;gap:6px;align-items:flex-start}
-  .outlet-grid{grid-template-columns:repeat(6,1fr)}
   .outlet-label{display:none}
   .placing-banner{font-size:.75rem;padding:8px 12px}
-  .tray-place-btn{padding:2px 6px;font-size:.62rem}
+  .panel-row{flex-direction:column;gap:8px}
 }
