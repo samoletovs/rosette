@@ -287,9 +287,9 @@ footer p{color:#B8B8B8;font-size:.66rem;font-weight:400;margin-top:2px}
 .height-presets .btn{padding:5px 10px;font-size:.72rem;flex:1}
 
 /* Socket tray (right sidebar) */
-.placement-tray{width:240px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;
-  max-height:600px;overflow-y:auto;padding-right:2px}
-.tray-header{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
+.placement-tray{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:6px;
+  max-height:700px;overflow-y:auto;padding-right:2px}
+.tray-header{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
 .tray-header strong{font-size:.82rem;font-weight:600;color:var(--tx)}
 
 /* Room card in tray */
@@ -329,8 +329,10 @@ footer p{color:#B8B8B8;font-size:.66rem;font-weight:400;margin-top:2px}
 
 @media(max-width:640px){
   .placement-layout{flex-direction:column}
-  .placement-tray{width:100%;max-height:none;flex-direction:row;flex-wrap:wrap;overflow-y:visible}
-  .tray-room{flex:1;min-width:200px}
+  .placement-tray{width:100%;max-height:300px;overflow-y:auto;flex-direction:column}
   .placement-panel{width:100%}
   .placement-toolbar{flex-direction:column;gap:6px;align-items:flex-start}
+  .outlet-grid{grid-template-columns:repeat(6,1fr)}
+  .outlet-label{display:none}
+  .tray-chip-action{display:none}
 }
