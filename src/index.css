@@ -135,6 +135,13 @@ select:focus{outline:none;border-color:var(--a);box-shadow:0 0 0 3px rgba(10,132
 .stat-sep{width:1px;height:28px;background:var(--bd)}
 .summary-text{text-align:center;color:#A0A0A0;font-size:.8rem;margin-bottom:16px;padding:0 16px;line-height:1.6}
 
+/* ── PDF Export ── */
+.pdf-export-bar{display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:16px;margin-bottom:16px;background:linear-gradient(135deg,#f0f7ff,#ede9fe);
+  border:1px solid var(--bd);border-radius:var(--r);text-align:center}
+.pdf-btn{font-size:.88rem;padding:12px 28px;gap:6px}
+.pdf-btn:disabled{opacity:.6;cursor:wait}
+
 .plan-box{background:#FAFAFA;border:1px solid var(--bd);border-radius:var(--r2);overflow:auto;
   margin-bottom:10px;padding:8px;min-height:160px}
 .plan-box canvas,.plan-box svg{max-width:100%;height:auto;display:block;border-radius:var(--r3)}

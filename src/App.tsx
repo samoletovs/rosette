@@ -88,6 +88,7 @@ export default function App() {
   const [fbSuccess, setFbSuccess] = useState(false);
   const [fbError, setFbError] = useState("");
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [pdfGenerating, setPdfGenerating] = useState(false);
 
   // Fetch authenticated user and log login
   useEffect(() => {
@@ -256,6 +257,33 @@ export default function App() {
     a.click();
   };
 
+  const handlePdfExport = async () => {
+    if (!placements || !svgRoomLayouts || !svgCircuitDiagram) return;
+    setPdfGenerating(true);
+    try {
+      const { exportPdf } = await import('./pdfExport');
+      const stdMap: Record<string, string> = {
+        LV: 'LBN 261-23', LT: 'STR 2.09.02:2005', EE: 'EVS-HD 60364',
+      };
+      await exportPdf({
+        rooms,
+        placements,
+        svgRoomLayouts,
+        svgCircuitDiagram,
+        svgWiringDiagram,
+        project: {
+          countryCode,
+          propertyType,
+          standard: stdMap[countryCode] || countryCode,
+        },
+      });
+    } catch (err: any) {
+      setError(err.message || 'PDF generation failed');
+    } finally {
+      setPdfGenerating(false);
+    }
+  };
+
   const reset = () => {
     setStep("upload"); setFile(null); setPreviewUrl(""); setBase64Url("");
     setRooms([]); setStandards(null); setPlacements(null); setAnalysisData(null);
@@ -263,6 +291,7 @@ export default function App() {
     setError(""); setCanvasReady(false); setSocketOverrides({});
     setProposedPlacements([]); setProposedSwitchboard(null);
     setConfirmedPlacements([]); setConfirmedSwitchboard(null);
+    setPdfGenerating(false);
   };
 
   const handleFeedbackSubmit = async () => {
@@ -428,6 +457,14 @@ export default function App() {
               </>}
             </section>
             {placements.summary && <p className="summary-text">{placements.summary}</p>}
+
+            {/* PDF Export */}
+            <div className="pdf-export-bar">
+              <button className="btn primary pdf-btn" disabled={pdfGenerating} onClick={handlePdfExport}>
+                {pdfGenerating ? "Generating PDF…" : "📄 Download A3 PDF — Full Electrical Plan"}
+              </button>
+              <span className="muted sm">A3 landscape · Room layouts, circuit diagram, wiring plan, bill of materials</span>
+            </div>
 
             {/* Electrical Diagrams with tabs */}
             <section className="card">
