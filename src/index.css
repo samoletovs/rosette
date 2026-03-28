@@ -227,3 +227,36 @@ footer p{color:#B8B8B8;font-size:.66rem;font-weight:400;margin-top:2px}
   .stepper{padding:10px 0 16px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0s!important;transition-duration:0s!important}}
+
+/* ── Placement Editor ── */
+.placement-editor{position:relative}
+.placement-toolbar{display:flex;align-items:center;justify-content:space-between;margin:12px 0 8px}
+.placement-canvas-wrap{background:#FAFAFA;border:1px solid var(--bd);border-radius:var(--r2);overflow:hidden;
+  margin-bottom:12px;position:relative;min-height:200px}
+.placement-canvas-wrap canvas{display:block;max-width:100%;cursor:grab}
+.placement-canvas-wrap canvas:active{cursor:grabbing}
+.placement-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:300px;gap:12px;position:relative}
+
+/* Socket / DB detail panel */
+.placement-panel{position:absolute;right:16px;bottom:80px;background:#fff;border:1px solid var(--bd);
+  border-radius:var(--r2);box-shadow:0 8px 24px rgba(0,0,0,.1);width:260px;z-index:10;overflow:hidden}
+.placement-panel-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--bd)}
+.placement-panel-head strong{font-size:.88rem;font-weight:600}
+.placement-panel-head .modal-close{margin-left:auto}
+.placement-panel-body{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+
+/* Height presets */
+.height-presets{display:flex;gap:6px}
+.height-presets .btn{padding:5px 10px;font-size:.72rem;flex:1}
+
+/* Legend */
+.placement-legend{display:flex;flex-wrap:wrap;gap:12px;padding:6px 0;margin-bottom:8px}
+.placement-legend-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--tx2);font-weight:400}
+.placement-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.placement-legend-swatch{width:16px;height:10px;border-radius:2px;flex-shrink:0}
+
+@media(max-width:640px){
+  .placement-panel{position:fixed;left:8px;right:8px;bottom:8px;width:auto}
+  .placement-toolbar{flex-direction:column;gap:6px;align-items:flex-start}
+}

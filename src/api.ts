@@ -67,16 +67,35 @@ export async function getCountries(): Promise<{ countries: { code: string; count
   return res.json();
 }
 
+export async function proposePlacements(
+  rooms: any[],
+  countryCode: string,
+  propertyType: string,
+  standards: any,
+  switchboard: any,
+): Promise<any> {
+  const res = await fetch(`${API_BASE}/propose-placements`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rooms, countryCode, propertyType, standards, switchboard }),
+    signal: withTimeout(TIMEOUT),
+  });
+  if (!res.ok) throw new Error(await safeJsonError(res, "Placement proposal failed"));
+  return res.json();
+}
+
 export async function calculateSockets(
   rooms: any[],
   countryCode: string,
   propertyType: string,
-  standards: any
+  standards: any,
+  confirmedPlacements?: any[],
+  confirmedSwitchboard?: any,
 ): Promise<any> {
   const res = await fetch(`${API_BASE}/calculate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ rooms, countryCode, propertyType, standards }),
+    body: JSON.stringify({ rooms, countryCode, propertyType, standards, confirmedPlacements, confirmedSwitchboard }),
     signal: withTimeout(TIMEOUT),
   });
   if (!res.ok) throw new Error(await safeJsonError(res, "Calculation failed"));

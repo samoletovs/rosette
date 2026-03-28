@@ -11,10 +11,29 @@ app.http("calculate", {
   route: "calculate",
   handler: async (request: HttpRequest): Promise<HttpResponseInit> => {
     try {
-      const body = (await request.json()) as { rooms: any[]; countryCode: string; propertyType: string; standards: any };
+      const body = (await request.json()) as {
+        rooms: any[];
+        countryCode: string;
+        propertyType: string;
+        standards: any;
+        confirmedPlacements?: any[];
+        confirmedSwitchboard?: any;
+      };
       if (!body.rooms || !body.countryCode) return { status: 400, jsonBody: { error: "rooms and countryCode required" } };
+      const hasConfirmedPlacements = Array.isArray(body.confirmedPlacements) && body.confirmedPlacements.length > 0;
 
       const client = new AzureOpenAI({ endpoint, apiKey, apiVersion: "2024-08-01-preview", deployment });
+
+      const confirmedSection = hasConfirmedPlacements
+        ? `\n\nIMPORTANT — CONFIRMED PLACEMENTS: The user has already positioned sockets on the floor plan. Use these EXACT positions — do NOT move or reposition any socket. Your job is ONLY to assign circuits, RCD groups, and wiring routes for the given placements.
+
+Confirmed switchboard: ${JSON.stringify(body.confirmedSwitchboard)}
+
+Confirmed socket positions:
+${JSON.stringify(body.confirmedPlacements, null, 2)}
+
+Return these placements verbatim in the "placements" array with the same x_pct, y_pct, wall, height_mm, and type values, but add the "circuit" field to each.`
+        : `\n\nIMPORTANT: Each room has a "requested_sockets" field — this is the number of sockets the user wants for that room. You MUST place exactly that many sockets in each room. Do not add fewer or more.`;
 
       const response = await client.chat.completions.create({
         model: deployment,
@@ -26,8 +45,7 @@ app.http("calculate", {
 Standards for ${body.countryCode}: ${JSON.stringify(body.standards?.room_rules || {}, null, 2)}
 
 Wiring standards: ${JSON.stringify(body.standards?.wiring || {}, null, 2)}
-
-IMPORTANT: Each room has a "requested_sockets" field — this is the number of sockets the user wants for that room. You MUST place exactly that many sockets in each room. Do not add fewer or more.
+${confirmedSection}
 
 Rules: Standard height 300mm, kitchen countertop 1000-1200mm, min 600mm from water, all circuits need 30mA RCD.
 
@@ -62,8 +80,9 @@ Respond in JSON:
       } catch {
         return { status: 500, jsonBody: { error: "AI returned malformed placement data. Please try again." } };
       }
-    } catch (error: any) {
-      return { status: 500, jsonBody: { error: error.message || "Calculation failed" } };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Calculation failed";
+      return { status: 500, jsonBody: { error: message } };
     }
   },
 });
