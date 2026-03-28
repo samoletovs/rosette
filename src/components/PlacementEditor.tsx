@@ -25,24 +25,13 @@ const OUTLET_LABELS: Record<number, string> = {
   1: "Single", 2: "Double", 3: "Triple", 4: "Quad", 5: "5-gang", 6: "6-gang",
 };
 
-// Room type → letter prefix for socket IDs
-const ROOM_PREFIX: Record<string, string> = {
-  kitchen: "K", living_room: "L", living_area: "L", bedroom: "B",
-  bathroom: "BT", hallway: "H", home_office: "O", wc: "W",
-  utility_room: "U", garage: "G", balcony: "BL", dining_room: "D",
-  laundry: "U", suite: "S", sala: "L", dormitorio: "B", cocina: "K",
-  lavanderia: "U", baño: "BT",
-};
-
+/** Derive a short prefix from room name (what the user sees).
+ *  "Kitchen" → "KI", "Sala" → "SA", "Dormitorio 2" → "DO", "Baño Social" → "BA" */
 function roomPrefix(room: Room): string {
-  const t = room.type?.toLowerCase().replace(/[\s-]+/g, "_").replace(/[^a-z0-9_]/g, "") || "";
-  // Check known prefixes
-  for (const [key, prefix] of Object.entries(ROOM_PREFIX)) {
-    if (t.includes(key)) return prefix;
-  }
-  // Fallback: first 2 uppercase chars of room name
-  const name = (room.name || room.type || "S").replace(/[^a-zA-Z]/g, "");
-  return (name.substring(0, 2) || "S").toUpperCase();
+  const name = (room.name || room.type || "R").replace(/[^a-zA-ZÀ-ÿ]/g, "");
+  if (name.length === 0) return "R";
+  // Use first 2 letters, uppercase
+  return name.substring(0, 2).toUpperCase();
 }
 
 interface PlacementEditorProps {
@@ -120,18 +109,30 @@ function matchRoom(s: SocketPlacement, rooms: Room[]): Room | undefined {
 }
 
 /** Re-assign socket IDs with room-prefix AND normalize room_id to match actual rooms.
- *  This handles the case where the AI returns room_ids that don't match the analysis. */
+ *  Prefix is derived from room name: "Kitchen" → KI1, "Sala" → SA1, etc.
+ *  Counter is per-room (not per-prefix) so each room has its own numbering. */
 function assignPrefixedIds(sockets: SocketPlacement[], rooms: Room[]): SocketPlacement[] {
-  const counters = new Map<string, number>();
+  // Build unique prefix per room (disambiguate if two rooms share a prefix)
+  const prefixMap = new Map<string, string>(); // room.id → prefix
+  const usedPrefixes = new Map<string, number>(); // prefix → count of rooms using it
+  for (const room of rooms) {
+    const base = roomPrefix(room);
+    const existing = usedPrefixes.get(base) || 0;
+    usedPrefixes.set(base, existing + 1);
+    // If duplicate, append a number: BA, BA2, BA3...
+    prefixMap.set(room.id, existing === 0 ? base : `${base}${existing + 1}`);
+  }
+
+  const counters = new Map<string, number>(); // room.id → socket counter
   return sockets.map((s) => {
     const room = matchRoom(s, rooms);
-    const prefix = room ? roomPrefix(room) : "S";
-    const count = (counters.get(prefix) || 0) + 1;
-    counters.set(prefix, count);
+    const roomId = room?.id ?? s.room_id;
+    const prefix = prefixMap.get(roomId) ?? roomPrefix(room || { name: s.room_name } as Room);
+    const count = (counters.get(roomId) || 0) + 1;
+    counters.set(roomId, count);
     return {
       ...s,
       socket_id: `${prefix}${count}`,
-      // Normalize room_id/room_name to match actual room data
       room_id: room?.id ?? s.room_id,
       room_name: room?.name ?? s.room_name,
       gang: s.gang || 1,
@@ -184,16 +185,13 @@ export function PlacementEditor({
     return () => window.removeEventListener("resize", resize);
   }, [image]);
 
-  // Next socket ID per room prefix
+  // Next socket ID for a room (based on room name prefix + count of existing sockets in that room)
   const nextId = useCallback((room: Room): string => {
     const prefix = roomPrefix(room);
     const all = [...placedSockets, ...tray];
-    const existing = all.filter((s) => s.socket_id.startsWith(prefix)).map((s) => {
-      const num = parseInt(s.socket_id.slice(prefix.length), 10);
-      return isNaN(num) ? 0 : num;
-    });
-    const max = existing.length > 0 ? Math.max(...existing) : 0;
-    return `${prefix}${max + 1}`;
+    // Count sockets in this specific room
+    const roomSockets = all.filter((s) => s.room_id === room.id);
+    return `${prefix}${roomSockets.length + 1}`;
   }, [placedSockets, tray]);
 
   // ── Socket drag ──
