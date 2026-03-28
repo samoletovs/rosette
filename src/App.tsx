@@ -218,7 +218,22 @@ export default function App() {
     if (!fbTitle.trim() || !fbDesc.trim()) { setFbError("Title and description are required"); return; }
     setFbSending(true); setFbError("");
     try {
-      await submitFeedback({ type: fbType, title: fbTitle, description: fbDesc, page: step });
+      // Create GitHub issue directly (feeds Copilot triage pipeline)
+      const typeMap: Record<string, { emoji: string; label: string; ghLabel: string }> = {
+        bug: { emoji: '🐛', label: 'Bug Report', ghLabel: 'bug' },
+        feature: { emoji: '💡', label: 'Feature Idea', ghLabel: 'enhancement' },
+        improvement: { emoji: '📝', label: 'Improvement', ghLabel: 'enhancement' },
+        other: { emoji: '📝', label: 'Other', ghLabel: 'enhancement' },
+      };
+      const info = typeMap[fbType] || typeMap.other;
+      const title = `${info.emoji} ${info.label}: ${fbTitle.slice(0, 80)}`;
+      const body = `## ${info.label}\n\n${fbDesc}\n\n---\n*Page: \`${step}\` · Submitted via rosette in-app feedback*`;
+      window.open(
+        `https://github.com/samoletovs/rosette/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&labels=${encodeURIComponent(info.ghLabel)}`,
+        '_blank',
+      );
+      // Also save to Table Storage as backup
+      try { await submitFeedback({ type: fbType, title: fbTitle, description: fbDesc, page: step }); } catch { /* non-critical */ }
       setFbSuccess(true);
       setTimeout(() => { setShowFeedback(false); setFbSuccess(false); setFbTitle(""); setFbDesc(""); setFbType("improvement"); }, 1800);
     } catch (err: any) {
