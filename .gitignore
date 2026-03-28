@@ -18,6 +18,9 @@ Thumbs.db
 # IDE
 .idea/
 *.swp
+
+# Test screenshots
+screenshots/
 *.swo
 
 # Playwright MCP
