@@ -326,17 +326,24 @@ export function PlacementEditor({
                     const gangLines: number[][] = [];
                     if (gang === 1) { gangLines.push([0, 1, 0, -r + 2]); }
                     else { const sp = Math.min(r - 2, gang * 2.5); for (let i = 0; i < gang; i++) { const lx = -sp / 2 + (sp / (gang - 1)) * i; gangLines.push([lx, 1, lx, -r + 2]); } }
+                    // Rotation: semicircle opens into room (away from wall)
+                    const wallRot: Record<string, number> = { north: 0, south: 180, east: 270, west: 90 };
+                    const rot = wallRot[(s.wall || 'north').toLowerCase()] ?? 0;
                     return (
                       <Group key={s.socket_id} x={sx} y={sy} draggable
                         onDragEnd={(e) => handleSocketDragEnd(s.socket_id, e)}
                         onClick={(e) => { e.cancelBubble = true; setSelectedSocket(s.socket_id); setShowDbPanel(false); setPlacingSocket(null); }}
                         onTap={(e) => { e.cancelBubble = true; setSelectedSocket(s.socket_id); setShowDbPanel(false); setPlacingSocket(null); }}>
                         {isSel && <Circle radius={r + 5} fill={color} opacity={0.15} />}
-                        <Circle radius={r + 2} fill="white" opacity={0.9} />
-                        <Arc angle={180} rotation={180} innerRadius={0} outerRadius={r} fill="none" stroke={color} strokeWidth={2} />
-                        <Line points={[-r, 0, r, 0]} stroke={color} strokeWidth={2} />
-                        <Line points={[-r + 2, 3, r - 2, 3]} stroke={color} strokeWidth={1.2} />
-                        {gangLines.map((pts, idx) => <Line key={idx} points={pts} stroke={color} strokeWidth={1.5} />)}
+                        {/* Symbol group — rotated to face away from wall */}
+                        <Group rotation={rot}>
+                          <Circle radius={r + 2} fill="white" opacity={0.9} />
+                          <Arc angle={180} rotation={180} innerRadius={0} outerRadius={r} fill="none" stroke={color} strokeWidth={2} />
+                          <Line points={[-r, 0, r, 0]} stroke={color} strokeWidth={2} />
+                          <Line points={[-r + 2, 3, r - 2, 3]} stroke={color} strokeWidth={1.2} />
+                          {gangLines.map((pts, idx) => <Line key={idx} points={pts} stroke={color} strokeWidth={1.5} />)}
+                        </Group>
+                        {/* Label stays horizontal (outside rotation) */}
                         <Text x={-16} y={-r - 16} text={s.socket_id} fontSize={9} fontFamily="Inter, system-ui, sans-serif" fontStyle="700" fill={color} width={32} align="center" />
                         {gang > 1 && (<>
                           <Circle x={r + 2} y={-r} radius={6} fill={color} />

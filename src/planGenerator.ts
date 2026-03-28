@@ -109,7 +109,7 @@ export function generateRoomLayouts(rooms: any[], placements: any[]): string {
         const h = s.height_mm ? `${s.height_mm}mm` : "";
         const socketType = s.type || "standard_16a";
         const gang = s.gang || 1;
-        svg += socketOutlet(sx, sy, s.socket_id, socketType, h, gang);
+        svg += socketOutlet(sx, sy, s.socket_id, socketType, h, gang, wall);
       });
     }
   });
@@ -477,6 +477,82 @@ export function generateWiringDiagram(
 
   // Standards footer
   svg += standardsFooter(svgW, svgH, 'NYM-J cable · Verify lengths on-site');
+
+  svg += `</svg>`;
+  return svg;
+}
+
+// ── Annotated Floor Plan ──
+// Renders user-confirmed sockets and distribution board as an SVG overlay
+// on top of the original floor plan image. This is the key electrician output.
+
+export function generateAnnotatedFloorPlan(
+  imageDataUrl: string,
+  imageWidth: number,
+  imageHeight: number,
+  placements: any[],
+  rooms: any[],
+  switchboardData?: { x_pct?: number; y_pct?: number; room_name?: string; wall?: string; height_mm?: number },
+): string {
+  const svgW = imageWidth;
+  const svgH = imageHeight;
+  const pct = (v: number, total: number) => (v / 100) * total;
+
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" style="font-family:Inter,system-ui,sans-serif">`;
+
+  // Floor plan as background
+  svg += `<image href="${xmlEsc(imageDataUrl)}" x="0" y="0" width="${svgW}" height="${svgH}" />`;
+
+  // Semi-transparent room overlays with names
+  rooms.forEach((room: any) => {
+    if (!room.position) return;
+    const p = room.position;
+    const x = pct(p.x_pct, svgW), y = pct(p.y_pct, svgH);
+    const w = pct(p.w_pct, svgW), h = pct(p.h_pct, svgH);
+    const type = room.type?.toLowerCase().replace(/[\\s-]+/g, "_") || "other";
+    const fill = ROOM_COLORS[type] || "#f1f5f9";
+
+    svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" opacity="0.2" stroke="#94a3b8" stroke-width="0.5" rx="2"/>`;
+    svg += `<text x="${x + 4}" y="${y + 12}" font-size="9" font-weight="600" fill="#374151" opacity="0.8">${xmlEsc(room.name || room.type)}</text>`;
+  });
+
+  // Wiring lines from switchboard to sockets (subtle dashed)
+  if (switchboardData?.x_pct !== undefined && switchboardData?.y_pct !== undefined) {
+    const dbX = pct(switchboardData.x_pct, svgW);
+    const dbY = pct(switchboardData.y_pct, svgH);
+
+    placements.forEach((s: any) => {
+      const sx = pct(s.x_pct, svgW), sy = pct(s.y_pct, svgH);
+      svg += `<line x1="${dbX}" y1="${dbY}" x2="${sx}" y2="${sy}" stroke="#94a3b8" stroke-width="0.5" stroke-dasharray="4 3" opacity="0.4"/>`;
+    });
+  }
+
+  // Socket symbols at their confirmed positions
+  const wallToDir: Record<string, string> = { north: 'N', south: 'S', east: 'E', west: 'W' };
+  placements.forEach((s: any) => {
+    const sx = pct(s.x_pct, svgW);
+    const sy = pct(s.y_pct, svgH);
+    const wall = wallToDir[(s.wall || 'north').toLowerCase()] || 'N';
+    const gang = s.gang || 1;
+    const h = s.height_mm ? `${s.height_mm}mm` : '';
+    const socketType = s.type || 'standard_16a';
+    svg += socketOutlet(sx, sy, s.socket_id, socketType, h, gang, wall);
+  });
+
+  // Distribution board marker
+  if (switchboardData?.x_pct !== undefined && switchboardData?.y_pct !== undefined) {
+    const dbX = pct(switchboardData.x_pct, svgW);
+    const dbY = pct(switchboardData.y_pct, svgH);
+    const bw = 28, bh = 18;
+    svg += `<rect x="${dbX - bw / 2}" y="${dbY - bh / 2}" width="${bw}" height="${bh}" fill="#1e293b" stroke="#0f172a" stroke-width="1" rx="3"/>`;
+    svg += `<text x="${dbX}" y="${dbY + 4}" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">DB</text>`;
+    svg += `<text x="${dbX}" y="${dbY + bh / 2 + 11}" text-anchor="middle" font-size="6" fill="${COLORS.muted}">${switchboardData.height_mm || 1600}mm</text>`;
+  }
+
+  // Title strip at bottom
+  svg += `<rect x="0" y="${svgH - 22}" width="${svgW}" height="22" fill="rgba(30,41,59,0.85)"/>`;
+  svg += `<text x="${svgW / 2}" y="${svgH - 7}" text-anchor="middle" font-size="9" font-weight="600" fill="#fff">`;
+  svg += `Rosette — Socket Placement Plan · ${placements.length} sockets · IEC 60617</text>`;
 
   svg += `</svg>`;
   return svg;

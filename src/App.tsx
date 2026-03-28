@@ -13,7 +13,7 @@ import {
   getAuthUser,
   AuthUser,
 } from "./api";
-import { generateRoomLayouts, generateCircuitDiagram, generateWiringDiagram, drawReferencePlan } from "./planGenerator";
+import { generateRoomLayouts, generateCircuitDiagram, generateWiringDiagram, generateAnnotatedFloorPlan } from "./planGenerator";
 import { PlacementEditor } from "./components/PlacementEditor";
 import type { SocketPlacement, Switchboard } from "./types";
 
@@ -83,12 +83,11 @@ export default function App() {
   const [svgRoomLayouts, setSvgRoomLayouts] = useState("");
   const [svgCircuitDiagram, setSvgCircuitDiagram] = useState("");
   const [svgWiringDiagram, setSvgWiringDiagram] = useState("");
-  const [diagramTab, setDiagramTab] = useState<"rooms" | "circuits" | "wiring" | "plan">("rooms");
+  const [svgFloorPlan, setSvgFloorPlan] = useState("");
+  const [diagramTab, setDiagramTab] = useState<"rooms" | "circuits" | "wiring" | "plan">("plan");
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [canvasReady, setCanvasReady] = useState(false);
   const [socketOverrides, setSocketOverrides] = useState<Record<string, number>>({});
   const [proposedPlacements, setProposedPlacements] = useState<SocketPlacement[]>([]);
   const [proposedSwitchboard, setProposedSwitchboard] = useState<Switchboard | null>(null);
@@ -136,23 +135,6 @@ export default function App() {
         ])
       );
   }, []);
-
-  // Draw reference plan (no socket dots) when results tab shows the floor plan
-  useEffect(() => {
-    if (step !== "results" || !base64Url || diagramTab !== "plan") return;
-    const timer = setTimeout(() => {
-      if (!canvasRef.current) return;
-      const img = new Image();
-      img.onload = () => {
-        if (canvasRef.current) {
-          drawReferencePlan(canvasRef.current, img);
-          setCanvasReady(true);
-        }
-      };
-      img.src = base64Url;
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [step, base64Url, diagramTab]);
 
   const handleFile = useCallback((f: File) => {
     setFile(f);
@@ -260,6 +242,18 @@ export default function App() {
       setSvgCircuitDiagram(generateCircuitDiagram(result.circuits || [], result.total_sockets || 0, result.rcd_groups));
       setSvgWiringDiagram(generateWiringDiagram(result.wiring || [], rooms, result.circuits || []));
 
+      // Generate annotated floor plan with sockets overlaid on the original image
+      if (base64Url) {
+        const img = new window.Image();
+        img.onload = () => {
+          setSvgFloorPlan(generateAnnotatedFloorPlan(
+            base64Url, img.naturalWidth, img.naturalHeight,
+            result.placements || [], rooms, confirmedDb || undefined,
+          ));
+        };
+        img.src = base64Url;
+      }
+
       const desc = await generateDescription(roomsWithOverrides, result, countryCode, propertyType);
       setDescEn(desc.description_en || "");
       setDescLocal(desc.description_local || "");
@@ -308,8 +302,8 @@ export default function App() {
   const reset = () => {
     setStep("upload"); setFile(null); setPreviewUrl(""); setBase64Url("");
     setRooms([]); setStandards(null); setPlacements(null); setAnalysisData(null);
-    setDescEn(""); setDescLocal(""); setSvgRoomLayouts(""); setSvgCircuitDiagram(""); setSvgWiringDiagram("");
-    setError(""); setCanvasReady(false); setSocketOverrides({});
+    setDescEn(""); setDescLocal(""); setSvgRoomLayouts(""); setSvgCircuitDiagram(""); setSvgWiringDiagram(""); setSvgFloorPlan("");
+    setError(""); setSocketOverrides({});
     setProposedPlacements([]); setProposedSwitchboard(null);
     setConfirmedPlacements([]); setConfirmedSwitchboard(null);
     setPdfGenerating(false);
@@ -608,9 +602,15 @@ export default function App() {
               )}
               {diagramTab === "plan" && (
                 <>
-                  <div className="plan-box"><canvas ref={canvasRef} /></div>
-                  <p className="muted sm" style={{textAlign:"center", margin:"8px 0"}}>Original floor plan for reference — socket positions are in the specification above</p>
-                  <button className="btn outline" disabled={!canvasReady} onClick={() => canvasRef.current && download(canvasRef.current.toDataURL("image/png"), "rosette-reference-plan.png", "image/png")}>↓ Download reference plan</button>
+                  {svgFloorPlan ? (
+                    <div className="plan-box svg-box" dangerouslySetInnerHTML={{ __html: svgFloorPlan }} />
+                  ) : (
+                    <div className="plan-box" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 200 }}>
+                      <p className="muted">Generating floor plan with sockets…</p>
+                    </div>
+                  )}
+                  <p className="muted sm" style={{textAlign:"center", margin:"8px 0"}}>Socket positions on the actual floor plan — ready for the electrician</p>
+                  <button className="btn outline" disabled={!svgFloorPlan} onClick={() => svgFloorPlan && download(svgFloorPlan, "rosette-socket-plan.svg", "image/svg+xml")}>↓ Download socket plan</button>
                 </>
               )}
             </section>
