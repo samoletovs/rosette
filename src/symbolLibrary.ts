@@ -80,7 +80,7 @@ export const ROOM_COLORS: Record<string, string> = {
  * IEC 60617 socket outlet — semicircle with line(s).
  *
  * Standard single socket:  semicircle opening upward + single vertical line
- * Double socket:           semicircle + two vertical lines
+ * Multi-gang:              semicircle + N vertical lines (1-5)
  * Special/dedicated:       semicircle + filled indicator
  * IP44 (waterproof):       symbol inside a circle
  *
@@ -89,7 +89,7 @@ export const ROOM_COLORS: Record<string, string> = {
  * @param id - socket identifier (e.g. "S1")
  * @param type - "standard_16a" | "dedicated" | "ip44" | other
  * @param height - mounting height label (e.g. "300mm")
- * @param isDouble - if true, renders double socket
+ * @param gang - number of connections (1-5, default 1)
  */
 export function socketOutlet(
   x: number,
@@ -97,12 +97,13 @@ export function socketOutlet(
   id: string,
   type: string,
   height: string,
-  isDouble = false,
+  gang = 1,
 ): string {
   const isSpecial = type !== 'standard_16a';
   const isIP44 = type === 'ip44' || type === 'waterproof';
   const color = isSpecial ? COLORS.special : COLORS.primary;
   const r = 9; // semicircle radius
+  const gangCount = Math.max(1, Math.min(5, gang));
 
   let symbol = `<g class="iec-socket">`;
 
@@ -116,21 +117,24 @@ export function socketOutlet(
   // Flat base line
   symbol += `<line x1="${x - r}" y1="${y}" x2="${x + r}" y2="${y}" stroke="${color}" stroke-width="1.8"/>`;
 
-  if (isDouble) {
-    // Two lines up from the semicircle (double socket)
-    symbol += `<line x1="${x - 3}" y1="${y}" x2="${x - 3}" y2="${y - r + 1}" stroke="${color}" stroke-width="1.5"/>`;
-    symbol += `<line x1="${x + 3}" y1="${y}" x2="${x + 3}" y2="${y - r + 1}" stroke="${color}" stroke-width="1.5"/>`;
-  } else {
-    // Single line up from the semicircle (single socket)
+  // Gang lines — vertical lines from base up into semicircle
+  if (gangCount === 1) {
     symbol += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y - r + 1}" stroke="${color}" stroke-width="1.5"/>`;
+  } else {
+    const spread = Math.min(r - 2, gangCount * 2.5);
+    for (let i = 0; i < gangCount; i++) {
+      const lx = x - spread / 2 + (spread / (gangCount - 1)) * i;
+      symbol += `<line x1="${lx}" y1="${y}" x2="${lx}" y2="${y - r + 1}" stroke="${color}" stroke-width="1.5"/>`;
+    }
   }
 
   // Earth contact bar (horizontal bar below the base)
   symbol += `<line x1="${x - r + 2}" y1="${y + 3}" x2="${x + r - 2}" y2="${y + 3}" stroke="${color}" stroke-width="1.2"/>`;
 
-  // Special/dedicated indicator — diagonal cross on the right
-  if (isSpecial && !isIP44) {
-    symbol += `<line x1="${x + r + 1}" y1="${y - 5}" x2="${x + r + 5}" y2="${y + 3}" stroke="${color}" stroke-width="1"/>`;
+  // Gang count badge (if > 1)
+  if (gangCount > 1) {
+    symbol += `<circle cx="${x + r + 4}" cy="${y - r + 2}" r="5" fill="${color}"/>`;
+    symbol += `<text x="${x + r + 4}" y="${y - r + 5}" text-anchor="middle" font-size="6" font-weight="700" fill="#fff">${gangCount}</text>`;
   }
 
   // ID label above
@@ -436,19 +440,23 @@ export interface LegendItem {
 export const LEGEND_ITEMS = {
   singleSocket: {
     label: 'Single socket outlet 16A',
-    symbolFn: (x: number, y: number) => socketOutlet(x, y, '', 'standard_16a', '', false),
+    symbolFn: (x: number, y: number) => socketOutlet(x, y, '', 'standard_16a', '', 1),
   },
   doubleSocket: {
     label: 'Double socket outlet 16A',
-    symbolFn: (x: number, y: number) => socketOutlet(x, y, '', 'standard_16a', '', true),
+    symbolFn: (x: number, y: number) => socketOutlet(x, y, '', 'standard_16a', '', 2),
+  },
+  tripleSocket: {
+    label: 'Triple socket outlet 16A',
+    symbolFn: (x: number, y: number) => socketOutlet(x, y, '', 'standard_16a', '', 3),
   },
   specialSocket: {
     label: 'Dedicated / special socket',
-    symbolFn: (x: number, y: number) => socketOutlet(x, y, '', 'dedicated', '', false),
+    symbolFn: (x: number, y: number) => socketOutlet(x, y, '', 'dedicated', '', 1),
   },
   ip44Socket: {
     label: 'Waterproof socket (IP44)',
-    symbolFn: (x: number, y: number) => socketOutlet(x, y, '', 'ip44', '', false),
+    symbolFn: (x: number, y: number) => socketOutlet(x, y, '', 'ip44', '', 1),
   },
   mcb: {
     label: 'MCB (Circuit breaker)',

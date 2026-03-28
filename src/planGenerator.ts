@@ -108,7 +108,8 @@ export function generateRoomLayouts(rooms: any[], placements: any[]): string {
 
         const h = s.height_mm ? `${s.height_mm}mm` : "";
         const socketType = s.type || "standard_16a";
-        svg += socketOutlet(sx, sy, s.socket_id, socketType, h);
+        const gang = s.gang || 1;
+        svg += socketOutlet(sx, sy, s.socket_id, socketType, h, gang);
       });
     }
   });
