@@ -415,6 +415,21 @@ export function PlacementEditor({
                 onClick={handleStageClick} onTap={handleStageClick}>
                 <Layer><KonvaImage image={image} width={W} height={H} /></Layer>
 
+                {/* Room name labels (text only, no colored overlay) */}
+                <Layer listening={false}>
+                  {rooms.map((room) => {
+                    const p = room.position;
+                    const x = pctToPixel(p.x_pct, W) + 4;
+                    const y = pctToPixel(p.y_pct, H) + 4;
+                    return (
+                      <Text key={`lbl-${room.id}`} x={x} y={y} text={room.name}
+                        fontSize={Math.max(9, Math.min(13, pctToPixel(p.w_pct, W) * 0.08))}
+                        fontFamily="Inter, system-ui, sans-serif" fontStyle="600"
+                        fill="#1e293b" opacity={0.7} />
+                    );
+                  })}
+                </Layer>
+
                 {/* Wiring lines (subtle) */}
                 <Layer listening={false}>
                   {switchboard.x_pct !== undefined && switchboard.y_pct !== undefined && placedSockets.map((s) => (
