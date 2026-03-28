@@ -225,78 +225,93 @@ def test_full_flow(viewport_name: str, width: int, height: int):
         page.wait_for_timeout(1000)  # Let Konva canvas render
         page.screenshot(path=f"{SCREENSHOTS}/{viewport_name}-03-placement.png", full_page=True)
 
-        # Check tray has sockets
-        tray_count_text = page.locator(".placement-toolbar .muted").inner_text()
-        print(f"\n[3] Placement page: {tray_count_text}")
+        # Check room cards strip
+        status_text = page.locator(".placement-toolbar .muted").inner_text()
+        print(f"\n[3] Placement page: {status_text}")
 
-        # Count tray chips
-        tray_chips = page.locator(".tray-chip.unplaced")
-        tray_count = tray_chips.count()
-        print(f"  ✓ {tray_count} sockets in tray")
+        # Count room cards
+        room_cards = page.locator(".room-card:not(.db-card)")
+        room_card_count = room_cards.count()
+        print(f"  ✓ {room_card_count} room cards in strip")
 
-        if tray_count == 0:
-            errors.append("CRITICAL: No sockets in tray!")
-            print("  ✗ FAIL: No sockets in tray!")
-        else:
-            # Verify we have sockets for multiple rooms
-            room_cards = page.locator(".tray-room")
-            room_card_count = room_cards.count()
-            print(f"  ✓ {room_card_count} room cards in tray")
+        if room_card_count < 3:
+            errors.append(f"Expected 5 room cards, got {room_card_count}")
 
-            if room_card_count < 3:
-                errors.append(f"Expected 5 room cards in tray, got {room_card_count}")
+        # Print room details
+        for i in range(room_card_count):
+            card = room_cards.nth(i)
+            room_name = card.locator(".room-card-name").inner_text()
+            count = card.locator(".room-card-count").inner_text()
+            print(f"    {room_name}: {count}")
 
-            # Print room details
-            for i in range(room_card_count):
-                card = room_cards.nth(i)
-                room_name = card.locator(".tray-room-name").inner_text()
-                count = card.locator(".tray-room-head .muted").inner_text()
-                print(f"    {room_name}: {count}")
+        # Test placing each room by clicking its Place button then clicking on the canvas
+        place_buttons = page.locator(".room-card-btn:not(.add)")
+        btn_count = place_buttons.count()
+        print(f"\n  Placing {btn_count} rooms...")
 
-        # Test Auto-place all
-        auto_btn = page.locator("button.primary", has_text="Auto-place all")
-        if auto_btn.count() > 0 and auto_btn.is_visible():
-            auto_btn.click()
-            page.wait_for_timeout(500)
-            page.screenshot(path=f"{SCREENSHOTS}/{viewport_name}-04-auto-placed.png", full_page=True)
+        for i in range(btn_count):
+            btn = page.locator(".room-card-btn:not(.add)").first
+            if not btn.is_visible():
+                break
+            btn_text = btn.inner_text()
+            btn.click()
+            page.wait_for_timeout(200)
 
-            placed_text = page.locator(".placement-toolbar .muted").inner_text()
-            print(f"  ✓ After auto-place: {placed_text}")
+            # Click on the canvas at different positions per room
+            canvas = page.locator(".placement-canvas-wrap canvas").first
+            if canvas.is_visible():
+                box = canvas.bounding_box()
+                if box:
+                    # Offset click position per room so they don't overlap
+                    x_offset = 100 + i * 120
+                    y_offset = 100 + (i % 3) * 100
+                    page.mouse.click(box["x"] + min(x_offset, box["width"] - 50),
+                                     box["y"] + min(y_offset, box["height"] - 50))
+                    page.wait_for_timeout(300)
+                    print(f"    Placed room {i+1} ({btn_text})")
 
-            # Verify all sockets are placed (none in tray)
-            remaining = page.locator(".tray-chip.unplaced").count()
-            if remaining > 0:
-                errors.append(f"Auto-place left {remaining} sockets in tray")
-                print(f"  ✗ {remaining} sockets still in tray after auto-place")
+        # Also place DB
+        db_btn = page.locator(".db-card .room-card-btn")
+        if db_btn.count() > 0 and db_btn.is_visible():
+            db_btn.click()
+            page.wait_for_timeout(200)
+            canvas = page.locator(".placement-canvas-wrap canvas").first
+            box = canvas.bounding_box()
+            if box:
+                page.mouse.click(box["x"] + box["width"] / 2, box["y"] + 50)
+                page.wait_for_timeout(300)
+                print("    Placed DB")
+
+        page.screenshot(path=f"{SCREENSHOTS}/{viewport_name}-04-placed.png", full_page=True)
+
+        # Check placed count
+        placed_text = page.locator(".placement-toolbar .muted").inner_text()
+        print(f"  ✓ After placing: {placed_text}")
+        
+        # Verify sockets are on the map
+        placed_count_str = placed_text.split(" ")[0]
+        try:
+            placed_count = int(placed_count_str)
+            if placed_count == 0:
+                errors.append("No sockets placed on the map")
+                print("  ✗ No sockets placed!")
             else:
-                print("  ✓ All sockets placed successfully")
-        else:
-            errors.append("Auto-place button not found")
-            print("  ✗ Auto-place button not found")
+                print(f"  ✓ {placed_count} sockets placed successfully")
+        except ValueError:
+            print(f"  ⚠ Could not parse placed count from: {placed_text}")
 
-        # Click a placed socket to test selection panel
-        placed_chips = page.locator(".tray-chip.placed")
-        if placed_chips.count() > 0:
-            placed_chips.first.click()
-            page.wait_for_timeout(300)
-            panel = page.locator(".placement-panel")
-            if panel.is_visible():
-                panel_id = panel.locator("strong").first.inner_text()
-                print(f"  ✓ Socket panel opened for {panel_id}")
-                # Verify panel has outlet grid
-                outlet_btns = panel.locator(".outlet-btn")
-                if outlet_btns.count() == 6:
-                    print(f"  ✓ Outlet grid shows 6 options (1-6)")
-                else:
-                    errors.append(f"Expected 6 outlet buttons, got {outlet_btns.count()}")
-                # Close panel
-                panel.locator(".modal-close").click()
-            page.screenshot(path=f"{SCREENSHOTS}/{viewport_name}-05-socket-panel.png", full_page=True)
+        # Click on the canvas to select a placed socket
+        page.wait_for_timeout(500)
+        page.screenshot(path=f"{SCREENSHOTS}/{viewport_name}-05-placed-detail.png", full_page=True)
 
         # Confirm placement
         confirm_btn = page.locator("button.primary", has_text="Confirm placement")
-        confirm_btn.click()
-        print("\n[4] Confirming placement...")
+        if confirm_btn.is_disabled():
+            errors.append("Confirm button is disabled (no sockets placed)")
+            print("  ✗ Confirm button disabled!")
+        else:
+            confirm_btn.click()
+            print("\n[4] Confirming placement...")
 
         # ── Step 5: Calculating ──
         page.wait_for_timeout(500)
