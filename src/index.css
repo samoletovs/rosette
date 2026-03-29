@@ -278,7 +278,7 @@ footer p{color:#B8B8B8;font-size:.66rem;font-weight:400;margin-top:2px}
   background:#fff;text-align:center;min-width:100px;transition:all .15s ease}
 .room-card.done{border-color:#10b981;background:#ecfdf5}
 .room-card.active{border-color:#4f46e5;background:#eef2ff;box-shadow:0 0 0 2px #4f46e540}
-.room-card.db-card{border-left:3px solid #1e293b}
+.room-card.db-card{border-left:3px solid var(--bd)}
 .room-card-name{font-size:.76rem;font-weight:600;color:var(--tx);white-space:nowrap}
 .room-card-count{font-size:.62rem;color:var(--tx2);margin:2px 0 6px}
 .room-card-btn{padding:4px 12px;border:1px solid #4f46e5;border-radius:4px;
