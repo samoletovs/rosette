@@ -231,29 +231,45 @@ export default function App() {
       );
       setPlacements(result);
 
-      // Restore user's socket properties (type, gang, height, rotation) that the AI may have changed
-      const userSocketMap = new Map((confirmedSockets || []).map(s => [s.socket_id, s]));
-      const restoredPlacements = (result.placements || []).map((p: any) => {
-        const user = userSocketMap.get(p.socket_id);
-        if (user) {
-          return { ...p, type: user.type || p.type, gang: user.gang || p.gang, height_mm: user.height_mm || p.height_mm };
-        }
-        return p;
-      });
-      result.placements = restoredPlacements;
+      // Use user's confirmed placements as the authoritative source for socket positions/properties.
+      // The AI calculation may return different socket_ids or modified types — we ignore those.
+      // We only take circuit assignments, RCD groups, and wiring from the AI.
+      const userPlacements = confirmedSockets || [];
 
-      // Generate professional diagrams
-      setSvgRoomLayouts(generateRoomLayouts(rooms, restoredPlacements));
-      setSvgCircuitDiagram(generateCircuitDiagram(result.circuits || [], result.total_sockets || 0, result.rcd_groups));
+      // Map AI circuit assignments back to user sockets (by matching room + index)
+      const aiPlacements = result.placements || [];
+      const aiByRoom = new Map<string, any[]>();
+      for (const p of aiPlacements) {
+        const key = p.room_id || p.room_name;
+        if (!aiByRoom.has(key)) aiByRoom.set(key, []);
+        aiByRoom.get(key)!.push(p);
+      }
+
+      const finalPlacements = userPlacements.map((s: SocketPlacement) => {
+        // Find matching AI socket to get circuit assignment
+        const aiForRoom = aiByRoom.get(s.room_id) || aiByRoom.get(s.room_name) || [];
+        const aiMatch = aiForRoom.shift(); // take next AI socket for this room
+        return {
+          ...s,
+          circuit: aiMatch?.circuit || `circuit_${s.room_id}`,
+        };
+      });
+
+      // Override result.placements with the user's authoritative positions
+      result.placements = finalPlacements;
+
+      // Generate professional diagrams using user's placements
+      setSvgRoomLayouts(generateRoomLayouts(rooms, finalPlacements));
+      setSvgCircuitDiagram(generateCircuitDiagram(result.circuits || [], finalPlacements.length, result.rcd_groups));
       setSvgWiringDiagram(generateWiringDiagram(result.wiring || [], rooms, result.circuits || []));
 
-      // Generate annotated floor plan with sockets overlaid on the original image
+      // Generate annotated floor plan — user's exact socket positions on the image
       if (base64Url) {
         const img = new window.Image();
         img.onload = () => {
           setSvgFloorPlan(generateAnnotatedFloorPlan(
             base64Url, img.naturalWidth, img.naturalHeight,
-            restoredPlacements, rooms, confirmedDb || undefined,
+            finalPlacements, rooms, confirmedDb || undefined,
           ));
         };
         img.src = base64Url;
