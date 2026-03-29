@@ -510,7 +510,7 @@ function legendSocket(x: number, y: number, color: string, gang: number): string
 function legendSocketIP44(x: number, y: number): string {
   const color = '#10b981';
   let s = legendSocket(x, y, color, 1);
-  s += `<circle cx="${x}" cy="${y}" r="12" fill="none" stroke="${color}" stroke-width="0.8" stroke-dasharray="2 1"/>`;
+  s += `<circle cx="${x}" cy="${y}" r="10" fill="none" stroke="${color}" stroke-width="0.8" stroke-dasharray="2 1"/>`;
   return s;
 }
 
@@ -547,31 +547,24 @@ export function symbolLegend(
   y: number,
   items: LegendItem[],
 ): string {
-  const colW = 190;
-  const rowH = 32;
-  const symbolW = 30; // space reserved for the symbol
-  const cols = Math.min(items.length, Math.floor(svgW / colW) || 1);
-  const rows = Math.ceil(items.length / cols);
-  const legendW = cols * colW;
-  const legendH = rows * rowH + 22;
-  const ox = (svgW - legendW) / 2;
+  // Simple horizontal legend: symbol · label pairs in a row
+  const itemW = Math.max(140, svgW / items.length);
+  const legendW = items.length * itemW;
+  const ox = Math.max(4, (svgW - legendW) / 2);
+  const legendH = 40;
 
   let s = `<g class="iec-legend">`;
-  s += `<rect x="${ox - 10}" y="${y}" width="${legendW + 20}" height="${legendH}" fill="#fff" stroke="#e5e7eb" stroke-width="0.8" rx="4"/>`;
-  s += `<text x="${svgW / 2}" y="${y + 14}" text-anchor="middle" font-size="7.5" font-weight="600" fill="${COLORS.text}">Symbol Legend (IEC 60617)</text>`;
+  s += `<rect x="${ox - 6}" y="${y}" width="${Math.min(legendW + 12, svgW - 8)}" height="${legendH}" fill="#fff" stroke="#e5e7eb" stroke-width="0.8" rx="4"/>`;
+  s += `<text x="${svgW / 2}" y="${y + 12}" text-anchor="middle" font-size="7" font-weight="600" fill="${COLORS.text}">Symbol Legend (IEC 60617)</text>`;
 
   items.forEach((item, i) => {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const cellX = ox + col * colW;
-    const cellY = y + 24 + row * rowH;
-    const symCenterX = cellX + symbolW / 2 + 4;
-    const symCenterY = cellY + rowH / 2 - 2;
+    const cx = ox + i * itemW + 20;
+    const cy = y + 28;
 
-    // Symbol (centered in its 30px-wide cell)
-    s += item.symbolFn(symCenterX, symCenterY);
-    // Label (vertically centered with the symbol)
-    s += `<text x="${cellX + symbolW + 10}" y="${symCenterY + 3}" font-size="6.5" fill="${COLORS.text}">${xmlEsc(item.label)}</text>`;
+    // Symbol
+    s += item.symbolFn(cx, cy);
+    // Label to the right of symbol
+    s += `<text x="${cx + 16}" y="${cy + 3}" font-size="6" fill="${COLORS.text}">${xmlEsc(item.label)}</text>`;
   });
 
   s += `</g>`;
