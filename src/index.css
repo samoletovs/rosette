@@ -253,9 +253,26 @@ footer p{color:#B8B8B8;font-size:.66rem;font-weight:400;margin-top:2px}
 
 /* ── Placement Editor ── */
 .placement-editor{position:relative}
-.placement-toolbar{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}
 
-/* Room strip — horizontal cards above plan */
+/* Static instruction bar — always visible, no layout shift */
+.instruction-bar{background:#f1f5f9;border:1px solid var(--bd);border-radius:var(--r2);
+  padding:8px 14px;margin-bottom:8px;font-size:.78rem;color:var(--tx2);
+  display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:38px;
+  transition:all .2s ease}
+.instruction-bar.active{background:#4f46e5;color:#fff;border-color:#4f46e5;
+  animation:pulse-bg 1.5s ease-in-out infinite}
+.banner-cancel{background:none;border:1px solid rgba(255,255,255,.4);color:#fff;padding:3px 10px;
+  border-radius:4px;font-size:.72rem;cursor:pointer;flex-shrink:0}
+.banner-cancel:hover{background:rgba(255,255,255,.15)}
+@keyframes pulse-bg{0%,100%{background:#4f46e5}50%{background:#6366f1}}
+
+.placement-toolbar{display:flex;align-items:center;justify-content:space-between;margin:0 0 6px}
+.toolbar-sep{width:1px;height:20px;background:var(--bd);margin:0 4px}
+.zoom-btn{width:28px;height:28px;border:1px solid var(--bd);border-radius:6px;background:#fff;
+  font-size:1rem;cursor:pointer;display:grid;place-items:center;color:var(--tx2);
+  transition:all .15s ease;padding:0;line-height:1}
+.zoom-btn:hover{background:#f1f5f9;border-color:#c7d2fe}
+.zoom-label{font-size:.68rem;font-weight:500;color:var(--tx2);min-width:36px;text-align:center}
 .room-strip{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px;margin-bottom:4px;-webkit-overflow-scrolling:touch}
 .room-card{flex-shrink:0;border:1px solid var(--bd);border-radius:var(--r2);padding:8px 12px;
   background:#fff;text-align:center;min-width:100px;transition:all .15s ease}
@@ -272,15 +289,6 @@ footer p{color:#B8B8B8;font-size:.66rem;font-weight:400;margin-top:2px}
 .room-card-btn.add{border-color:var(--bd);background:#fff;color:var(--tx2);font-weight:400}
 .room-card-btn.add:hover{border-color:#4f46e5;color:#4f46e5;background:#eef2ff}
 .room-card-check{font-size:.82rem;color:#10b981}
-
-/* Placement mode banner */
-.placing-banner{background:#4f46e5;color:#fff;padding:10px 16px;border-radius:var(--r2);
-  display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;
-  font-size:.82rem;animation:pulse-bg 1.5s ease-in-out infinite}
-.banner-cancel{background:none;border:1px solid rgba(255,255,255,.4);color:#fff;padding:4px 10px;
-  border-radius:4px;font-size:.72rem;cursor:pointer}
-.banner-cancel:hover{background:rgba(255,255,255,.15)}
-@keyframes pulse-bg{0%,100%{background:#4f46e5}50%{background:#6366f1}}
 
 /* Canvas */
 .placement-canvas-wrap{background:#FAFAFA;border:1px solid var(--bd);border-radius:var(--r2);overflow:hidden;
@@ -312,6 +320,10 @@ footer p{color:#B8B8B8;font-size:.66rem;font-weight:400;margin-top:2px}
 .height-presets{display:flex;gap:6px}
 .height-presets .btn{padding:5px 10px;font-size:.72rem;flex:1}
 
+/* Rotation presets */
+.rotation-presets{display:flex;gap:4px}
+.rotation-presets .btn{padding:4px 8px;font-size:.68rem;flex:1;min-width:0}
+
 /* Legend */
 .placement-legend{display:flex;flex-wrap:wrap;gap:12px;padding:6px 0;margin-bottom:8px}
 .placement-legend-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--tx2);font-weight:400}
@@ -326,6 +338,7 @@ footer p{color:#B8B8B8;font-size:.66rem;font-weight:400;margin-top:2px}
   .placement-panel{width:100%}
   .placement-toolbar{flex-direction:column;gap:6px;align-items:flex-start}
   .outlet-label{display:none}
-  .placing-banner{font-size:.75rem;padding:8px 12px}
+  .instruction-bar{font-size:.72rem;padding:6px 10px;min-height:34px}
   .panel-row{flex-direction:column;gap:8px}
+  .rotation-presets .btn{font-size:.62rem;padding:3px 4px}
 }

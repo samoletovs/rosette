@@ -7,7 +7,6 @@ import {
   getStandards,
   getCountries,
   calculateSockets,
-  proposePlacements,
   generateDescription,
   submitFeedback,
   getAuthUser,
@@ -185,28 +184,23 @@ export default function App() {
     }
   };
 
-  const startProposal = async () => {
-    setStep("proposing");
-    setError("");
-    try {
-      const roomsWithOverrides = rooms.map((r: any) => ({
-        ...r,
-        requested_sockets: socketOverrides[r.id] ?? standards?.room_rules?.[mapRoomType(r.type)]?.minimum_sockets ?? 2,
-      }));
-      const result = await proposePlacements(
-        roomsWithOverrides,
-        countryCode,
-        propertyType,
-        standards,
-        analysisData?.switchboard,
-      );
-      setProposedPlacements(result.placements || []);
-      setProposedSwitchboard(result.switchboard || analysisData?.switchboard || null);
-      setStep("placement");
-    } catch (err: any) {
-      setError(err.name === "AbortError" ? "Request timed out — please try again." : (err.message || "Proposal failed"));
-      setStep("review");
+  const goToPlacement = () => {
+    // Generate socket stubs directly from room counts (no AI proposal needed)
+    const stubs: SocketPlacement[] = [];
+    let counter = 0;
+    for (const r of rooms) {
+      const count = socketOverrides[r.id] ?? standards?.room_rules?.[mapRoomType(r.type)]?.minimum_sockets ?? 2;
+      for (let i = 0; i < count; i++) {
+        counter++;
+        stubs.push({
+          room_id: r.id, room_name: r.name, socket_id: `s${counter}`,
+          x_pct: 0, y_pct: 0, wall: 'north', height_mm: 300, type: 'standard_16a',
+        });
+      }
     }
+    setProposedPlacements(stubs);
+    setProposedSwitchboard(analysisData?.switchboard || { room_id: rooms[0]?.id || '', room_name: rooms[0]?.name || 'Hallway', wall: 'north', height_mm: 1600, reason: 'Central location' });
+    setStep('placement');
   };
 
   const handlePlacementConfirm = (placements: SocketPlacement[], switchboard: Switchboard) => {
@@ -531,7 +525,7 @@ export default function App() {
 
             <div className="btn-row">
               <button className="btn ghost" onClick={reset}>← Back</button>
-              <button className="btn primary" disabled={rooms.length === 0} onClick={startProposal}>Place sockets →</button>
+              <button className="btn primary" disabled={rooms.length === 0} onClick={goToPlacement}>Place sockets →</button>
             </div>
           </section>
         )}
