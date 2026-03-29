@@ -4,13 +4,18 @@ import type { KonvaEventObject } from "konva/lib/Node";
 import type { Room, SocketPlacement, Switchboard } from "../types";
 
 const SOCKET_COLORS: Record<string, string> = {
-  standard_16a: "#4f46e5", dedicated: "#f59e0b", oven: "#ef4444", lighting: "#10b981",
+  standard_16a: "#4f46e5", dedicated: "#f59e0b", oven: "#ef4444",
+  ip44: "#10b981", usb: "#8b5cf6", tv_data: "#6366f1", ev_charger: "#dc2626",
 };
 const HEIGHT_PRESETS = [300, 600, 1100] as const;
 const SOCKET_TYPES = [
   { value: "standard_16a", label: "Standard 16A" },
   { value: "dedicated", label: "Dedicated" },
+  { value: "ip44", label: "IP44 Waterproof" },
+  { value: "usb", label: "USB Socket" },
+  { value: "tv_data", label: "TV / Data" },
   { value: "oven", label: "Oven (32A)" },
+  { value: "ev_charger", label: "EV Charger (32A)" },
 ] as const;
 const OUTLET_OPTIONS = [1, 2, 3, 4, 5, 6] as const;
 const OUTLET_LABELS: Record<number, string> = {
@@ -435,7 +440,11 @@ export function PlacementEditor({
       <div className="placement-legend">
         <div className="placement-legend-item"><span className="placement-legend-dot" style={{ background: "#4f46e5" }} /> Standard</div>
         <div className="placement-legend-item"><span className="placement-legend-dot" style={{ background: "#f59e0b" }} /> Dedicated</div>
+        <div className="placement-legend-item"><span className="placement-legend-dot" style={{ background: "#10b981" }} /> IP44</div>
+        <div className="placement-legend-item"><span className="placement-legend-dot" style={{ background: "#8b5cf6" }} /> USB</div>
+        <div className="placement-legend-item"><span className="placement-legend-dot" style={{ background: "#6366f1" }} /> TV/Data</div>
         <div className="placement-legend-item"><span className="placement-legend-dot" style={{ background: "#ef4444" }} /> Oven</div>
+        <div className="placement-legend-item"><span className="placement-legend-dot" style={{ background: "#dc2626" }} /> EV</div>
         <div className="placement-legend-item"><span className="placement-legend-swatch" style={{ background: "#1e293b" }} /> DB</div>
       </div>
 

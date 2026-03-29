@@ -101,10 +101,14 @@ export function socketOutlet(
   gang = 1,
   wall = 'N',
 ): string {
-  const isSpecial = type !== 'standard_16a';
   const isIP44 = type === 'ip44' || type === 'waterproof';
-  const color = isSpecial ? COLORS.special : COLORS.primary;
-  const r = 9; // semicircle radius
+  // Color per socket type
+  const typeColors: Record<string, string> = {
+    standard_16a: COLORS.primary, dedicated: COLORS.special, oven: '#ef4444',
+    ip44: '#10b981', usb: '#8b5cf6', tv_data: '#6366f1', ev_charger: '#dc2626',
+  };
+  const color = typeColors[type] || COLORS.primary;
+  const r = 9;
   const gangCount = Math.max(1, Math.min(5, gang));
 
   // Rotation: semicircle opens away from the wall (into the room)
