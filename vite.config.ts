@@ -13,5 +13,13 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes("react-markdown") || id.includes("remark-gfm")) return "markdown";
+          if (id.includes("pdfkit") || id.includes("html2canvas")) return "pdf";
+        },
+      },
+    },
   },
 });
