@@ -317,7 +317,7 @@ export default function App() {
   };
 
   const handlePdfExport = async () => {
-    if (!placements || !svgRoomLayouts || !svgCircuitDiagram) return;
+    if (!placements) return;
     setPdfGenerating(true);
     try {
       const { exportPdf } = await import('./pdfExport');

@@ -356,17 +356,26 @@ export async function exportPdf(data: PdfData): Promise<void> {
 
   // Page 1: Room layouts
   drawPageFrame(doc, 1, totalPages, 'Room Socket Layouts', 'E-01', data.project);
-  await renderSvgPage(doc, data.svgRoomLayouts, MARGIN + 18, CONTENT_W, CONTENT_H - 30);
+  if (data.svgRoomLayouts) {
+    try { await renderSvgPage(doc, data.svgRoomLayouts, MARGIN + 18, CONTENT_W, CONTENT_H - 30); }
+    catch (e) { console.warn('PDF: Room layouts SVG render failed', e); }
+  }
 
   // Page 2: Circuit diagram
   doc.addPage('a3', 'landscape');
   drawPageFrame(doc, 2, totalPages, 'Single-Line Circuit Diagram', 'E-02', data.project);
-  await renderSvgPage(doc, data.svgCircuitDiagram, MARGIN + 18, CONTENT_W, CONTENT_H - 30);
+  if (data.svgCircuitDiagram) {
+    try { await renderSvgPage(doc, data.svgCircuitDiagram, MARGIN + 18, CONTENT_W, CONTENT_H - 30); }
+    catch (e) { console.warn('PDF: Circuit diagram SVG render failed', e); }
+  }
 
   // Page 3: Wiring plan
   doc.addPage('a3', 'landscape');
   drawPageFrame(doc, 3, totalPages, 'Wiring Plan', 'E-03', data.project);
-  await renderSvgPage(doc, data.svgWiringDiagram, MARGIN + 18, CONTENT_W, CONTENT_H - 30);
+  if (data.svgWiringDiagram) {
+    try { await renderSvgPage(doc, data.svgWiringDiagram, MARGIN + 18, CONTENT_W, CONTENT_H - 30); }
+    catch (e) { console.warn('PDF: Wiring plan SVG render failed', e); }
+  }
 
   // Page 4: Bill of materials + standards
   doc.addPage('a3', 'landscape');
