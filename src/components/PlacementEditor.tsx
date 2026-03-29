@@ -173,7 +173,7 @@ export function PlacementEditor({
     if (placing.type === 'db') {
       const room = findContainingRoom(xPct, yPct, rooms);
       setSwitchboard((prev) => ({ ...prev, x_pct: xPct, y_pct: yPct, room_id: room?.id ?? prev.room_id, room_name: room?.name ?? prev.room_name, wall: room ? deriveWall(xPct, yPct, room) : prev.wall }));
-      setDbPlaced(true); setPlacing(null); return;
+      setDbPlaced(true); setPlacing(null); setShowDbPanel(true); setSelectedSocket(null); return;
     }
 
     if (placing.type === 'room') {
@@ -189,6 +189,8 @@ export function PlacementEditor({
       setSockets((prev) => [...prev, ...newSockets]);
       setPlacedRoomIds((prev) => new Set([...prev, roomId]));
       setPlacing(null);
+      // Focus on the first socket of the newly placed room
+      if (newSockets.length > 0) { setSelectedSocket(newSockets[0].socket_id); setShowDbPanel(false); }
     }
   }, [placing, stageSize, rooms, socketsByRoom, zoom]);
 
@@ -431,8 +433,60 @@ export function PlacementEditor({
             <button className="modal-close" onClick={() => setShowDbPanel(false)} aria-label="Close">×</button>
           </div>
           <div className="placement-panel-body">
-            <p className="muted sm">{switchboard.reason}</p>
-            <p className="muted sm">Height: {switchboard.height_mm}mm</p>
+            <div className="panel-row">
+              <label className="form-field" style={{ flex: 1 }}>
+                <span>Type</span>
+                <select value={switchboard.type || "flush"}
+                  onChange={(e) => setSwitchboard((prev) => ({ ...prev, type: e.target.value }))}>
+                  <option value="flush">Flush-mounted (recessed)</option>
+                  <option value="surface">Surface-mounted</option>
+                  <option value="floor_standing">Floor-standing</option>
+                </select>
+              </label>
+              <label className="form-field" style={{ flex: 1 }}>
+                <span>Rating</span>
+                <select value={switchboard.rating || "63A"}
+                  onChange={(e) => setSwitchboard((prev) => ({ ...prev, rating: e.target.value }))}>
+                  <option value="40A">40A (small apartment)</option>
+                  <option value="63A">63A (standard residential)</option>
+                  <option value="80A">80A (large house)</option>
+                  <option value="100A">100A (large + EV)</option>
+                </select>
+              </label>
+            </div>
+            <div className="panel-row">
+              <label className="form-field" style={{ flex: 1 }}>
+                <span>Height from floor</span>
+                <div className="height-presets">
+                  {([1400, 1500, 1600, 1800] as const).map((h) => (
+                    <button key={h} className={`btn ${switchboard.height_mm === h ? "primary" : "outline"}`}
+                      onClick={() => setSwitchboard((prev) => ({ ...prev, height_mm: h }))}>{h}mm</button>
+                  ))}
+                </div>
+              </label>
+              <label className="form-field" style={{ flex: 1 }}>
+                <span>IP Rating</span>
+                <select value={switchboard.ip_rating || "IP30"}
+                  onChange={(e) => setSwitchboard((prev) => ({ ...prev, ip_rating: e.target.value }))}>
+                  <option value="IP30">IP30 (indoor dry)</option>
+                  <option value="IP44">IP44 (semi-outdoor)</option>
+                  <option value="IP65">IP65 (outdoor / garage)</option>
+                </select>
+              </label>
+            </div>
+            <label className="form-field">
+              <span>Rotation</span>
+              <div className="rotation-presets">
+                {ROTATION_OPTIONS.map((r) => (
+                  <button key={r.value} className={`btn ${(switchboard.rotation ?? 0) === r.value ? "primary" : "outline"}`}
+                    onClick={() => setSwitchboard((prev) => ({ ...prev, rotation: r.value }))}>{r.label}</button>
+                ))}
+              </div>
+            </label>
+            <p className="muted sm" style={{ lineHeight: 1.4, marginTop: 4 }}>
+              IEC 60364-5-51: Mount 1400–1800mm from floor. Accessible, dry location.
+              {switchboard.reason ? ` ${switchboard.reason}` : ''}
+            </p>
           </div>
         </div>
       )}
