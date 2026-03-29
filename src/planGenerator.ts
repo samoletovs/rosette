@@ -503,17 +503,12 @@ export function generateAnnotatedFloorPlan(
   // Floor plan as background
   svg += `<image href="${xmlEsc(imageDataUrl)}" x="0" y="0" width="${svgW}" height="${svgH}" />`;
 
-  // Semi-transparent room overlays with names
+  // Room name labels only (no colored rectangles)
   rooms.forEach((room: any) => {
     if (!room.position) return;
     const p = room.position;
-    const x = pct(p.x_pct, svgW), y = pct(p.y_pct, svgH);
-    const w = pct(p.w_pct, svgW), h = pct(p.h_pct, svgH);
-    const type = room.type?.toLowerCase().replace(/[\\s-]+/g, "_") || "other";
-    const fill = ROOM_COLORS[type] || "#f1f5f9";
-
-    svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" opacity="0.2" stroke="#94a3b8" stroke-width="0.5" rx="2"/>`;
-    svg += `<text x="${x + 4}" y="${y + 12}" font-size="9" font-weight="600" fill="#374151" opacity="0.8">${xmlEsc(room.name || room.type)}</text>`;
+    const x = pct(p.x_pct, svgW) + 4, y = pct(p.y_pct, svgH) + 12;
+    svg += `<text x="${x}" y="${y}" font-size="9" font-weight="600" fill="#1e293b" opacity="0.7">${xmlEsc(room.name || room.type)}</text>`;
   });
 
   // Wiring lines from switchboard to sockets (subtle dashed)

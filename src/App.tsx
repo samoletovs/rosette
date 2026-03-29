@@ -16,7 +16,7 @@ import { generateRoomLayouts, generateCircuitDiagram, generateWiringDiagram, gen
 import { PlacementEditor } from "./components/PlacementEditor";
 import type { SocketPlacement, Switchboard } from "./types";
 
-type Step = "upload" | "analyzing" | "review" | "proposing" | "placement" | "calculating" | "results";
+type Step = "upload" | "analyzing" | "review" | "placement" | "calculating" | "results";
 
 const PROPERTY_TYPES = [
   { value: "house", label: "House" },
@@ -231,8 +231,19 @@ export default function App() {
       );
       setPlacements(result);
 
+      // Restore user's socket properties (type, gang, height, rotation) that the AI may have changed
+      const userSocketMap = new Map((confirmedSockets || []).map(s => [s.socket_id, s]));
+      const restoredPlacements = (result.placements || []).map((p: any) => {
+        const user = userSocketMap.get(p.socket_id);
+        if (user) {
+          return { ...p, type: user.type || p.type, gang: user.gang || p.gang, height_mm: user.height_mm || p.height_mm };
+        }
+        return p;
+      });
+      result.placements = restoredPlacements;
+
       // Generate professional diagrams
-      setSvgRoomLayouts(generateRoomLayouts(rooms, result.placements || []));
+      setSvgRoomLayouts(generateRoomLayouts(rooms, restoredPlacements));
       setSvgCircuitDiagram(generateCircuitDiagram(result.circuits || [], result.total_sockets || 0, result.rcd_groups));
       setSvgWiringDiagram(generateWiringDiagram(result.wiring || [], rooms, result.circuits || []));
 
@@ -242,7 +253,7 @@ export default function App() {
         img.onload = () => {
           setSvgFloorPlan(generateAnnotatedFloorPlan(
             base64Url, img.naturalWidth, img.naturalHeight,
-            result.placements || [], rooms, confirmedDb || undefined,
+            restoredPlacements, rooms, confirmedDb || undefined,
           ));
         };
         img.src = base64Url;
@@ -334,15 +345,17 @@ export default function App() {
 
   const stepsData: { key: Step; label: string }[] = [
     { key: "upload", label: "Upload" },
-    { key: "analyzing", label: "Analyze" },
     { key: "review", label: "Review" },
     { key: "placement", label: "Place" },
-    { key: "calculating", label: "Calculate" },
     { key: "results", label: "Results" },
   ];
-  const stepOrder = ["upload", "analyzing", "review", "proposing", "placement", "calculating", "results"];
+  const stepOrder: string[] = ["upload", "analyzing", "review", "placement", "calculating", "results"];
   const _stepIdx = stepOrder.indexOf(step);
-  const displayIdx = stepsData.findIndex((s) => s.key === (step === "proposing" ? "placement" : step));
+  // Map intermediate steps to their display step
+  const displayStep = step === "analyzing" ? "review" : step === "calculating" ? "results" : step;
+  const displayIdx = stepsData.findIndex((s) => s.key === displayStep);
+  // Results is the final step — show it as "done" (green) when active
+  const isLastStep = step === "results";
 
   return (
     <div className="app">
@@ -359,8 +372,8 @@ export default function App() {
 
       <nav className="stepper">
         {stepsData.map((s, i) => (
-          <div key={s.key} className={`s-item ${i === displayIdx ? "current" : i < displayIdx ? "done" : ""}`}>
-            <div className="s-dot">{i < displayIdx ? "✓" : i + 1}</div>
+          <div key={s.key} className={`s-item ${(i === displayIdx && isLastStep) || i < displayIdx ? "done" : i === displayIdx ? "current" : ""}`}>
+            <div className="s-dot">{i < displayIdx || (i === displayIdx && isLastStep) ? "✓" : i + 1}</div>
             <span className="s-label">{s.label}</span>
           </div>
         ))}
@@ -404,11 +417,11 @@ export default function App() {
           </section>
         )}
 
-        {(step === "analyzing" || step === "calculating" || step === "proposing") && (
+        {(step === "analyzing" || step === "calculating") && (
           <section className="card fade-in center-content">
             <div className="pulse-ring" /><div className="pulse-icon">⚡</div>
-            <h3>{step === "analyzing" ? "Analyzing floor plan" : step === "proposing" ? "Proposing placements" : "Calculating placements"}</h3>
-            <p className="muted">{step === "analyzing" ? "AI is identifying rooms…" : step === "proposing" ? "AI is proposing socket positions…" : `Applying ${countryCode} standards…`}</p>
+            <h3>{step === "analyzing" ? "Analyzing floor plan" : "Calculating circuits & wiring"}</h3>
+            <p className="muted">{step === "analyzing" ? "AI is identifying rooms…" : `Applying ${countryCode} standards…`}</p>
           </section>
         )}
 
