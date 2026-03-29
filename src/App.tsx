@@ -185,16 +185,39 @@ export default function App() {
   };
 
   const goToPlacement = () => {
-    // Generate socket stubs directly from room counts (no AI proposal needed)
+    // Generate socket stubs with smart defaults based on room type and country standards
     const stubs: SocketPlacement[] = [];
     let counter = 0;
+
+    // Room type → default socket properties per IEC/LBN standards
+    const roomDefaults: Record<string, (idx: number, total: number) => { type: string; height_mm: number; gang: number }> = {
+      kitchen: (idx, total) => {
+        if (idx === 0) return { type: 'oven', height_mm: 300, gang: 1 }; // oven dedicated
+        if (idx < Math.min(4, total - 1)) return { type: 'standard_16a', height_mm: 1100, gang: 2 }; // countertop doubles
+        return { type: 'standard_16a', height_mm: 300, gang: 1 };
+      },
+      bathroom: () => ({ type: 'ip44', height_mm: 1100, gang: 1 }),
+      wc: () => ({ type: 'ip44', height_mm: 1100, gang: 1 }),
+      balcony: () => ({ type: 'ip44', height_mm: 300, gang: 1 }),
+      garage: (idx) => idx === 0 ? { type: 'ev_charger', height_mm: 1100, gang: 1 } : { type: 'ip44', height_mm: 300, gang: 1 },
+      bedroom: (idx) => idx < 2 ? { type: 'usb', height_mm: 600, gang: 2 } : { type: 'standard_16a', height_mm: 300, gang: 1 },
+      home_office: (idx) => idx < 3 ? { type: 'dedicated', height_mm: 700, gang: 2 } : { type: 'standard_16a', height_mm: 300, gang: 1 },
+      utility_room: (idx) => idx < 2 ? { type: 'dedicated', height_mm: 1000, gang: 1 } : { type: 'standard_16a', height_mm: 300, gang: 1 },
+      living_room: (idx) => idx === 0 ? { type: 'tv_data', height_mm: 300, gang: 4 } : { type: 'standard_16a', height_mm: 300, gang: 1 },
+    };
+
     for (const r of rooms) {
       const count = socketOverrides[r.id] ?? standards?.room_rules?.[mapRoomType(r.type)]?.minimum_sockets ?? 2;
+      const roomType = mapRoomType(r.type);
+      const getDefaults = roomDefaults[roomType];
+
       for (let i = 0; i < count; i++) {
         counter++;
+        const defaults = getDefaults ? getDefaults(i, count) : { type: 'standard_16a', height_mm: 300, gang: 1 };
         stubs.push({
           room_id: r.id, room_name: r.name, socket_id: `s${counter}`,
-          x_pct: 0, y_pct: 0, wall: 'north', height_mm: 300, type: 'standard_16a',
+          x_pct: 0, y_pct: 0, wall: 'north',
+          height_mm: defaults.height_mm, type: defaults.type, gang: defaults.gang,
         });
       }
     }
