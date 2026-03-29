@@ -46,12 +46,15 @@ app.http("generate-description", {
       const roomsClean = body.rooms.map((r: any) => ({
         id: r.id, type: r.type, name: r.name,
         area_m2: r.area_m2, width_m: r.width_m, height_m: r.height_m,
+        position: r.position,
         features: r.features, requested_sockets: r.requested_sockets,
       }));
       const placementsClean = {
         placements: (body.placements.placements || []).map((p: any) => ({
           socket_id: p.socket_id, room_id: p.room_id, room_name: p.room_name,
-          wall: p.wall, height_mm: p.height_mm, type: p.type, circuit: p.circuit, notes: p.notes,
+          x_pct: p.x_pct, y_pct: p.y_pct,
+          wall: p.wall, height_mm: p.height_mm, type: p.type, gang: p.gang || 1,
+          circuit: p.circuit, notes: p.notes,
         })),
         circuits: body.placements.circuits || [],
         wiring: body.placements.wiring || [],
@@ -96,19 +99,22 @@ For EACH room, use this exact format:
 
 For each socket, create a structured entry:
 
-| # | ID | Location | Height | Type | Circuit | Purpose |
-|---|-----|----------|--------|------|---------|---------|
-| 1 | S1 | North wall, 200mm right of entrance door | 300mm | Standard 16A | C1 | General use |
-| 2 | S2 | East wall, above countertop, centered | 1100mm | Standard 16A | C1 | Countertop appliances |
+| # | ID | Location | Height | Type | Gang | Circuit | Purpose |
+|---|-----|----------|--------|------|------|---------|---------|
+| 1 | S1 | North wall, left section | 300mm | Standard 16A | Single | C1 | General use |
+| 2 | S2 | East wall, center section | 1100mm | Standard 16A | Double | C1 | Countertop appliances |
 
-Use PRACTICAL location descriptions that reference:
-- Door positions ("300mm left of kitchen door")
-- Windows ("centered below east window")
-- Fixtures ("above countertop, between stove and sink, min 600mm from water")
-- Furniture positions ("at bedside table position, left side")
-- Wall landmarks ("corner of north and east walls, 200mm from corner")
+LOCATION DESCRIPTIONS — derive from the provided data:
+Each socket has x_pct/y_pct (position on floor plan as percentages) and a wall assignment. Each room has a position bounding box (x_pct, y_pct, w_pct, h_pct). Use this to determine WHERE on the wall the socket sits:
+- Calculate the socket's relative position within its room (e.g., socket x_pct relative to room x_pct → left/center/right of that wall)
+- Describe as: "[Wall] wall, [left/center/right] section" or "[Wall] wall, near [corner with adjacent wall]"
+- For kitchen countertop sockets (height ≥1000mm): add "above countertop level"
+- For bedside sockets (height 600mm in bedrooms): add "bedside height"
+- If room features mention water sources and socket is nearby: note "min 600mm from water source"
+- NEVER invent distances from doors, windows, or furniture — we do not have their exact positions
+- NEVER fabricate specific millimeter measurements from landmarks
 
-NEVER use percentage coordinates or abstract positions.
+GANG COLUMN: Show "Single", "Double", "Triple", etc. based on the gang value (1=Single, 2=Double, 3=Triple, 4=Quad, 5+=Multi).
 
 **Special notes for this room:** (e.g., "Refrigerator socket on dedicated circuit", "All sockets min 600mm from sink per ${info.standards}")
 
@@ -156,7 +162,7 @@ List the recommended order of circuits in the consumer unit/distribution board.
 
 | Item | Specification | Quantity |
 |------|--------------|----------|
-| Socket outlets | ${info.socketType} | X |
+| Socket outlets | ${info.socketType} | X outlet frames (Y total connection points, accounting for double/triple gang) |
 | MCB 16A Type B | Per ${info.standards} | X |
 
 Include cable quantities (meters of each cable type: 3×2.5mm², 3×1.5mm², 3×6mm², etc.)
@@ -212,7 +218,7 @@ Write 5-8 practical tips in simple language:
 CRITICAL RULES:
 1. Translate EVERYTHING — all headings, labels, table headers, descriptions, notes, tips
 2. Keep the EXACT same Markdown structure — same headings (##, ###), same tables, same lists
-3. Keep ALL socket location details — translate "North wall, 200mm right of entrance door" to the ${info.lang} equivalent with the SAME precision
+3. Keep ALL socket location details — translate "North wall, left section" to the ${info.lang} equivalent with the SAME precision
 4. Keep ALL "Special notes" sections — if English says "No special notes" translate it, if it says "Refrigerator on dedicated circuit" translate it
 5. Keep ALL table rows — do not skip or summarize any socket entries
 6. Keep technical terms recognizable — "MCB", "RCD", "16A", "3×2.5mm²" stay as-is
