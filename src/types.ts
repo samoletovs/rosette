@@ -27,6 +27,10 @@ export interface Switchboard {
   reason: string;
   x_pct?: number;
   y_pct?: number;
+  type?: string;
+  rating?: string;
+  ip_rating?: string;
+  rotation?: number;
 }
 
 export interface SocketPlacement {
