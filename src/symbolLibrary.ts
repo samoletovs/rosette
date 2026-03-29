@@ -451,37 +451,89 @@ export interface LegendItem {
 
 /**
  * Pre-built legend items for common electrical installation symbols.
+ * Legend variants use compact, consistently-sized symbols (24×16 bounding box).
  */
 export const LEGEND_ITEMS = {
   singleSocket: {
     label: 'Single socket outlet 16A',
-    symbolFn: (x: number, y: number) => socketOutlet(x, y, '', 'standard_16a', '', 1),
+    symbolFn: (x: number, y: number) => legendSocket(x, y, COLORS.primary, 1),
   },
   doubleSocket: {
     label: 'Double socket outlet 16A',
-    symbolFn: (x: number, y: number) => socketOutlet(x, y, '', 'standard_16a', '', 2),
+    symbolFn: (x: number, y: number) => legendSocket(x, y, COLORS.primary, 2),
   },
   tripleSocket: {
     label: 'Triple socket outlet 16A',
-    symbolFn: (x: number, y: number) => socketOutlet(x, y, '', 'standard_16a', '', 3),
+    symbolFn: (x: number, y: number) => legendSocket(x, y, COLORS.primary, 3),
   },
   specialSocket: {
     label: 'Dedicated / special socket',
-    symbolFn: (x: number, y: number) => socketOutlet(x, y, '', 'dedicated', '', 1),
+    symbolFn: (x: number, y: number) => legendSocket(x, y, COLORS.special, 1),
   },
   ip44Socket: {
     label: 'Waterproof socket (IP44)',
-    symbolFn: (x: number, y: number) => socketOutlet(x, y, '', 'ip44', '', 1),
+    symbolFn: (x: number, y: number) => legendSocketIP44(x, y),
   },
   mcb: {
     label: 'MCB (Circuit breaker)',
-    symbolFn: (x: number, y: number) => mcbSymbol(x, y, '', ''),
+    symbolFn: (x: number, y: number) => legendMCB(x, y),
   },
   rcd: {
     label: 'RCD / RCCB (30mA)',
-    symbolFn: (x: number, y: number) => rcdSymbol(x, y, '', '', COLORS.rcd),
+    symbolFn: (x: number, y: number) => legendRCD(x, y),
   },
 } as const;
+
+/* ── Compact legend-only symbols (all fit a 24×16 box centered at x,y) ── */
+
+function legendSocket(x: number, y: number, color: string, gang: number): string {
+  const r = 7;
+  let s = '';
+  // Semicircle opening up
+  s += `<path d="M${x - r},${y + 2} A${r},${r} 0 0,1 ${x + r},${y + 2}" fill="none" stroke="${color}" stroke-width="1.5"/>`;
+  s += `<line x1="${x - r}" y1="${y + 2}" x2="${x + r}" y2="${y + 2}" stroke="${color}" stroke-width="1.5"/>`;
+  // Gang lines
+  if (gang === 1) {
+    s += `<line x1="${x}" y1="${y + 2}" x2="${x}" y2="${y - r + 3}" stroke="${color}" stroke-width="1.2"/>`;
+  } else {
+    const spread = Math.min(r - 2, gang * 2.4);
+    for (let i = 0; i < gang; i++) {
+      const lx = x - spread / 2 + (spread / Math.max(gang - 1, 1)) * i;
+      s += `<line x1="${lx}" y1="${y + 2}" x2="${lx}" y2="${y - r + 3}" stroke="${color}" stroke-width="1.2"/>`;
+    }
+  }
+  // Earth bar
+  s += `<line x1="${x - r + 2}" y1="${y + 5}" x2="${x + r - 2}" y2="${y + 5}" stroke="${color}" stroke-width="1"/>`;
+  return s;
+}
+
+function legendSocketIP44(x: number, y: number): string {
+  const color = '#10b981';
+  let s = legendSocket(x, y, color, 1);
+  s += `<circle cx="${x}" cy="${y}" r="12" fill="none" stroke="${color}" stroke-width="0.8" stroke-dasharray="2 1"/>`;
+  return s;
+}
+
+function legendMCB(x: number, y: number): string {
+  const w = 20, h = 18;
+  let s = '';
+  s += `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" fill="#fff" stroke="${COLORS.primary}" stroke-width="1.2" rx="2"/>`;
+  s += `<line x1="${x - 3}" y1="${y - 4}" x2="${x + 3}" y2="${y + 2}" stroke="${COLORS.primary}" stroke-width="1.2" stroke-linecap="round"/>`;
+  s += `<line x1="${x - 2}" y1="${y + 3}" x2="${x + 2}" y2="${y + 6}" stroke="${COLORS.primary}" stroke-width="0.7"/>`;
+  s += `<line x1="${x + 2}" y1="${y + 3}" x2="${x - 2}" y2="${y + 6}" stroke="${COLORS.primary}" stroke-width="0.7"/>`;
+  return s;
+}
+
+function legendRCD(x: number, y: number): string {
+  const w = 24, h = 20;
+  const color = '#10b981';
+  let s = '';
+  s += `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" fill="#fff" stroke="${color}" stroke-width="1.4" rx="2"/>`;
+  // Delta triangle
+  const ts = 5;
+  s += `<polygon points="${x},${y - ts} ${x - ts},${y + ts * 0.6} ${x + ts},${y + ts * 0.6}" fill="none" stroke="${color}" stroke-width="1.2"/>`;
+  return s;
+}
 
 /**
  * Render a symbol legend box at the bottom of a diagram.
@@ -495,25 +547,31 @@ export function symbolLegend(
   y: number,
   items: LegendItem[],
 ): string {
-  const colW = 170;
-  const rowH = 28;
+  const colW = 190;
+  const rowH = 32;
+  const symbolW = 30; // space reserved for the symbol
   const cols = Math.min(items.length, Math.floor(svgW / colW) || 1);
   const rows = Math.ceil(items.length / cols);
   const legendW = cols * colW;
-  const legendH = rows * rowH + 20;
+  const legendH = rows * rowH + 22;
   const ox = (svgW - legendW) / 2;
 
   let s = `<g class="iec-legend">`;
-  s += `<rect x="${ox - 8}" y="${y}" width="${legendW + 16}" height="${legendH}" fill="#fff" stroke="#e5e7eb" stroke-width="0.8" rx="4"/>`;
-  s += `<text x="${svgW / 2}" y="${y + 13}" text-anchor="middle" font-size="7.5" font-weight="600" fill="${COLORS.text}">Symbol Legend (IEC 60617)</text>`;
+  s += `<rect x="${ox - 10}" y="${y}" width="${legendW + 20}" height="${legendH}" fill="#fff" stroke="#e5e7eb" stroke-width="0.8" rx="4"/>`;
+  s += `<text x="${svgW / 2}" y="${y + 14}" text-anchor="middle" font-size="7.5" font-weight="600" fill="${COLORS.text}">Symbol Legend (IEC 60617)</text>`;
 
   items.forEach((item, i) => {
     const col = i % cols;
     const row = Math.floor(i / cols);
-    const ix = ox + col * colW + 20;
-    const iy = y + 24 + row * rowH;
-    s += item.symbolFn(ix, iy);
-    s += `<text x="${ix + 18}" y="${iy + 3}" font-size="6.5" fill="${COLORS.text}">${xmlEsc(item.label)}</text>`;
+    const cellX = ox + col * colW;
+    const cellY = y + 24 + row * rowH;
+    const symCenterX = cellX + symbolW / 2 + 4;
+    const symCenterY = cellY + rowH / 2 - 2;
+
+    // Symbol (centered in its 30px-wide cell)
+    s += item.symbolFn(symCenterX, symCenterY);
+    // Label (vertically centered with the symbol)
+    s += `<text x="${cellX + symbolW + 10}" y="${symCenterY + 3}" font-size="6.5" fill="${COLORS.text}">${xmlEsc(item.label)}</text>`;
   });
 
   s += `</g>`;
