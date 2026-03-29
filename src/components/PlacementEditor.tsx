@@ -327,8 +327,8 @@ export function PlacementEditor({
                   const gangLines: number[][] = [];
                   if (gang === 1) gangLines.push([0, 1, 0, -r + 2]);
                   else { const sp = Math.min(r - 2, gang * 2.5); for (let g = 0; g < gang; g++) { const lx = -sp / 2 + (sp / (gang - 1)) * g; gangLines.push([lx, 1, lx, -r + 2]); } }
-                  // Use manual rotation if set, else derive from wall
-                  const rot = (s as any).rotation ?? (WALL_ROT[(s.wall || 'north').toLowerCase()] ?? 0);
+                  // Manual rotation only (no auto-rotate from wall)
+                  const rot = (s as any).rotation ?? 0;
                   return (
                     <Group key={s.socket_id} x={sx} y={sy} draggable
                       onDragEnd={(e) => handleSocketDragEnd(s.socket_id, e)}
@@ -408,7 +408,7 @@ export function PlacementEditor({
                 <span>Rotation</span>
                 <div className="rotation-presets">
                   {ROTATION_OPTIONS.map((r) => {
-                    const current = (selectedData as any).rotation ?? (WALL_ROT[(selectedData.wall || 'north').toLowerCase()] ?? 0);
+                    const current = (selectedData as any).rotation ?? 0;
                     return (
                       <button key={r.value} className={`btn ${current === r.value ? "primary" : "outline"}`}
                         onClick={() => updateSocket(selectedData.socket_id, { rotation: r.value } as any)}>{r.label}</button>
