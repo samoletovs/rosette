@@ -21,6 +21,8 @@ Thumbs.db
 
 # Test screenshots
 screenshots/
+test-screenshots/
+*.png
 *.swo
 
 # Playwright MCP
