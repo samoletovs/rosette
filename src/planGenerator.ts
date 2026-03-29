@@ -31,23 +31,22 @@ function normalizeWall(wall: string): string {
 
 // Generate per-room wall layout diagrams with IEC 60617 symbols
 export function generateRoomLayouts(rooms: any[], placements: any[]): string {
-  const roomW = 200, roomH = 140, pad = 16, labelH = 28;
+  const roomW = 240, roomH = 160, pad = 16, labelH = 32;
   const cols = Math.min(rooms.length, 3);
   const rows = Math.ceil(rooms.length / cols);
   const cellW = roomW + pad * 2;
-  const cellH = roomH + pad * 2 + labelH + 30;
+  const cellH = roomH + pad * 2 + labelH + 40;
   const svgW = cols * cellW + pad;
-  const legendH = 70;
+  const legendH = 80;
   const titleH = 48;
   const svgH = titleH + rows * cellH + legendH + 20;
 
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" style="font-family:Inter,system-ui,sans-serif">`;
   svg += `<rect width="${svgW}" height="${svgH}" fill="${COLORS.bg}" rx="6"/>`;
 
-  // IEC 61082 title block
   svg += titleBlock(svgW, {
     title: 'Room Socket Layouts',
-    subtitle: 'IEC 60617 socket symbols · Per-room wall placement',
+    subtitle: 'IEC 60617 symbols · Per-room socket summary',
     date: new Date().toISOString().slice(0, 10),
     drawingNumber: 'E-01',
   });
@@ -63,13 +62,13 @@ export function generateRoomLayouts(rooms: any[], placements: any[]): string {
     const fill = ROOM_COLORS[type] || "#f1f5f9";
 
     // Room label
-    svg += `<text x="${rx + roomW / 2}" y="${oy + 16}" text-anchor="middle" font-size="10" font-weight="700" fill="${COLORS.text}">${xmlEsc(room.name || room.type)}</text>`;
-    svg += `<text x="${rx + roomW / 2}" y="${oy + 26}" text-anchor="middle" font-size="7.5" fill="${COLORS.muted}">${xmlEsc(`${room.area_m2 || "?"} m² · ${room.width_m || "?"}×${room.height_m || "?"}m`)}</text>`;
+    svg += `<text x="${rx + roomW / 2}" y="${oy + 16}" text-anchor="middle" font-size="11" font-weight="700" fill="${COLORS.text}">${xmlEsc(room.name || room.type)}</text>`;
+    svg += `<text x="${rx + roomW / 2}" y="${oy + 28}" text-anchor="middle" font-size="8" fill="${COLORS.muted}">${xmlEsc(`${room.area_m2 || "?"} m² · ${room.width_m || "?"}×${room.height_m || "?"}m`)}</text>`;
 
-    // Room rectangle with wall labels
-    svg += `<rect x="${rx}" y="${ry}" width="${roomW}" height="${roomH}" fill="${fill}" stroke="${COLORS.wall}" stroke-width="1.5" rx="2"/>`;
+    // Room rectangle
+    svg += `<rect x="${rx}" y="${ry}" width="${roomW}" height="${roomH}" fill="${fill}" stroke="${COLORS.wall}" stroke-width="1.5" rx="3"/>`;
 
-    // Wall labels (compass)
+    // Wall labels
     svg += `<text x="${rx + roomW / 2}" y="${ry - 3}" text-anchor="middle" font-size="7" fill="${COLORS.faint}">N</text>`;
     svg += `<text x="${rx + roomW / 2}" y="${ry + roomH + 10}" text-anchor="middle" font-size="7" fill="${COLORS.faint}">S</text>`;
     svg += `<text x="${rx - 8}" y="${ry + roomH / 2 + 3}" text-anchor="middle" font-size="7" fill="${COLORS.faint}">W</text>`;
@@ -78,53 +77,51 @@ export function generateRoomLayouts(rooms: any[], placements: any[]): string {
     // Get sockets for this room
     const roomSockets = placements.filter((p: any) => p.room_id === room.id || p.room_name === room.name);
 
-    // Place sockets on walls
-    const wallGroups: Record<string, any[]> = { N: [], S: [], E: [], W: [] };
-    roomSockets.forEach((s: any) => {
-      const wall = normalizeWall(s.wall || "north");
-      wallGroups[wall].push(s);
-    });
+    // Socket count summary inside room
+    const totalOutlets = roomSockets.reduce((sum: number, s: any) => sum + (s.gang || 1), 0);
+    svg += `<text x="${rx + roomW / 2}" y="${ry + roomH / 2 - 8}" text-anchor="middle" font-size="22" font-weight="700" fill="${COLORS.text}" opacity="0.15">${roomSockets.length}</text>`;
+    svg += `<text x="${rx + roomW / 2}" y="${ry + roomH / 2 + 8}" text-anchor="middle" font-size="8" fill="${COLORS.muted}" opacity="0.4">${roomSockets.length} points · ${totalOutlets} outlets</text>`;
 
-    // Position sockets along each wall using IEC 60617 symbols
+    // Place sockets on walls using IEC symbols
+    const wallGroups: Record<string, any[]> = { N: [], S: [], E: [], W: [] };
+    roomSockets.forEach((s: any) => { wallGroups[normalizeWall(s.wall || "north")].push(s); });
+
     for (const [wall, sockets] of Object.entries(wallGroups)) {
       sockets.forEach((s: any, idx: number) => {
         const count = sockets.length;
         const spacing = wall === "N" || wall === "S" ? roomW / (count + 1) : roomH / (count + 1);
         let sx: number, sy: number;
-
-        if (wall === "N") {
-          sx = rx + spacing * (idx + 1);
-          sy = ry + 16;
-        } else if (wall === "S") {
-          sx = rx + spacing * (idx + 1);
-          sy = ry + roomH - 16;
-        } else if (wall === "W") {
-          sx = rx + 16;
-          sy = ry + spacing * (idx + 1);
-        } else {
-          sx = rx + roomW - 16;
-          sy = ry + spacing * (idx + 1);
-        }
+        if (wall === "N") { sx = rx + spacing * (idx + 1); sy = ry + 16; }
+        else if (wall === "S") { sx = rx + spacing * (idx + 1); sy = ry + roomH - 16; }
+        else if (wall === "W") { sx = rx + 16; sy = ry + spacing * (idx + 1); }
+        else { sx = rx + roomW - 16; sy = ry + spacing * (idx + 1); }
 
         const h = s.height_mm ? `${s.height_mm}mm` : "";
-        const socketType = s.type || "standard_16a";
-        const gang = s.gang || 1;
-        svg += socketOutlet(sx, sy, s.socket_id, socketType, h, gang, wall);
+        svg += socketOutlet(sx, sy, s.socket_id, s.type || "standard_16a", h, s.gang || 1, wall);
       });
+    }
+
+    // Socket list below room (compact table)
+    const listY = ry + roomH + 4;
+    roomSockets.forEach((s: any, idx: number) => {
+      if (idx >= 6) return; // max 6 in the summary
+      const lx = rx + (idx % 3) * 80;
+      const ly = listY + Math.floor(idx / 3) * 12;
+      const typeLabel = s.type === 'standard_16a' ? '' : ` · ${s.type?.replace(/_/g, ' ') || ''}`;
+      const gangLabel = (s.gang || 1) > 1 ? ` ${s.gang}×` : '';
+      svg += `<text x="${lx}" y="${ly + 9}" font-size="6" fill="${COLORS.muted}">${xmlEsc(s.socket_id)}${gangLabel} ${s.height_mm || 300}mm${typeLabel}</text>`;
+    });
+    if (roomSockets.length > 6) {
+      svg += `<text x="${rx}" y="${listY + 33}" font-size="6" fill="${COLORS.faint}">+${roomSockets.length - 6} more</text>`;
     }
   });
 
-  // IEC 61082 mandatory symbol legend
-  const legendY = svgH - legendH - 14;
-  svg += symbolLegend(svgW, legendY, [
+  svg += symbolLegend(svgW, svgH - legendH - 14, [
     LEGEND_ITEMS.singleSocket,
     LEGEND_ITEMS.specialSocket,
     LEGEND_ITEMS.ip44Socket,
   ]);
-
-  // Standards footer
   svg += standardsFooter(svgW, svgH);
-
   svg += `</svg>`;
   return svg;
 }
