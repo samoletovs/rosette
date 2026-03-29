@@ -351,16 +351,54 @@ export function PlacementEditor({
                 })}
               </Layer>
               <Layer>
-                {dbPlaced && switchboard.x_pct !== undefined && switchboard.y_pct !== undefined && (
-                  <Group x={pctToPixel(switchboard.x_pct, W)} y={pctToPixel(switchboard.y_pct, H)} draggable
-                    onDragEnd={handleDbDragEnd}
-                    onClick={(e) => { e.cancelBubble = true; setShowDbPanel(true); setSelectedSocket(null); }}
-                    onTap={(e) => { e.cancelBubble = true; setShowDbPanel(true); setSelectedSocket(null); }}>
-                    <Rect x={-18} y={-12} width={36} height={24} fill="#1e293b" stroke="#0f172a" strokeWidth={1.5} cornerRadius={3} />
-                    <Text x={-18} y={-9} width={36} text="DB" fontSize={11} fontFamily="Inter, system-ui, sans-serif" fontStyle="700" fill="white" align="center" />
-                    <Text x={-18} y={1} width={36} text="⚡" fontSize={8} fontFamily="Inter, system-ui, sans-serif" fill="#fbbf24" align="center" />
-                  </Group>
-                )}
+                {dbPlaced && switchboard.x_pct !== undefined && switchboard.y_pct !== undefined && (() => {
+                  const dbRot = switchboard.rotation ?? 0;
+                  const dbType = switchboard.type || 'flush';
+                  const dbRating = switchboard.rating || '63A';
+                  const dbIp = switchboard.ip_rating || 'IP30';
+                  // Size based on rating
+                  const sizeMap: Record<string, { w: number; h: number }> = {
+                    '40A': { w: 32, h: 22 }, '63A': { w: 40, h: 26 }, '80A': { w: 48, h: 30 }, '100A': { w: 54, h: 32 },
+                  };
+                  const sz = sizeMap[dbRating] || sizeMap['63A'];
+                  // Color based on type
+                  const fillColor = dbType === 'surface' ? '#334155' : dbType === 'floor_standing' ? '#1e293b' : '#475569';
+                  const strokeColor = dbIp === 'IP65' ? '#10b981' : dbIp === 'IP44' ? '#f59e0b' : '#0f172a';
+                  const strokeW = dbType === 'surface' ? 2.5 : 1.5;
+
+                  return (
+                    <Group x={pctToPixel(switchboard.x_pct!, W)} y={pctToPixel(switchboard.y_pct!, H)} draggable
+                      onDragEnd={handleDbDragEnd}
+                      onClick={(e) => { e.cancelBubble = true; setShowDbPanel(true); setSelectedSocket(null); }}
+                      onTap={(e) => { e.cancelBubble = true; setShowDbPanel(true); setSelectedSocket(null); }}>
+                      {/* Rotation group */}
+                      <Group rotation={dbRot}>
+                        {/* IP65 weather shield indicator */}
+                        {dbIp === 'IP65' && <Rect x={-sz.w / 2 - 3} y={-sz.h / 2 - 3} width={sz.w + 6} height={sz.h + 6} fill="none" stroke="#10b981" strokeWidth={1} cornerRadius={5} dash={[3, 2]} />}
+                        {/* Main box */}
+                        <Rect x={-sz.w / 2} y={-sz.h / 2} width={sz.w} height={sz.h}
+                          fill={fillColor} stroke={strokeColor} strokeWidth={strokeW} cornerRadius={3} />
+                        {/* Surface-mounted: double border */}
+                        {dbType === 'surface' && <Rect x={-sz.w / 2 + 2} y={-sz.h / 2 + 2} width={sz.w - 4} height={sz.h - 4} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={0.5} cornerRadius={2} />}
+                        {/* Floor-standing: base line */}
+                        {dbType === 'floor_standing' && <Line points={[-sz.w / 2 - 4, sz.h / 2, sz.w / 2 + 4, sz.h / 2]} stroke="#0f172a" strokeWidth={2.5} />}
+                        {/* Internal MCB slot lines */}
+                        {Array.from({ length: Math.min(4, parseInt(dbRating) / 20) }).map((_, i) => {
+                          const slotX = -sz.w / 2 + 4 + i * ((sz.w - 8) / Math.min(4, parseInt(dbRating) / 20));
+                          return <Line key={i} points={[slotX, -sz.h / 2 + 4, slotX, sz.h / 2 - 4]} stroke="rgba(255,255,255,0.25)" strokeWidth={0.5} />;
+                        })}
+                      </Group>
+                      {/* Labels outside rotation */}
+                      <Text x={-sz.w / 2} y={-sz.h / 2 - 14} text="DB" fontSize={10}
+                        fontFamily="Inter, system-ui, sans-serif" fontStyle="700" fill="white" width={sz.w} align="center" />
+                      <Text x={-sz.w / 2} y={sz.h / 2 + 3} text={dbRating} fontSize={7}
+                        fontFamily="Inter, system-ui, sans-serif" fontStyle="600" fill="#94a3b8" width={sz.w} align="center" />
+                      {/* Lightning bolt */}
+                      <Text x={-sz.w / 2} y={-4} text="⚡" fontSize={8}
+                        fontFamily="Inter, system-ui, sans-serif" fill="#fbbf24" width={sz.w} align="center" />
+                    </Group>
+                  );
+                })()}
               </Layer>
             </Stage>
           )}

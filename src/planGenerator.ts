@@ -531,14 +531,38 @@ export function generateAnnotatedFloorPlan(
     svg += socketOutlet(sx, sy, s.socket_id, socketType, h, gang, wall);
   });
 
-  // Distribution board marker
+  // Distribution board marker — reflects user's type/rating/IP settings
   if (switchboardData?.x_pct !== undefined && switchboardData?.y_pct !== undefined) {
     const dbX = pct(switchboardData.x_pct, svgW);
     const dbY = pct(switchboardData.y_pct, svgH);
-    const bw = 28, bh = 18;
-    svg += `<rect x="${dbX - bw / 2}" y="${dbY - bh / 2}" width="${bw}" height="${bh}" fill="#1e293b" stroke="#0f172a" stroke-width="1" rx="3"/>`;
-    svg += `<text x="${dbX}" y="${dbY + 4}" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">DB</text>`;
-    svg += `<text x="${dbX}" y="${dbY + bh / 2 + 11}" text-anchor="middle" font-size="6" fill="${COLORS.muted}">${switchboardData.height_mm || 1600}mm</text>`;
+    const dbType = (switchboardData as any).type || 'flush';
+    const dbRating = (switchboardData as any).rating || '63A';
+    const dbIp = (switchboardData as any).ip_rating || 'IP30';
+    const dbRot = (switchboardData as any).rotation ?? 0;
+    // Size based on rating
+    const sizeMap: Record<string, { w: number; h: number }> = {
+      '40A': { w: 24, h: 16 }, '63A': { w: 30, h: 20 }, '80A': { w: 36, h: 22 }, '100A': { w: 40, h: 24 },
+    };
+    const sz = sizeMap[dbRating] || sizeMap['63A'];
+    const fillColor = dbType === 'surface' ? '#334155' : dbType === 'floor_standing' ? '#1e293b' : '#475569';
+    const strokeColor = dbIp === 'IP65' ? '#10b981' : dbIp === 'IP44' ? '#f59e0b' : '#0f172a';
+    const strokeW = dbType === 'surface' ? 2 : 1;
+
+    svg += `<g transform="rotate(${dbRot},${dbX},${dbY})">`;
+    if (dbIp === 'IP65') {
+      svg += `<rect x="${dbX - sz.w / 2 - 2}" y="${dbY - sz.h / 2 - 2}" width="${sz.w + 4}" height="${sz.h + 4}" fill="none" stroke="#10b981" stroke-width="0.8" rx="4" stroke-dasharray="2 1"/>`;
+    }
+    svg += `<rect x="${dbX - sz.w / 2}" y="${dbY - sz.h / 2}" width="${sz.w}" height="${sz.h}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="${strokeW}" rx="3"/>`;
+    if (dbType === 'surface') {
+      svg += `<rect x="${dbX - sz.w / 2 + 1.5}" y="${dbY - sz.h / 2 + 1.5}" width="${sz.w - 3}" height="${sz.h - 3}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.5" rx="2"/>`;
+    }
+    if (dbType === 'floor_standing') {
+      svg += `<line x1="${dbX - sz.w / 2 - 3}" y1="${dbY + sz.h / 2}" x2="${dbX + sz.w / 2 + 3}" y2="${dbY + sz.h / 2}" stroke="#0f172a" stroke-width="2"/>`;
+    }
+    svg += `</g>`;
+    // Labels (always horizontal)
+    svg += `<text x="${dbX}" y="${dbY - sz.h / 2 - 4}" text-anchor="middle" font-size="8" font-weight="700" fill="#1e293b">DB</text>`;
+    svg += `<text x="${dbX}" y="${dbY + sz.h / 2 + 10}" text-anchor="middle" font-size="5.5" fill="${COLORS.muted}">${dbRating} · ${dbIp} · ${switchboardData.height_mm || 1600}mm</text>`;
   }
 
   // Title strip at bottom
