@@ -43,6 +43,7 @@ export interface SocketPlacement {
   height_mm: number;
   type: string;
   gang?: number; // 1-5 connections (default 1)
+  rotation?: number; // degrees: 0=N, 90=E, 180=S, 270=W
   circuit?: string;
   notes?: string;
 }

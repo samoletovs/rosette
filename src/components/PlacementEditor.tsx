@@ -52,8 +52,6 @@ function deriveWall(xPct: number, yPct: number, room: Room): string {
   return Object.entries(d).sort((a, b) => a[1] - b[1])[0][0];
 }
 
-const WALL_ROT: Record<string, number> = { north: 0, south: 180, east: 270, west: 90 };
-
 function roomPrefix(room: Room): string {
   const name = (room.name || room.type || "R").replace(/[^a-zA-ZÀ-ÿ]/g, "");
   return (name.substring(0, 2) || "R").toUpperCase();
@@ -330,7 +328,7 @@ export function PlacementEditor({
                   if (gang === 1) gangLines.push([0, 1, 0, -r + 2]);
                   else { const sp = Math.min(r - 2, gang * 2.5); for (let g = 0; g < gang; g++) { const lx = -sp / 2 + (sp / (gang - 1)) * g; gangLines.push([lx, 1, lx, -r + 2]); } }
                   // Manual rotation only (no auto-rotate from wall)
-                  const rot = (s as any).rotation ?? 0;
+                  const rot = s.rotation ?? 0;
                   return (
                     <Group key={s.socket_id} x={sx} y={sy} draggable
                       onDragEnd={(e) => handleSocketDragEnd(s.socket_id, e)}
@@ -448,10 +446,10 @@ export function PlacementEditor({
                 <span>Rotation</span>
                 <div className="rotation-presets">
                   {ROTATION_OPTIONS.map((r) => {
-                    const current = (selectedData as any).rotation ?? 0;
+                    const current = selectedData.rotation ?? 0;
                     return (
                       <button key={r.value} className={`btn ${current === r.value ? "primary" : "outline"}`}
-                        onClick={() => updateSocket(selectedData.socket_id, { rotation: r.value } as any)}>{r.label}</button>
+                        onClick={() => updateSocket(selectedData.socket_id, { rotation: r.value })}>{r.label}</button>
                     );
                   })}
                 </div>
