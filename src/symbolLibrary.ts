@@ -90,7 +90,7 @@ export const ROOM_COLORS: Record<string, string> = {
  * @param type - "standard_16a" | "dedicated" | "ip44" | other
  * @param height - mounting height label (e.g. "300mm")
  * @param gang - number of connections (1-5, default 1)
- * @param wall - wall direction for rotation: "N" | "S" | "E" | "W" (default "N")
+ * @param rotation - degrees: 0=N (up), 90=E (right), 180=S (down), 270=W (left)
  */
 export function socketOutlet(
   x: number,
@@ -99,7 +99,7 @@ export function socketOutlet(
   type: string,
   height: string,
   gang = 1,
-  wall = 'N',
+  rotation = 0,
 ): string {
   const isIP44 = type === 'ip44' || type === 'waterproof';
   // Color per socket type
@@ -111,13 +111,8 @@ export function socketOutlet(
   const r = 9;
   const gangCount = Math.max(1, Math.min(5, gang));
 
-  // Rotation: semicircle opens away from the wall (into the room)
-  // Default (N): semicircle opens upward (into room from north wall) — 0°
-  // S: opens downward — 180°
-  // E: opens left — 270°
-  // W: opens right — 90°
-  const wallRotation: Record<string, number> = { N: 0, S: 180, E: 270, W: 90 };
-  const rot = wallRotation[wall] ?? 0;
+  // Rotation in degrees: 0=N (up), 90=E (right), 180=S (down), 270=W (left)
+  const rot = rotation;
 
   let symbol = `<g class="iec-socket" transform="rotate(${rot},${x},${y})">`;
 

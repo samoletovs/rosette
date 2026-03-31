@@ -97,7 +97,9 @@ export function generateRoomLayouts(rooms: any[], placements: any[]): string {
         else { sx = rx + roomW - 16; sy = ry + spacing * (idx + 1); }
 
         const h = s.height_mm ? `${s.height_mm}mm` : "";
-        svg += socketOutlet(sx, sy, s.socket_id, s.type || "standard_16a", h, s.gang || 1, wall);
+        // Room layout diagram: rotate based on wall (semicircle opens into room)
+        const wallRot: Record<string, number> = { N: 180, S: 0, E: 270, W: 90 };
+        svg += socketOutlet(sx, sy, s.socket_id, s.type || "standard_16a", h, s.gang || 1, wallRot[wall] ?? 0);
       });
     }
 
@@ -519,16 +521,15 @@ export function generateAnnotatedFloorPlan(
     });
   }
 
-  // Socket symbols at their confirmed positions
-  const wallToDir: Record<string, string> = { north: 'N', south: 'S', east: 'E', west: 'W' };
+  // Socket symbols at their confirmed positions — use the rotation the user set in the editor
   placements.forEach((s: any) => {
     const sx = pct(s.x_pct, svgW);
     const sy = pct(s.y_pct, svgH);
-    const wall = wallToDir[(s.wall || 'north').toLowerCase()] || 'N';
     const gang = s.gang || 1;
+    const rot = s.rotation ?? 0;
     const h = s.height_mm ? `${s.height_mm}mm` : '';
     const socketType = s.type || 'standard_16a';
-    svg += socketOutlet(sx, sy, s.socket_id, socketType, h, gang, wall);
+    svg += socketOutlet(sx, sy, s.socket_id, socketType, h, gang, rot);
   });
 
   // Distribution board marker — reflects user's type/rating/IP settings
