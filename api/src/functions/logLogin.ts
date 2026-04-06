@@ -3,6 +3,7 @@ import { TableClient, TableServiceClient } from "@azure/data-tables";
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || "";
 const TABLE_NAME = "logins";
+const TELEGRAM_NOTIFY_URL = 'https://func-agents-s6vbks3oteo4y.azurewebsites.net/api/notify?code=r_R7xLV9tH3-9XjJ0dbniNan9OXwkZ2S8luCASzGE8OZAzFuxePshQ==';
 
 async function getTableClient(): Promise<TableClient> {
   const serviceClient = TableServiceClient.fromConnectionString(connectionString);
@@ -38,6 +39,14 @@ app.http("logLogin", {
         email,
         timestamp: now.toISOString(),
       });
+
+      fetch(TELEGRAM_NOTIFY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `👤 rosette login\n\nUser: ${email}\nProvider: ${provider}\nTime: ${now.toISOString()}`
+        })
+      }).catch(() => {});
 
       return { status: 200, jsonBody: { logged: true } };
     } catch (error: any) {
