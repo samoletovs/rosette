@@ -569,7 +569,7 @@ export function generateAnnotatedFloorPlan(
   // Title strip at bottom
   svg += `<rect x="0" y="${svgH - 22}" width="${svgW}" height="22" fill="rgba(30,41,59,0.85)"/>`;
   svg += `<text x="${svgW / 2}" y="${svgH - 7}" text-anchor="middle" font-size="9" font-weight="600" fill="#fff">`;
-  svg += `Rosette — Socket Placement Plan · ${placements.length} sockets · IEC 60617</text>`;
+  svg += `rosette — Socket Placement Plan · ${placements.length} sockets · IEC 60617</text>`;
 
   svg += `</svg>`;
   return svg;

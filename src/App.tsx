@@ -399,7 +399,7 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <div className="brand"><span className="brand-icon">⚡</span><h1>Rosette</h1></div>
+        <div className="brand"><span className="brand-icon">⚡</span><h1>rosette</h1></div>
         <p className="tagline">Electric socket planner — Baltic standards</p>
         {user && (
           <div className="user-bar">
@@ -689,7 +689,7 @@ export default function App() {
           ))}
         </div>
         <button className="btn ghost feedback-btn" onClick={() => setShowFeedback(true)}>💬 Send feedback</button>
-        <p>Rosette © 2026 · Baltic electrical standards (LBN · STR · EVS)</p>
+        <p>rosette © 2026 · Baltic electrical standards (LBN · STR · EVS)</p>
       </footer>
 
       {showFeedback && (
