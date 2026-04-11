@@ -22,7 +22,7 @@ app.http("calculate", {
       if (!body.rooms || !body.countryCode) return { status: 400, jsonBody: { error: "rooms and countryCode required" } };
       const hasConfirmedPlacements = Array.isArray(body.confirmedPlacements) && body.confirmedPlacements.length > 0;
 
-      const client = new AzureOpenAI({ endpoint, apiKey, apiVersion: "2024-08-01-preview", deployment });
+      const client = new AzureOpenAI({ endpoint, apiKey, apiVersion: "2024-10-21", deployment });
 
       const confirmedSection = hasConfirmedPlacements
         ? `\n\nIMPORTANT — CONFIRMED PLACEMENTS: The user has already positioned sockets on the floor plan. Use these EXACT positions — do NOT move or reposition any socket. Your job is ONLY to assign circuits, RCD groups, and wiring routes for the given placements.

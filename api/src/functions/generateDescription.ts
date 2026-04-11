@@ -41,7 +41,7 @@ app.http("generate-description", {
       const body = (await request.json()) as { rooms: any[]; placements: any; countryCode: string; propertyType: string };
       const cc = body.countryCode || "LV";
       const info = COUNTRY_INFO[cc] || COUNTRY_INFO.LV;
-      const client = new AzureOpenAI({ endpoint, apiKey, apiVersion: "2024-08-01-preview", deployment });
+      const client = new AzureOpenAI({ endpoint, apiKey, apiVersion: "2024-10-21", deployment });
 
       const roomsClean = body.rooms.map((r: any) => ({
         id: r.id, type: r.type, name: r.name,
