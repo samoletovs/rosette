@@ -22,7 +22,7 @@ app.http("analyze", {
         return { status: 413, jsonBody: { error: "Image data too large (max 10MB)" } };
       }
 
-      const client = new AzureOpenAI({ endpoint, apiKey, apiVersion: "2024-08-01-preview", deployment });
+      const client = new AzureOpenAI({ endpoint, apiKey, apiVersion: "2024-10-21", deployment });
 
       const response = await client.chat.completions.create({
         model: deployment,

@@ -39,7 +39,7 @@ app.http("proposePlacements", {
         return { status: 400, jsonBody: { error: "rooms and countryCode required" } };
       }
 
-      const client = new AzureOpenAI({ endpoint, apiKey, apiVersion: "2024-08-01-preview", deployment });
+      const client = new AzureOpenAI({ endpoint, apiKey, apiVersion: "2024-10-21", deployment });
 
       const response = await client.chat.completions.create({
         model: deployment,
