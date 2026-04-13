@@ -3,7 +3,7 @@ import { TableClient, TableServiceClient } from "@azure/data-tables";
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || "";
 const TABLE_NAME = "logins";
-const TELEGRAM_NOTIFY_URL = 'https://func-agents-s6vbks3oteo4y.azurewebsites.net/api/notify?code=r_R7xLV9tH3-9XjJ0dbniNan9OXwkZ2S8luCASzGE8OZAzFuxePshQ==';
+const TELEGRAM_NOTIFY_URL = process.env.TELEGRAM_NOTIFY_URL || '';
 
 async function getTableClient(): Promise<TableClient> {
   const serviceClient = TableServiceClient.fromConnectionString(connectionString);
