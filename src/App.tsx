@@ -1,5 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import Markdown from "react-markdown";
+import { lazy, Suspense, useState, useRef, useCallback, useEffect } from "react";
 import remarkGfm from "remark-gfm";
 import {
   uploadFile,
@@ -13,8 +12,7 @@ import {
   AuthUser,
 } from "./api";
 import { generateRoomLayouts, generateCircuitDiagram, generateWiringDiagram, generateAnnotatedFloorPlan } from "./planGenerator";
-import { PlacementEditor } from "./components/PlacementEditor";
-import type { SocketPlacement, Switchboard } from "./types";
+import type { AnalysisResult, CalculationResult, CountryItem, Room, SocketPlacement, StandardsData, Switchboard } from "./types";
 
 type Step = "upload" | "analyzing" | "review" | "placement" | "calculating" | "results";
 
@@ -64,6 +62,19 @@ let nextRoomCounter = 50;
 
 const FLAG: Record<string, string> = { LV: "\u{1F1F1}\u{1F1FB}", LT: "\u{1F1F1}\u{1F1F9}", EE: "\u{1F1EA}\u{1F1EA}" };
 
+const Markdown = lazy(() => import("react-markdown"));
+const PlacementEditor = lazy(() => import("./components/PlacementEditor").then((m) => ({ default: m.PlacementEditor })));
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return "Request timed out — please try again.";
+  }
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export default function App() {
   const [step, setStep] = useState<Step>("upload");
   const [file, setFile] = useState<File | null>(null);
@@ -71,10 +82,10 @@ export default function App() {
   const [base64Url, setBase64Url] = useState("");
   const [countryCode, setCountryCode] = useState("LV");
   const [propertyType, setPropertyType] = useState("apartment");
-  const [countries, setCountries] = useState<{ code: string; country: string }[]>([]);
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [standards, setStandards] = useState<any>(null);
-  const [placements, setPlacements] = useState<any>(null);
+  const [countries, setCountries] = useState<CountryItem[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [standards, setStandards] = useState<StandardsData | null>(null);
+  const [placements, setPlacements] = useState<CalculationResult | null>(null);
   const [descEn, setDescEn] = useState("");
   const [descLocal, setDescLocal] = useState("");
   const [specLang, setSpecLang] = useState<"en" | "local">("en");
@@ -90,7 +101,7 @@ export default function App() {
   const [socketOverrides, setSocketOverrides] = useState<Record<string, number>>({});
   const [proposedPlacements, setProposedPlacements] = useState<SocketPlacement[]>([]);
   const [proposedSwitchboard, setProposedSwitchboard] = useState<Switchboard | null>(null);
-  const [analysisData, setAnalysisData] = useState<any>(null);
+  const [analysisData, setAnalysisData] = useState<AnalysisResult | null>(null);
   const [_confirmedPlacements, setConfirmedPlacements] = useState<SocketPlacement[]>([]);
   const [_confirmedSwitchboard, setConfirmedSwitchboard] = useState<Switchboard | null>(null);
   const [theme, setTheme] = useState(() => localStorage.getItem("rosette-theme") || "ocean");
@@ -135,6 +146,14 @@ export default function App() {
       );
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   const handleFile = useCallback((f: File) => {
     setFile(f);
     setPreviewUrl(URL.createObjectURL(f));
@@ -178,8 +197,8 @@ export default function App() {
       }
       setSocketOverrides(overrides);
       setStep("review");
-    } catch (err: any) {
-      setError(err.name === "AbortError" ? "Request timed out — please try again." : (err.message || "Analysis failed"));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Analysis failed"));
       setStep("upload");
     }
   };
@@ -236,11 +255,16 @@ export default function App() {
     confirmedSockets?: SocketPlacement[],
     confirmedDb?: Switchboard | null,
   ) => {
+    if (!standards) {
+      setError("Standards are not loaded yet. Please run analysis again.");
+      setStep("review");
+      return;
+    }
     setStep("calculating");
     setError("");
     try {
       // Augment rooms with user's socket overrides
-      const roomsWithOverrides = rooms.map((r: any) => ({
+      const roomsWithOverrides: Room[] = rooms.map((r) => ({
         ...r,
         requested_sockets: socketOverrides[r.id] ?? standards?.room_rules?.[mapRoomType(r.type)]?.minimum_sockets ?? 2,
       }));
@@ -261,7 +285,7 @@ export default function App() {
 
       // Map AI circuit assignments back to user sockets (by matching room + index)
       const aiPlacements = result.placements || [];
-      const aiByRoom = new Map<string, any[]>();
+      const aiByRoom = new Map<string, SocketPlacement[]>();
       for (const p of aiPlacements) {
         const key = p.room_id || p.room_name;
         if (!aiByRoom.has(key)) aiByRoom.set(key, []);
@@ -303,8 +327,8 @@ export default function App() {
       setDescLocal(desc.description_local || "");
       setLangName(desc.language?.name || "Local");
       setStep("results");
-    } catch (err: any) {
-      setError(err.name === "AbortError" ? "Calculation timed out — please try again." : (err.message || "Calculation failed"));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Calculation failed"));
       setStep("placement");
     }
   };
@@ -336,8 +360,8 @@ export default function App() {
           standard: stdMap[countryCode] || countryCode,
         },
       });
-    } catch (err: any) {
-      setError(err.message || 'PDF generation failed');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "PDF generation failed"));
     } finally {
       setPdfGenerating(false);
     }
@@ -375,8 +399,8 @@ export default function App() {
       try { await submitFeedback({ type: fbType, title: fbTitle, description: fbDesc, page: step }); } catch { /* non-critical */ }
       setFbSuccess(true);
       setTimeout(() => { setShowFeedback(false); setFbSuccess(false); setFbTitle(""); setFbDesc(""); setFbType("improvement"); }, 1800);
-    } catch (err: any) {
-      setFbError(err.message || "Failed to submit");
+    } catch (err: unknown) {
+      setFbError(getErrorMessage(err, "Failed to submit"));
     } finally {
       setFbSending(false);
     }
@@ -469,7 +493,7 @@ export default function App() {
             <h2>Review detected rooms</h2>
             <p className="muted">{rooms.length} rooms detected — add, remove, or adjust socket counts</p>
             <div className="room-list">
-              {rooms.map((r: any) => {
+              {rooms.map((r) => {
                 const min = standards?.room_rules?.[mapRoomType(r.type)]?.minimum_sockets;
                 const count = socketOverrides[r.id] ?? min ?? 2;
                 return (
@@ -583,14 +607,16 @@ export default function App() {
         )}
 
         {step === "placement" && proposedSwitchboard && (
-          <PlacementEditor
-            imageUrl={base64Url}
-            rooms={rooms}
-            placements={proposedPlacements}
-            switchboard={proposedSwitchboard}
-            onConfirm={handlePlacementConfirm}
-            onBack={() => setStep("review")}
-          />
+          <Suspense fallback={<section className="card fade-in center-content"><p className="muted">Loading placement editor…</p></section>}>
+            <PlacementEditor
+              imageUrl={base64Url}
+              rooms={rooms}
+              placements={proposedPlacements}
+              switchboard={proposedSwitchboard}
+              onConfirm={handlePlacementConfirm}
+              onBack={() => setStep("review")}
+            />
+          </Suspense>
         )}
 
         {step === "results" && placements && (
@@ -601,7 +627,7 @@ export default function App() {
               <div className="stat"><span className="stat-n">{placements.total_circuits || placements.circuits?.length || 0}</span><span className="stat-l">Circuits</span></div>
               <div className="stat-sep" />
               <div className="stat"><span className="stat-n">{rooms.length}</span><span className="stat-l">Rooms</span></div>
-              {placements.total_cable_m > 0 && <>
+              {(placements.total_cable_m ?? 0) > 0 && <>
                 <div className="stat-sep" />
                 <div className="stat"><span className="stat-n">~{placements.total_cable_m}</span><span className="stat-l">Cable (m)</span></div>
               </>}
@@ -669,7 +695,11 @@ export default function App() {
                   <button className={`toggle-btn ${specLang === "local" ? "on" : ""}`} onClick={() => setSpecLang("local")}>{FLAG[countryCode] || "🌍"} {langName}</button>
                 </div>
               </div>
-              <div className="spec-body"><Markdown remarkPlugins={[remarkGfm]}>{specLang === "en" ? descEn : descLocal}</Markdown></div>
+              <div className="spec-body">
+                <Suspense fallback={<p className="muted">Loading specification…</p>}>
+                  <Markdown remarkPlugins={[remarkGfm]}>{specLang === "en" ? descEn : descLocal}</Markdown>
+                </Suspense>
+              </div>
               <button className="btn outline" onClick={() => {
                 const c = specLang === "en" ? descEn : descLocal;
                 download(c, `rosette-spec-${specLang === "en" ? "en" : countryCode.toLowerCase()}.md`, "text/markdown");
