@@ -1,3 +1,14 @@
+import type {
+  AnalysisResult,
+  CalculationResult,
+  CountryItem,
+  DescriptionResponse,
+  Room,
+  SocketPlacement,
+  StandardsData,
+  Switchboard,
+} from "./types";
+
 const API_BASE = "/api";
 const TIMEOUT = 90000; // 90 seconds for AI calls
 
@@ -44,7 +55,7 @@ export async function uploadFile(file: File): Promise<{ id: string; url: string;
   return res.json();
 }
 
-export async function analyzeFloorPlan(imageUrl: string, propertyType: string): Promise<any> {
+export async function analyzeFloorPlan(imageUrl: string, propertyType: string): Promise<AnalysisResult> {
   const res = await fetch(`${API_BASE}/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -55,25 +66,25 @@ export async function analyzeFloorPlan(imageUrl: string, propertyType: string): 
   return res.json();
 }
 
-export async function getStandards(countryCode: string): Promise<any> {
+export async function getStandards(countryCode: string): Promise<StandardsData> {
   const res = await fetch(`${API_BASE}/standards/${countryCode}`);
   if (!res.ok) throw new Error(await safeJsonError(res, "Standards not found"));
   return res.json();
 }
 
-export async function getCountries(): Promise<{ countries: { code: string; country: string }[] }> {
+export async function getCountries(): Promise<{ countries: CountryItem[] }> {
   const res = await fetch(`${API_BASE}/standards`);
   if (!res.ok) throw new Error(await safeJsonError(res, "Failed to load countries"));
   return res.json();
 }
 
 export async function proposePlacements(
-  rooms: any[],
+  rooms: Room[],
   countryCode: string,
   propertyType: string,
-  standards: any,
-  switchboard: any,
-): Promise<any> {
+  standards: StandardsData,
+  switchboard: Switchboard,
+): Promise<CalculationResult> {
   const res = await fetch(`${API_BASE}/propose-placements`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -85,13 +96,13 @@ export async function proposePlacements(
 }
 
 export async function calculateSockets(
-  rooms: any[],
+  rooms: Room[],
   countryCode: string,
   propertyType: string,
-  standards: any,
-  confirmedPlacements?: any[],
-  confirmedSwitchboard?: any,
-): Promise<any> {
+  standards: StandardsData,
+  confirmedPlacements?: SocketPlacement[],
+  confirmedSwitchboard?: Switchboard | null,
+): Promise<CalculationResult> {
   const res = await fetch(`${API_BASE}/calculate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -103,11 +114,11 @@ export async function calculateSockets(
 }
 
 export async function generateDescription(
-  rooms: any[],
-  placements: any,
+  rooms: Room[],
+  placements: CalculationResult,
   countryCode: string,
   propertyType: string
-): Promise<{ description_en: string; description_local: string; language: { name: string; code: string } }> {
+): Promise<DescriptionResponse> {
   const res = await fetch(`${API_BASE}/generate-description`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

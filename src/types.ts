@@ -57,3 +57,67 @@ export interface ConfirmedPlacement {
   switchboard: Switchboard;
   placements: SocketPlacement[];
 }
+
+export interface CountryItem {
+  code: string;
+  country: string;
+}
+
+export interface StandardsData {
+  room_rules?: Record<string, { minimum_sockets?: number }>;
+  [key: string]: unknown;
+}
+
+export interface AnalysisResult {
+  rooms: Room[];
+  switchboard?: Switchboard;
+  [key: string]: unknown;
+}
+
+export interface CircuitInfo {
+  id: string;
+  sockets?: string[];
+  breaker?: string;
+  cable?: string;
+  rcd_group?: string;
+  [key: string]: unknown;
+}
+
+export interface RcdGroup {
+  id: string;
+  label?: string;
+  rcd?: string;
+  circuits?: string[];
+  [key: string]: unknown;
+}
+
+export interface WiringEntry {
+  circuit_id?: string;
+  to_room_id?: string;
+  to_room?: string;
+  cable_type?: string;
+  estimated_length_m?: number;
+  wire_colors?: string[];
+  [key: string]: unknown;
+}
+
+export interface CalculationResult {
+  placements: SocketPlacement[];
+  circuits?: CircuitInfo[];
+  wiring?: WiringEntry[];
+  rcd_groups?: RcdGroup[];
+  summary?: string;
+  total_sockets?: number;
+  total_circuits?: number;
+  total_cable_m?: number;
+  [key: string]: unknown;
+}
+
+export interface DescriptionResponse {
+  description_en: string;
+  description_local: string;
+  language?: {
+    name?: string;
+    code?: string;
+  };
+}

@@ -13,6 +13,7 @@ import {
   ROOM_COLORS,
   LEGEND_ITEMS,
 } from './symbolLibrary';
+import type { CircuitInfo, RcdGroup, Room, SocketPlacement, Switchboard, WiringEntry } from './types';
 
 export { xmlEsc, WIRE_COLORS, ROOM_COLORS };
 
@@ -30,7 +31,7 @@ function normalizeWall(wall: string): string {
 }
 
 // Generate per-room wall layout diagrams with IEC 60617 symbols
-export function generateRoomLayouts(rooms: any[], placements: any[]): string {
+export function generateRoomLayouts(rooms: Room[], placements: SocketPlacement[]): string {
   const roomW = 240, roomH = 160, pad = 16, labelH = 32;
   const cols = Math.min(rooms.length, 3);
   const rows = Math.ceil(rooms.length / cols);
@@ -51,7 +52,7 @@ export function generateRoomLayouts(rooms: any[], placements: any[]): string {
     drawingNumber: 'E-01',
   });
 
-  rooms.forEach((room: any, i: number) => {
+  rooms.forEach((room, i: number) => {
     const col = i % cols;
     const row = Math.floor(i / cols);
     const ox = pad + col * cellW;
@@ -75,19 +76,19 @@ export function generateRoomLayouts(rooms: any[], placements: any[]): string {
     svg += `<text x="${rx + roomW + 8}" y="${ry + roomH / 2 + 3}" text-anchor="middle" font-size="7" fill="${COLORS.faint}">E</text>`;
 
     // Get sockets for this room
-    const roomSockets = placements.filter((p: any) => p.room_id === room.id || p.room_name === room.name);
+    const roomSockets = placements.filter((p) => p.room_id === room.id || p.room_name === room.name);
 
     // Socket count summary inside room
-    const totalOutlets = roomSockets.reduce((sum: number, s: any) => sum + (s.gang || 1), 0);
+    const totalOutlets = roomSockets.reduce((sum: number, s) => sum + (s.gang || 1), 0);
     svg += `<text x="${rx + roomW / 2}" y="${ry + roomH / 2 - 8}" text-anchor="middle" font-size="22" font-weight="700" fill="${COLORS.text}" opacity="0.15">${roomSockets.length}</text>`;
     svg += `<text x="${rx + roomW / 2}" y="${ry + roomH / 2 + 8}" text-anchor="middle" font-size="8" fill="${COLORS.muted}" opacity="0.4">${roomSockets.length} points · ${totalOutlets} outlets</text>`;
 
     // Place sockets on walls using IEC symbols
-    const wallGroups: Record<string, any[]> = { N: [], S: [], E: [], W: [] };
-    roomSockets.forEach((s: any) => { wallGroups[normalizeWall(s.wall || "north")].push(s); });
+    const wallGroups: Record<string, SocketPlacement[]> = { N: [], S: [], E: [], W: [] };
+    roomSockets.forEach((s) => { wallGroups[normalizeWall(s.wall || "north")].push(s); });
 
     for (const [wall, sockets] of Object.entries(wallGroups)) {
-      sockets.forEach((s: any, idx: number) => {
+      sockets.forEach((s, idx: number) => {
         const count = sockets.length;
         const spacing = wall === "N" || wall === "S" ? roomW / (count + 1) : roomH / (count + 1);
         let sx: number, sy: number;
@@ -105,7 +106,7 @@ export function generateRoomLayouts(rooms: any[], placements: any[]): string {
 
     // Socket list below room (compact table)
     const listY = ry + roomH + 4;
-    roomSockets.forEach((s: any, idx: number) => {
+    roomSockets.forEach((s, idx: number) => {
       if (idx >= 6) return; // max 6 in the summary
       const lx = rx + (idx % 3) * 80;
       const ly = listY + Math.floor(idx / 3) * 12;
@@ -130,18 +131,18 @@ export function generateRoomLayouts(rooms: any[], placements: any[]): string {
 
 // Build RCD groups from circuit data. If the AI provided rcd_groups, use them;
 // otherwise auto-group circuits into chunks of max 3-4 per RCD.
-function buildRcdGroups(circuits: any[], rcdGroups?: any[]): { id: string; label: string; rcd: string; circuits: any[] }[] {
+function buildRcdGroups(circuits: CircuitInfo[], rcdGroups?: RcdGroup[]): { id: string; label: string; rcd: string; circuits: CircuitInfo[] }[] {
   if (rcdGroups && rcdGroups.length > 0) {
     const circuitMap = new Map(circuits.map(c => [c.id, c]));
-    return rcdGroups.map((g: any) => ({
+    return rcdGroups.map((g) => ({
       id: g.id,
       label: g.label || g.id,
       rcd: g.rcd || "30mA Type A",
       circuits: (g.circuits || []).map((cid: string) => circuitMap.get(cid)).filter(Boolean),
-    }));
+    })) as { id: string; label: string; rcd: string; circuits: CircuitInfo[] }[];
   }
   // Fallback: group by rcd_group field on circuits, or auto-chunk max 4
-  const groupMap = new Map<string, any[]>();
+  const groupMap = new Map<string, CircuitInfo[]>();
   circuits.forEach(c => {
     const key = c.rcd_group || "auto";
     if (!groupMap.has(key)) groupMap.set(key, []);
@@ -149,7 +150,7 @@ function buildRcdGroups(circuits: any[], rcdGroups?: any[]): { id: string; label
   });
   if (groupMap.size === 1 && groupMap.has("auto")) {
     // No grouping info — split into chunks of 4
-    const groups: { id: string; label: string; rcd: string; circuits: any[] }[] = [];
+    const groups: { id: string; label: string; rcd: string; circuits: CircuitInfo[] }[] = [];
     const all = circuits.slice();
     let idx = 1;
     while (all.length > 0) {
@@ -168,7 +169,7 @@ function buildRcdGroups(circuits: any[], rcdGroups?: any[]): { id: string; label
 }
 
 // Generate single-line circuit diagram with IEC 60617 symbols
-export function generateCircuitDiagram(circuits: any[], totalSockets: number, rcdGroups?: any[]): string {
+export function generateCircuitDiagram(circuits: CircuitInfo[], totalSockets: number, rcdGroups?: RcdGroup[]): string {
   const groups = buildRcdGroups(circuits, rcdGroups);
   const circuitCount = circuits.length || 1;
   const groupCount = groups.length || 1;
@@ -238,7 +239,7 @@ export function generateCircuitDiagram(circuits: any[], totalSockets: number, rc
     svg += `<rect x="${curX - 4}" y="${subBusY - 4}" width="${gWidth + 8}" height="${svgH - legendH - subBusY - 40}" fill="${rcdColor}08" stroke="${rcdColor}30" stroke-width="1" rx="6" stroke-dasharray="4 2"/>`;
 
     // Draw circuits within this group with IEC 60617 MCB symbols
-    gCircuits.forEach((circuit: any, ci: number) => {
+    gCircuits.forEach((circuit, ci: number) => {
       const cx = curX + ci * circuitW + circuitW / 2;
       const socketIds: string[] = circuit.sockets || [];
       const socketCount = socketIds.length;
@@ -326,10 +327,10 @@ function getCableSize(cableType: string): string {
 
 // Generate wiring diagram with IEC 60617 symbols showing cables from switchboard to rooms
 export function generateWiringDiagram(
-  wiring: any[],
-  rooms: any[],
-  circuits: any[],
-  switchboard?: any
+  wiring: WiringEntry[],
+  rooms: Room[],
+  circuits: CircuitInfo[],
+  switchboard?: Switchboard
 ): string {
   if (!wiring || wiring.length === 0) {
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200" width="600" height="200" style="font-family:Inter,system-ui,sans-serif">
@@ -341,7 +342,7 @@ export function generateWiringDiagram(
   // Collect unique destination rooms from wiring
   const destRooms = new Map<string, { name: string; id: string }>();
   for (const w of wiring) {
-    const key = w.to_room_id || w.to_room || w.circuit_id;
+    const key = w.to_room_id || w.to_room || w.circuit_id || 'unknown';
     if (!destRooms.has(key)) {
       destRooms.set(key, { name: w.to_room || key, id: w.to_room_id || key });
     }
@@ -377,14 +378,14 @@ export function generateWiringDiagram(
 
   // Draw DIN rail slots (MCB breakers inside the DB box)
   const slotStartY = dbY + 32;
-  wiring.forEach((w: any, i: number) => {
+  wiring.forEach((w, i: number) => {
     const sy = slotStartY + i * 20;
     if (sy + 16 > dbY + dbH - 4) return;
     // MCB slot
     svg += `<rect x="${dbX + 6}" y="${sy}" width="30" height="14" fill="#eef2ff" stroke="#c7d2fe" stroke-width="0.8" rx="2"/>`;
     svg += `<text x="${dbX + 21}" y="${sy + 10}" text-anchor="middle" font-size="5.5" font-weight="600" fill="${COLORS.primary}">${xmlEsc(w.circuit_id || `C${i + 1}`)}</text>`;
     // Breaker rating
-    const breaker = circuits.find((c: any) => c.id === w.circuit_id)?.breaker || "16A";
+    const breaker = circuits.find((c) => c.id === w.circuit_id)?.breaker || "16A";
     svg += `<text x="${dbX + 42}" y="${sy + 10}" font-size="5" fill="${COLORS.muted}">${xmlEsc(breaker)}</text>`;
   });
 
@@ -396,15 +397,15 @@ export function generateWiringDiagram(
     roomPositions.push({ x: rx, y: ry, name: room.name });
 
     // Room box
-    const rType = rooms.find((r: any) => r.id === room.id || r.name === room.name)?.type?.toLowerCase().replace(/[\s-]+/g, "_") || "other";
+    const rType = rooms.find((r) => r.id === room.id || r.name === room.name)?.type?.toLowerCase().replace(/[\s-]+/g, "_") || "other";
     const fill = ROOM_COLORS[rType] || "#f1f5f9";
     svg += `<rect x="${rx}" y="${ry}" width="120" height="36" fill="${fill}" stroke="${COLORS.wall}" stroke-width="1.2" rx="4"/>`;
     svg += `<text x="${rx + 60}" y="${ry + 15}" text-anchor="middle" font-size="9" font-weight="600" fill="${COLORS.text}">${xmlEsc(room.name)}</text>`;
 
     // Show socket count from wiring entries for this room
-    const roomWires = wiring.filter((w: any) => (w.to_room_id || w.to_room) === room.id || w.to_room === room.name);
-    const socketCount = roomWires.reduce((sum: number, w: any) => {
-      const circuit = circuits.find((c: any) => c.id === w.circuit_id);
+    const roomWires = wiring.filter((w) => (w.to_room_id || w.to_room) === room.id || w.to_room === room.name);
+    const socketCount = roomWires.reduce((sum: number, w) => {
+      const circuit = circuits.find((c) => c.id === w.circuit_id);
       return sum + (circuit?.sockets?.length || 0);
     }, 0);
     if (socketCount > 0) {
@@ -413,9 +414,10 @@ export function generateWiringDiagram(
   });
 
   // Draw cable lines from DB to rooms with IEC 60446 wire colors
-  wiring.forEach((w: any, i: number) => {
+  wiring.forEach((w, i: number) => {
+    const roomKey = w.to_room_id || w.to_room || 'unknown';
     const roomTarget = roomPositions.find((r) => r.name === w.to_room) ||
-      roomPositions.find((r) => r.name === destRooms.get(w.to_room_id || w.to_room)?.name);
+      roomPositions.find((r) => r.name === destRooms.get(roomKey)?.name);
     if (!roomTarget) return;
 
     const fromX = dbX + dbW;
@@ -453,7 +455,7 @@ export function generateWiringDiagram(
   });
 
   // Total cable length
-  const totalCable = wiring.reduce((sum: number, w: any) => sum + (w.estimated_length_m || 0), 0);
+  const totalCable = wiring.reduce((sum: number, w) => sum + (w.estimated_length_m || 0), 0);
   if (totalCable > 0) {
     svg += `<text x="${svgW / 2}" y="${svgH - legendH - 36}" text-anchor="middle" font-size="9" font-weight="600" fill="${COLORS.supply}">Total estimated cable: ~${totalCable}m</text>`;
   }
@@ -489,9 +491,9 @@ export function generateAnnotatedFloorPlan(
   imageDataUrl: string,
   imageWidth: number,
   imageHeight: number,
-  placements: any[],
-  rooms: any[],
-  switchboardData?: { x_pct?: number; y_pct?: number; room_name?: string; wall?: string; height_mm?: number },
+  placements: SocketPlacement[],
+  rooms: Room[],
+  switchboardData?: Pick<Switchboard, 'x_pct' | 'y_pct' | 'room_name' | 'wall' | 'height_mm' | 'type' | 'rating' | 'ip_rating' | 'rotation'>,
 ): string {
   const svgW = imageWidth;
   const svgH = imageHeight;
@@ -503,7 +505,7 @@ export function generateAnnotatedFloorPlan(
   svg += `<image href="${xmlEsc(imageDataUrl)}" x="0" y="0" width="${svgW}" height="${svgH}" />`;
 
   // Room name labels only (no colored rectangles)
-  rooms.forEach((room: any) => {
+  rooms.forEach((room) => {
     if (!room.position) return;
     const p = room.position;
     const x = pct(p.x_pct, svgW) + 4, y = pct(p.y_pct, svgH) + 12;
@@ -515,14 +517,14 @@ export function generateAnnotatedFloorPlan(
     const dbX = pct(switchboardData.x_pct, svgW);
     const dbY = pct(switchboardData.y_pct, svgH);
 
-    placements.forEach((s: any) => {
+    placements.forEach((s) => {
       const sx = pct(s.x_pct, svgW), sy = pct(s.y_pct, svgH);
       svg += `<line x1="${dbX}" y1="${dbY}" x2="${sx}" y2="${sy}" stroke="#94a3b8" stroke-width="0.5" stroke-dasharray="4 3" opacity="0.4"/>`;
     });
   }
 
   // Socket symbols at their confirmed positions — use the rotation the user set in the editor
-  placements.forEach((s: any) => {
+  placements.forEach((s) => {
     const sx = pct(s.x_pct, svgW);
     const sy = pct(s.y_pct, svgH);
     const gang = s.gang || 1;
@@ -536,10 +538,10 @@ export function generateAnnotatedFloorPlan(
   if (switchboardData?.x_pct !== undefined && switchboardData?.y_pct !== undefined) {
     const dbX = pct(switchboardData.x_pct, svgW);
     const dbY = pct(switchboardData.y_pct, svgH);
-    const dbType = (switchboardData as any).type || 'flush';
-    const dbRating = (switchboardData as any).rating || '63A';
-    const dbIp = (switchboardData as any).ip_rating || 'IP30';
-    const dbRot = (switchboardData as any).rotation ?? 0;
+    const dbType = switchboardData.type || 'flush';
+    const dbRating = switchboardData.rating || '63A';
+    const dbIp = switchboardData.ip_rating || 'IP30';
+    const dbRot = switchboardData.rotation ?? 0;
     // Size based on rating
     const sizeMap: Record<string, { w: number; h: number }> = {
       '40A': { w: 24, h: 16 }, '63A': { w: 30, h: 20 }, '80A': { w: 36, h: 22 }, '100A': { w: 40, h: 24 },

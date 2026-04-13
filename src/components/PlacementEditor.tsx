@@ -234,11 +234,12 @@ export function PlacementEditor({
   const selectedData = sockets.find((s) => s.socket_id === selectedSocket);
   const W = stageSize.width, H = stageSize.height;
   const unplacedRooms = rooms.filter((r) => !placedRoomIds.has(r.id) && (socketsByRoom.get(r.id)?.length || 0) > 0);
+  const placingRoomId = placing?.type === 'room' ? placing.roomId : null;
 
   // Instruction text (always visible — no layout shift)
   let instructionText = "Click Place on a room, then click on the plan to position its sockets.";
-  if (placing?.type === 'room') {
-    const rName = rooms.find((r) => r.id === (placing as any).roomId)?.name || "room";
+  if (placingRoomId) {
+    const rName = rooms.find((r) => r.id === placingRoomId)?.name || "room";
     instructionText = `👆 Click on the floor plan to place ${rName} sockets`;
   } else if (placing?.type === 'db') {
     instructionText = "👆 Click on the floor plan to place the Distribution Board";
@@ -264,7 +265,7 @@ export function PlacementEditor({
           const proposed = socketsByRoom.get(room.id)?.length || 0;
           const placed = placedByRoom.get(room.id)?.length || 0;
           const isPlaced = placedRoomIds.has(room.id);
-          const isPlacing = placing?.type === 'room' && (placing as any).roomId === room.id;
+          const isPlacing = placingRoomId === room.id;
           return (
             <div key={room.id} className={`room-card ${isPlaced ? "done" : ""} ${isPlacing ? "active" : ""}`}>
               <div className="room-card-name">{room.name}</div>

@@ -13,6 +13,7 @@
 
 import { jsPDF } from 'jspdf';
 import 'svg2pdf.js';
+import type { CalculationResult, CircuitInfo, Room, SocketPlacement, WiringEntry } from './types';
 
 // ── A3 Landscape dimensions (mm) ──
 const A3_W = 420;
@@ -32,8 +33,8 @@ export interface PdfProjectInfo {
 }
 
 interface PdfData {
-  rooms: any[];
-  placements: any;
+  rooms: Room[];
+  placements: CalculationResult;
   svgRoomLayouts: string;
   svgCircuitDiagram: string;
   svgWiringDiagram: string;
@@ -155,8 +156,8 @@ function drawMaterialsPage(doc: jsPDF, data: PdfData, pageNum: number, totalPage
   drawPageFrame(doc, pageNum, totalPages, 'Bill of Materials & Standards', 'E-04', data.project);
 
   const { placements, rooms, project } = data;
-  const circuits = placements.circuits || [];
-  const wiring = placements.wiring || [];
+  const circuits: CircuitInfo[] = placements.circuits || [];
+  const wiring: WiringEntry[] = placements.wiring || [];
 
   let y = MARGIN + 22;
   const col1 = MARGIN + 6;
@@ -183,9 +184,9 @@ function drawMaterialsPage(doc: jsPDF, data: PdfData, pageNum: number, totalPage
 
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(17, 24, 39);
-  const socketPlacements = placements.placements || [];
-  rooms.forEach((room: any) => {
-    const count = socketPlacements.filter((p: any) => p.room_id === room.id || p.room_name === room.name).length;
+  const socketPlacements: SocketPlacement[] = placements.placements || [];
+  rooms.forEach((room) => {
+    const count = socketPlacements.filter((p) => p.room_id === room.id || p.room_name === room.name).length;
     doc.text(room.name || room.type, col1 + 2, y + 4);
     doc.text(room.type, col1 + 60, y + 4);
     doc.text(String(room.area_m2 || '?'), col1 + 100, y + 4);
@@ -228,7 +229,7 @@ function drawMaterialsPage(doc: jsPDF, data: PdfData, pageNum: number, totalPage
 
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(17, 24, 39);
-  circuits.forEach((c: any) => {
+  circuits.forEach((c) => {
     if (y > MARGIN + CONTENT_H - 20) return;
     doc.text(c.id || '', col1 + 2, y + 4);
     doc.text(c.breaker || '16A', col1 + 40, y + 4);
@@ -261,7 +262,7 @@ function drawMaterialsPage(doc: jsPDF, data: PdfData, pageNum: number, totalPage
 
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(17, 24, 39);
-    wiring.forEach((w: any) => {
+    wiring.forEach((w) => {
       if (ry > MARGIN + CONTENT_H / 2) return;
       doc.text(`DB → ${w.to_room || w.circuit_id || '?'}`, col2 + 2, ry + 4);
       doc.text(w.cable_type || 'NYM-J 3×2.5mm²', col2 + 70, ry + 4);
@@ -271,7 +272,7 @@ function drawMaterialsPage(doc: jsPDF, data: PdfData, pageNum: number, totalPage
       ry += 7;
     });
 
-    const totalCable = wiring.reduce((s: number, w: any) => s + (w.estimated_length_m || 0), 0);
+    const totalCable = wiring.reduce((s: number, w) => s + (w.estimated_length_m || 0), 0);
     if (totalCable > 0) {
       ry += 2;
       doc.setFont('helvetica', 'bold');
