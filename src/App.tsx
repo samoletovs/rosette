@@ -13,6 +13,7 @@ import {
 } from "./api";
 import { generateRoomLayouts, generateCircuitDiagram, generateWiringDiagram, generateAnnotatedFloorPlan } from "./planGenerator";
 import type { AnalysisResult, CalculationResult, CountryItem, Room, SocketPlacement, StandardsData, Switchboard } from "./types";
+import { usePaywall, PaywallModal } from "./components/PaywallModal";
 
 type Step = "upload" | "analyzing" | "review" | "placement" | "calculating" | "results";
 
@@ -114,6 +115,7 @@ export default function App() {
   const [fbError, setFbError] = useState("");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [pdfGenerating, setPdfGenerating] = useState(false);
+  const { showPaywall, unlocked, requestDownload, closePaywall, handleUnlocked } = usePaywall();
   const [addRoomOpen, setAddRoomOpen] = useState(false);
   const [newRoomType, setNewRoomType] = useState("bedroom");
   const [newRoomName, setNewRoomName] = useState("");
@@ -636,10 +638,10 @@ export default function App() {
 
             {/* PDF Export */}
             <div className="pdf-export-bar">
-              <button className="btn primary pdf-btn" disabled={pdfGenerating} onClick={handlePdfExport}>
-                {pdfGenerating ? "Generating PDF…" : "📄 Download A3 PDF — Full Electrical Plan"}
+              <button className="btn primary pdf-btn" disabled={pdfGenerating} onClick={() => requestDownload(handlePdfExport)}>
+                {pdfGenerating ? "Generating PDF…" : unlocked ? "📄 Download A3 PDF — Full Electrical Plan" : "📄 Get A3 PDF — Full Electrical Plan · €5"}
               </button>
-              <span className="muted sm">A3 landscape · Room layouts, circuit diagram, wiring plan, bill of materials</span>
+              <span className="muted sm">{unlocked ? "A3 landscape · Room layouts, circuit diagram, wiring plan, bill of materials" : "One-time payment · A3 landscape with all diagrams"}</span>
             </div>
 
             {/* Electrical Diagrams with tabs */}
@@ -769,6 +771,10 @@ export default function App() {
             )}
           </div>
         </div>
+      )}
+
+      {showPaywall && (
+        <PaywallModal onClose={closePaywall} onUnlocked={handleUnlocked} />
       )}
     </div>
   );
