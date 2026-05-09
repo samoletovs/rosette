@@ -16,8 +16,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id: string) {
-          if (id.includes("react-markdown") || id.includes("remark-gfm")) return "markdown";
-          if (id.includes("pdfkit") || id.includes("html2canvas")) return "pdf";
+          if (id.includes("react-markdown") || id.includes("remark-gfm") || id.includes("unified") || id.includes("mdast") || id.includes("micromark")) return "markdown";
+          if (id.includes("pdfkit") || id.includes("html2canvas") || id.includes("jspdf") || id.includes("svg2pdf")) return "pdf";
         },
       },
     },

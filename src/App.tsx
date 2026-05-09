@@ -1,5 +1,4 @@
 import { lazy, Suspense, useState, useRef, useCallback, useEffect } from "react";
-import remarkGfm from "remark-gfm";
 import {
   uploadFile,
   analyzeFloorPlan,
@@ -11,7 +10,6 @@ import {
   getAuthUser,
   AuthUser,
 } from "./api";
-import { generateRoomLayouts, generateCircuitDiagram, generateWiringDiagram, generateAnnotatedFloorPlan } from "./planGenerator";
 import type { AnalysisResult, CalculationResult, CountryItem, Room, SocketPlacement, StandardsData, Switchboard } from "./types";
 import { usePaywall, PaywallModal } from "./components/PaywallModal";
 
@@ -63,7 +61,13 @@ let nextRoomCounter = 50;
 
 const FLAG: Record<string, string> = { LV: "\u{1F1F1}\u{1F1FB}", LT: "\u{1F1F1}\u{1F1F9}", EE: "\u{1F1EA}\u{1F1EA}" };
 
-const Markdown = lazy(() => import("react-markdown"));
+const Markdown = lazy(async () => {
+  const [{ default: ReactMarkdown }, { default: remarkGfm }] = await Promise.all([
+    import("react-markdown"),
+    import("remark-gfm"),
+  ]);
+  return { default: (props: { children?: string }) => <ReactMarkdown remarkPlugins={[remarkGfm]}>{props.children}</ReactMarkdown> };
+});
 const PlacementEditor = lazy(() => import("./components/PlacementEditor").then((m) => ({ default: m.PlacementEditor })));
 
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -308,6 +312,7 @@ export default function App() {
       result.placements = finalPlacements;
 
       // Generate professional diagrams using user's placements
+      const { generateRoomLayouts, generateCircuitDiagram, generateWiringDiagram, generateAnnotatedFloorPlan } = await import("./planGenerator");
       setSvgRoomLayouts(generateRoomLayouts(rooms, finalPlacements));
       setSvgCircuitDiagram(generateCircuitDiagram(result.circuits || [], finalPlacements.length, result.rcd_groups));
       setSvgWiringDiagram(generateWiringDiagram(result.wiring || [], rooms, result.circuits || []));
@@ -699,7 +704,7 @@ export default function App() {
               </div>
               <div className="spec-body">
                 <Suspense fallback={<p className="muted">Loading specification…</p>}>
-                  <Markdown remarkPlugins={[remarkGfm]}>{specLang === "en" ? descEn : descLocal}</Markdown>
+                  <Markdown>{specLang === "en" ? descEn : descLocal}</Markdown>
                 </Suspense>
               </div>
               <button className="btn outline" onClick={() => {
