@@ -50,7 +50,7 @@ rosette/
 
 ## Environment
 
-- Azure subscription: Visual Studio Enterprise (<146099412+samoletovs@users.noreply.github.com>)
+- Azure subscription: Visual Studio Enterprise
 - Azure region: northeurope
 - GitHub: samoletovs/rosette (private)
 - Push to `main` branch
