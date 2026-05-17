@@ -1,0 +1,19 @@
+name: rosette
+purpose: "AI-powered electrical socket planner — uploads floor plan, GPT-4o analyzes, generates placement diagram"
+users: "Builders, architects, electricians, property owners (LV, LT, EE)"
+stage: active
+goals:
+  - "Vision-based floor plan analysis (GPT-4o)"
+  - "Country-specific electrical standards (Latvia, Lithuania, Estonia)"
+  - "SVG circuit diagram and socket placement generation"
+  - "PDF export"
+similar:
+  - "AR/AI design tools"
+  - "CAD software"
+  - "Interior design apps"
+quality:
+  - tests
+  - ci-cd
+  - responsive
+  - api
+  - auth
