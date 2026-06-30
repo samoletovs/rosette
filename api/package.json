@@ -19,7 +19,7 @@
     "@azure/openai": "^2.0.0",
     "@azure/storage-blob": "^12.33.0",
     "dotenv": "^17.4.2",
-    "openai": "^6.44.0"
+    "openai": "^6.45.0"
   },
   "devDependencies": {
     "@types/node": "^26.0.1",
