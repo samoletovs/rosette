@@ -28,7 +28,7 @@
   "dependencies": {
     "jspdf": "^4.2.1",
     "konva": "^10.3.0",
-    "react": "^19.2.7",
+    "react": "^19.2.8",
     "react-dom": "^19.2.7",
     "react-konva": "^19.2.5",
     "react-markdown": "^10.1.0",
