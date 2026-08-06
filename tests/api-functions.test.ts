@@ -93,9 +93,13 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
-  vi.clearAllMocks();
   mocks.openAICreateMock.mockReset();
+  mocks.tableCreateEntityMock.mockReset();
+  mocks.tableGetEntityMock.mockReset();
+  mocks.tableUpdateEntityMock.mockReset();
   mocks.tableListEntitiesMock.mockReset();
+  mocks.tableCreateTableMock.mockReset();
+  mocks.blobUploadMock.mockReset();
 });
 
 describe('standards endpoint', () => {
@@ -272,7 +276,7 @@ describe('feedback endpoints', () => {
 
   it('creates feedback and returns 201', async () => {
     const response = await getHandler('feedbackSubmit')({
-      json: async () => ({ title: 'Need feature', description: 'Please add X', type: 'unknown' }),
+      json: async () => ({ title: 'Need feature', description: 'Please add X', type: 'feature' }),
     });
 
     expect(response.status).toBe(201);
