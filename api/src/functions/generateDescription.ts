@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit } from "@azure/functions";
 import { AzureOpenAI } from "openai";
+import { buildDetailedErrorMessage } from "../utils/errorMessage";
 
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT || "";
 const apiKey = process.env.AZURE_OPENAI_KEY || "";
@@ -244,8 +245,11 @@ CRITICAL RULES:
           language: { name: info.lang, code: info.code },
         },
       };
-    } catch (error: any) {
-      return { status: 500, jsonBody: { error: error.message || "Description generation failed" } };
+    } catch (error: unknown) {
+      return {
+        status: 500,
+        jsonBody: { error: buildDetailedErrorMessage("generate-description", error, "Description generation failed") },
+      };
     }
   },
 });
