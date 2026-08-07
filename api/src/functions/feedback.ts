@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit } from "@azure/functions";
 import { TableClient, TableServiceClient } from "@azure/data-tables";
+import { buildDetailedErrorMessage } from "../utils/errorMessage";
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || "";
 const TABLE_NAME = "feedback";
@@ -61,8 +62,11 @@ app.http("feedbackSubmit", {
         status: 201,
         jsonBody: { id, message: "Feedback submitted successfully" },
       };
-    } catch (error: any) {
-      return { status: 500, jsonBody: { error: error.message || "Failed to submit feedback" } };
+    } catch (error: unknown) {
+      return {
+        status: 500,
+        jsonBody: { error: buildDetailedErrorMessage("feedback-submit", error, "Failed to submit feedback") },
+      };
     }
   },
 });
@@ -106,8 +110,11 @@ app.http("feedbackList", {
         status: 200,
         jsonBody: { items, count: items.length },
       };
-    } catch (error: any) {
-      return { status: 500, jsonBody: { error: error.message || "Failed to list feedback" } };
+    } catch (error: unknown) {
+      return {
+        status: 500,
+        jsonBody: { error: buildDetailedErrorMessage("feedback-list", error, "Failed to list feedback") },
+      };
     }
   },
 });
@@ -142,7 +149,10 @@ app.http("feedbackUpdate", {
       if (error.statusCode === 404) {
         return { status: 404, jsonBody: { error: "Feedback not found" } };
       }
-      return { status: 500, jsonBody: { error: error.message || "Failed to update feedback" } };
+      return {
+        status: 500,
+        jsonBody: { error: buildDetailedErrorMessage("feedback-update", error, "Failed to update feedback") },
+      };
     }
   },
 });

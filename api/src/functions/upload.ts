@@ -1,6 +1,7 @@
 import { app, HttpRequest, HttpResponseInit } from "@azure/functions";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { randomUUID } from "crypto";
+import { buildDetailedErrorMessage } from "../utils/errorMessage";
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || "";
 
@@ -55,8 +56,11 @@ app.http("upload", {
         status: 200,
         jsonBody: { id, blobName, url: blockBlobClient.url, contentType: file.type },
       };
-    } catch (error: any) {
-      return { status: 500, jsonBody: { error: error.message || "Upload failed" } };
+    } catch (error: unknown) {
+      return {
+        status: 500,
+        jsonBody: { error: buildDetailedErrorMessage("upload", error, "Upload failed") },
+      };
     }
   },
 });
