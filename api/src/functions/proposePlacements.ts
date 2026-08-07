@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit } from "@azure/functions";
 import { AzureOpenAI } from "openai";
+import { buildDetailedErrorMessage } from "../utils/errorMessage";
 
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT || "";
 const apiKey = process.env.AZURE_OPENAI_KEY || "";
@@ -119,8 +120,10 @@ ${JSON.stringify(body.rooms, null, 2)}`,
         return { status: 500, jsonBody: { error: "AI returned malformed placement data. Please try again." } };
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Proposal failed";
-      return { status: 500, jsonBody: { error: message } };
+      return {
+        status: 500,
+        jsonBody: { error: buildDetailedErrorMessage("propose-placements", error, "Proposal failed") },
+      };
     }
   },
 });

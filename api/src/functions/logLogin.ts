@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit } from "@azure/functions";
 import { TableClient, TableServiceClient } from "@azure/data-tables";
+import { buildDetailedErrorMessage } from "../utils/errorMessage";
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || "";
 const TABLE_NAME = "logins";
@@ -49,9 +50,12 @@ app.http("logLogin", {
       }).catch(() => {});
 
       return { status: 200, jsonBody: { logged: true } };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Don't fail the app if logging fails
-      return { status: 200, jsonBody: { logged: false, error: error.message } };
+      return {
+        status: 200,
+        jsonBody: { logged: false, error: buildDetailedErrorMessage("log-login", error, "Login logging failed") },
+      };
     }
   },
 });
