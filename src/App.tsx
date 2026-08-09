@@ -12,6 +12,7 @@ import {
 } from "./api";
 import type { AnalysisResult, CalculationResult, CountryItem, Room, SocketPlacement, StandardsData, Switchboard } from "./types";
 import { usePaywall, PaywallModal } from "./components/PaywallModal";
+import { StandardSelector } from "./components/StandardSelector";
 
 type Step = "upload" | "analyzing" | "review" | "placement" | "calculating" | "results";
 
@@ -58,6 +59,12 @@ const ROOM_TYPES = [
 ];
 
 let nextRoomCounter = 50;
+
+const DEFAULT_COUNTRIES: CountryItem[] = [
+  { code: "LV", country: "Latvia" },
+  { code: "LT", country: "Lithuania" },
+  { code: "EE", country: "Estonia" },
+];
 
 const FLAG: Record<string, string> = { LV: "\u{1F1F1}\u{1F1FB}", LT: "\u{1F1F1}\u{1F1F9}", EE: "\u{1F1EA}\u{1F1EA}" };
 
@@ -143,13 +150,7 @@ export default function App() {
   useEffect(() => {
     getCountries()
       .then((r) => setCountries(r.countries))
-      .catch(() =>
-        setCountries([
-          { code: "LV", country: "Latvia" },
-          { code: "LT", country: "Lithuania" },
-          { code: "EE", country: "Estonia" },
-        ])
-      );
+      .catch(() => setCountries(DEFAULT_COUNTRIES));
   }, []);
 
   useEffect(() => {
@@ -180,9 +181,10 @@ export default function App() {
     setStep("analyzing");
     setError("");
     try {
+      const preloaded = standards && standards.country_code === countryCode ? standards : null;
       const [analysis, std] = await Promise.all([
         analyzeFloorPlan(base64Url, propertyType),
-        getStandards(countryCode),
+        preloaded ? Promise.resolve(preloaded) : getStandards(countryCode),
         uploadFile(file).catch(() => {}),
       ]);
       const analysisRooms = analysis.rooms || [];
@@ -458,14 +460,13 @@ export default function App() {
             <h2>Upload floor plan</h2>
             <p className="muted">Select country, property type, and upload your plan</p>
             <div className="form-row">
-              <label className="form-field">
-                <span>Country</span>
-                <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)}>
-                  {(countries.length > 0 ? countries : [{ code: "LV", country: "Latvia" }, { code: "LT", country: "Lithuania" }, { code: "EE", country: "Estonia" }]).map((c) => (
-                    <option key={c.code} value={c.code}>{c.country}</option>
-                  ))}
-                </select>
-              </label>
+              <StandardSelector
+                countries={countries.length > 0 ? countries : DEFAULT_COUNTRIES}
+                value={countryCode}
+                onChange={setCountryCode}
+                standards={standards}
+                onStandardsLoaded={(_code, std) => setStandards(std)}
+              />
               <label className="form-field">
                 <span>Property type</span>
                 <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)}>
@@ -499,6 +500,14 @@ export default function App() {
           <section className="card fade-in">
             <h2>Review detected rooms</h2>
             <p className="muted">{rooms.length} rooms detected — add, remove, or adjust socket counts</p>
+            <div className="std-review">
+              <StandardSelector
+                countries={countries.length > 0 ? countries : DEFAULT_COUNTRIES}
+                value={countryCode}
+                standards={standards}
+                showCountrySelect={false}
+              />
+            </div>
             <div className="room-list">
               {rooms.map((r) => {
                 const min = standards?.room_rules?.[mapRoomType(r.type)]?.minimum_sockets;

@@ -64,7 +64,13 @@ export interface CountryItem {
 }
 
 export interface StandardsData {
-  room_rules?: Record<string, { minimum_sockets?: number }>;
+  country?: string;
+  country_code?: string;
+  standard?: string;
+  voltage?: string;
+  frequency?: string;
+  socket_type?: string;
+  room_rules?: Record<string, { minimum_sockets?: number; notes?: string; [key: string]: unknown }>;
   [key: string]: unknown;
 }
 

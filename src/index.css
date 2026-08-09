@@ -73,6 +73,25 @@ select{width:100%;padding:9px 36px 9px 12px;border:1px solid var(--bd);border-ra
 select:hover{border-color:#D4D4D4}
 select:focus{outline:none;border-color:var(--a);box-shadow:0 0 0 3px rgba(10,132,255,.08)}
 
+/* ── Standard selector ── */
+.form-row .std-panel{grid-column:1/-1}
+.std-review{margin:12px 0 4px}
+.std-panel{border:1px solid var(--bd);border-radius:var(--r2);background:#fff;overflow:hidden}
+.std-toggle{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;background:none;border:none;
+  font-family:var(--font);font-size:.78rem;color:var(--tx);cursor:pointer;text-align:left}
+.std-toggle:hover{background:#FAFAFA}
+.std-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.std-caret{color:#A0A0A0;font-size:.6rem}
+.std-error{padding:0 12px 8px}
+.std-details{border-top:1px solid var(--bd);padding:10px 12px 12px}
+.std-subtitle{font-size:.62rem;font-weight:600;color:#A0A0A0;text-transform:uppercase;letter-spacing:.06em;margin:10px 0 4px}
+.std-facts,.std-rooms,.std-circuits{list-style:none;display:flex;flex-direction:column;gap:2px}
+.std-rooms,.std-circuits{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px}
+.std-facts li,.std-rooms li,.std-circuits li{display:flex;justify-content:space-between;gap:10px;
+  font-size:.74rem;padding:3px 0;border-bottom:1px solid #F5F5F4}
+.std-facts li span,.std-rooms li span,.std-circuits li span{color:#A0A0A0}
+.std-facts li strong,.std-rooms li strong,.std-circuits li strong{font-weight:500;text-align:right}
+
 /* ── Drop ── */
 .drop{border:1.5px dashed #D4D4D4;border-radius:var(--r2);padding:32px 16px;text-align:center;
   cursor:pointer;transition:border-color .15s ease,background .15s ease;margin-bottom:16px;min-height:140px;
@@ -234,6 +253,7 @@ footer p{color:#B8B8B8;font-size:.66rem;font-weight:400;margin-top:2px}
   .card{padding:18px 16px;border-radius:10px}
   .brand h1{font-size:1.05rem}
   .form-row{grid-template-columns:1fr}
+  .std-rooms,.std-circuits{grid-template-columns:1fr}
   .s-label{font-size:.5rem}
   .s-dot{width:22px;height:22px;font-size:.58rem}
   .stats-bar{flex-wrap:wrap;gap:8px;padding:14px}
