@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Stage, Layer, Image as KonvaImage, Rect, Circle, Group, Text, Line, Arc } from "react-konva";
 import type { KonvaEventObject } from "konva/lib/Node";
-import type { Room, SocketPlacement, Switchboard } from "../types";
+import type { Room, SocketPlacement, StandardsData, Switchboard } from "../types";
+import { checkCompliance } from "../complianceChecker";
+import type { ComplianceIssue } from "../complianceChecker";
 
 const SOCKET_COLORS: Record<string, string> = {
   standard_16a: "#4f46e5", dedicated: "#f59e0b", oven: "#ef4444",
@@ -31,6 +33,7 @@ interface PlacementEditorProps {
   rooms: Room[];
   placements: SocketPlacement[];
   switchboard: Switchboard;
+  standards?: StandardsData | null;
   onConfirm: (placements: SocketPlacement[], switchboard: Switchboard) => void;
   onBack: () => void;
 }
@@ -110,7 +113,7 @@ function fanFromPoint(cx: number, cy: number, count: number, spacing: number): {
 }
 
 export function PlacementEditor({
-  imageUrl, rooms, placements: initialPlacements, switchboard: initialSwitchboard, onConfirm, onBack,
+  imageUrl, rooms, placements: initialPlacements, switchboard: initialSwitchboard, standards = null, onConfirm, onBack,
 }: PlacementEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
@@ -232,6 +235,14 @@ export function PlacementEditor({
   }, [initialSwitchboard, rooms]);
 
   const selectedData = sockets.find((s) => s.socket_id === selectedSocket);
+  const compliance = useMemo(
+    () => checkCompliance({ rooms, placements: sockets, switchboard: dbPlaced ? switchboard : null, standards }),
+    [rooms, sockets, switchboard, dbPlaced, standards],
+  );
+  const focusIssue = useCallback((issue: ComplianceIssue) => {
+    const id = issue.socketIds?.[0];
+    if (id) { setSelectedSocket(id); setShowDbPanel(false); setPlacing(null); }
+  }, []);
   const W = stageSize.width, H = stageSize.height;
   const unplacedRooms = rooms.filter((r) => !placedRoomIds.has(r.id) && (socketsByRoom.get(r.id)?.length || 0) > 0);
   const placingRoomId = placing?.type === 'room' ? placing.roomId : null;
@@ -527,6 +538,39 @@ export function PlacementEditor({
           </div>
         </div>
       )}
+
+      <div className="compliance-panel">
+        <div className="compliance-head">
+          <strong>Compliance check</strong>
+          <span className={`compliance-score ${compliance.errors > 0 ? "err" : compliance.warnings > 0 ? "warn" : "ok"}`}>
+            {compliance.score}%
+          </span>
+          <span className="muted sm">
+            {compliance.errors} error{compliance.errors === 1 ? "" : "s"} · {compliance.warnings} warning{compliance.warnings === 1 ? "" : "s"}
+          </span>
+        </div>
+        {compliance.issues.length === 0 ? (
+          <p className="muted sm compliance-empty">✓ All {compliance.checks} checks pass for the selected standards.</p>
+        ) : (
+          <ul className="compliance-list">
+            {compliance.issues.map((issue) => (
+              <li key={issue.id} className={`compliance-item ${issue.severity}`}>
+                <button type="button" className="compliance-item-btn"
+                  onClick={() => focusIssue(issue)}
+                  disabled={!issue.socketIds?.length}>
+                  <span className="compliance-icon" aria-hidden="true">
+                    {issue.severity === "error" ? "✕" : issue.severity === "warning" ? "!" : "i"}
+                  </span>
+                  <span className="compliance-text">
+                    <span className="compliance-rule">{issue.rule}</span>
+                    <span>{issue.message}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <div className="placement-legend">
         <div className="placement-legend-item"><span className="placement-legend-dot" style={{ background: "#4f46e5" }} /> Standard</div>

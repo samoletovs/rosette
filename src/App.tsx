@@ -13,6 +13,7 @@ import {
 import type { AnalysisResult, CalculationResult, CountryItem, Room, SocketPlacement, StandardsData, Switchboard } from "./types";
 import { usePaywall, PaywallModal } from "./components/PaywallModal";
 import { StandardSelector } from "./components/StandardSelector";
+import { mapRoomType } from "./complianceChecker";
 
 type Step = "upload" | "analyzing" | "review" | "placement" | "calculating" | "results";
 
@@ -22,27 +23,6 @@ const PROPERTY_TYPES = [
   { value: "office", label: "Office" },
   { value: "commercial", label: "Commercial" },
 ];
-
-const ROOM_TYPE_MAP: Record<string, string> = {
-  kitchen: "kitchen", living_room: "living_room", living_area: "living_room",
-  lounge: "living_room", sitting_room: "living_room", dining_room: "dining_room",
-  dining_area: "dining_room", dining: "dining_room", bedroom: "bedroom",
-  bedroom_1: "bedroom", bedroom_2: "bedroom", bedroom_3: "bedroom",
-  master_bedroom: "bedroom", bathroom: "bathroom", bath: "bathroom",
-  shower_room: "bathroom", hallway: "hallway", corridor: "hallway",
-  entrance: "hallway", foyer: "hallway", hall: "hallway",
-  home_office: "home_office", study: "home_office", office: "home_office",
-  wc: "wc", toilet: "wc", "c.r.": "wc", cr: "wc", comfort_room: "wc",
-  restroom: "wc", utility_room: "utility_room", laundry: "utility_room",
-  storage: "utility_room", pantry: "utility_room", garage: "garage",
-  carport: "garage", balcony: "balcony", terrace: "balcony", patio: "balcony",
-  porch: "balcony", veranda: "balcony", loggia: "balcony",
-};
-
-function mapRoomType(type: string): string {
-  const n = type.toLowerCase().replace(/[\s-]+/g, "_").replace(/[^a-z0-9_]/g, "");
-  return ROOM_TYPE_MAP[n] || ROOM_TYPE_MAP[type.toLowerCase()] || n;
-}
 
 const ROOM_TYPES = [
   { value: "kitchen", label: "Kitchen" },
@@ -629,6 +609,7 @@ export default function App() {
               rooms={rooms}
               placements={proposedPlacements}
               switchboard={proposedSwitchboard}
+              standards={standards}
               onConfirm={handlePlacementConfirm}
               onBack={() => setStep("review")}
             />
