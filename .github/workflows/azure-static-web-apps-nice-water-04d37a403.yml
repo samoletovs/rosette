@@ -35,7 +35,7 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -52,7 +52,7 @@ jobs:
       # this job already pays for checkout and `npm ci`, which is the expensive
       # part, so the marginal cost is the ~2s the suite takes and no extra run.
       - name: Test
-        run: npm test
+        run: npm test -- --coverage
 
   # ── Build & Deploy ─────────────────────────────────────────────────
   build_and_deploy_job:
@@ -73,6 +73,19 @@ jobs:
         with:
           submodules: true
           lfs: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # Build outside Oryx so the frontend uses the same Node version as tests.
+      - name: Install & build frontend
+        run: |
+          npm ci
+          npm run build
+          cp staticwebapp.config.json dist/
+
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -80,9 +93,10 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_NICE_WATER_04D37A403 }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "/"
+          app_location: "dist"
           api_location: "api"
-          output_location: "dist"
+          output_location: ""
+          skip_app_build: true
           api_build_command: "npm install && npm run build"
 
       - name: Notify Telegram (success)

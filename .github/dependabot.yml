@@ -10,9 +10,12 @@ updates:
     # run, and a separate thing for a human to look at and learn nothing from.
     # One PR per directory per week carries the same information.
     #
-    # Majors stay ungrouped on purpose: they are the ones that actually break a
-    # build, and they are worth reading individually.
+    # Unrelated majors stay separate; Vitest packages require matching versions.
     groups:
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
       minor-and-patch:
         patterns:
           - "*"
