@@ -69,5 +69,6 @@ npm test           # Run tests (pending)
 ## Deployment
 
 - Push to `main` triggers GitHub Actions → Azure SWA deploy
+- PR preview cleanup has a separate concurrency group from production; only superseded active PR runs may cancel an earlier run.
 - API builds separately in `api/` folder
 - Telegram notification on success/failure
