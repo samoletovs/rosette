@@ -108,10 +108,23 @@ long room names, all diagram views, local-language specification, SVG/Markdown
 downloads, the actual PDF exporter in a simulated already-unlocked state, and
 paywall Escape behavior. No purchase or real service call occurs.
 
-It checks multiple widths, 200% **text enlargement** (not claimed as browser
-zoom), reduced motion, and unexpected external requests. Record separate manual
-browser zoom, contrast, assistive-technology, and visual-intent observations.
-Local resource timings in `browser-results.json` are not field Core Web Vitals.
+It checks multiple widths, 200% **text enlargement** in each representative
+state (not claimed as browser zoom), measured HTML/form/placeholder contrast,
+active placement hover, reduced motion, and unexpected external requests.
+SVG/canvas/image text and broader visual/assistive-technology checks remain in
+the manual review scope.
+
+The build emits a module-based `lazy-chunks.json`. The runner requires placement,
+markdown and PDF code to remain absent before their respective phases, then
+requires the requested feature to load and work. Vendor chunks count, not just
+lazy wrappers. `browser-results.json` records initial uncompressed JavaScript
+bytes, phase observations and actual local resource timings—not field Core Web
+Vitals. The four loading-assertion unit tests can also run with the existing
+Playwright environment:
+
+```powershell
+python tests\test_browser_requirements.py
+```
 
 After committing all source/documentation fixes, capture evidence using the
 exact served build marker and matching checkout:
@@ -128,5 +141,9 @@ desktop/mobile PNGs. Copy the two `concept-*-desktop.png` artifacts into the
 new-direction option entries and cite the actual owner choice. Commit evidence
 after source; run the gate again immediately before delivery.
 
-Until those steps actually pass, no implementation browser pass, performance
-pass, independent review, or ready-to-merge receipt is claimed.
+The parent verified the `cff8acd` quality build and browser journeys, then found
+real loading and accessibility failures; see
+[`planning-studio/performance-and-accessibility.md`](planning-studio/performance-and-accessibility.md).
+Those baseline results are not a pass for the revised source. Until its checks
+and independent review are complete, no latest-source performance pass or
+ready-to-merge receipt is claimed.

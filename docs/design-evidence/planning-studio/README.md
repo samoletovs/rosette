@@ -1,6 +1,7 @@
 # Evidence status
 
-**The files currently present are concept-choice artifacts only.**
+**This folder contains concept history plus explicitly labelled baseline and
+diagnostic observations—not a latest-source pass receipt.**
 
 The four `concept-*.png` files were captured during the original two-direction
 exploration on 2026-09-21 using the shared fictional apartment. The owner chose
@@ -20,7 +21,13 @@ production implementation.
 | concept-b-desktop.png | 41e33674019eda180aa36dcd46f6eede007a381fbc1c5c19ebaff7df5f706b2c |
 | concept-b-mobile.png | 359ced5fe9bd4ffd06e64e670836b965223672ca5ba88699eb666bd80e4bf1f5 |
 
-Still required: successful exact-source remote quality validation; actual app
-desktop/mobile, waiting/error/recovery/long-content browser evidence; measured
-contrast/zoom/performance observations; parent-coordinated independent review;
-then an honest `review.json`. No placeholder pass receipt is supplied.
+The exact `cff8acd` implementation subsequently passed remote quality and real
+mocked browser journeys. Its initial-load budget and two accessibility states
+failed further measurement. See
+[`performance-and-accessibility.md`](performance-and-accessibility.md) for
+actual measurements, root causes, fixes and the limited CSS isolation check.
+
+Still required for the revised source: exact-source remote build and browser
+phase-loading/accessibility checks, fresh representative captures, remaining
+manual accessibility/zoom observations, and parent-coordinated independent
+review. Only then may an honest `review.json` be created.

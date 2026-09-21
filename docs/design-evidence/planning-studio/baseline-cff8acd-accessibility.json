@@ -1,0 +1,467 @@
+{
+  "source": "cff8acdd38608612c3f84bb2b4d0fc46ba2363c4",
+  "cssOverride": null,
+  "observations": [
+    {
+      "phase": "upload",
+      "width": 1440,
+      "contrast": {
+        "measured": 35,
+        "minimumTextRatio": 5.36,
+        "failures": [],
+        "controls": [
+          {
+            "surface": "--bg",
+            "border": 3.47,
+            "focus": 6.73
+          },
+          {
+            "surface": "--sf",
+            "border": 3.88,
+            "focus": 7.53
+          },
+          {
+            "surface": "--a3",
+            "border": 3.24,
+            "focus": 6.28
+          }
+        ],
+        "svgTextNotAutomaticallyMeasured": 0,
+        "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+      },
+      "text200": {
+        "rootFont": "32px",
+        "viewport": 1440,
+        "pageWidth": 1440,
+        "overflow": []
+      }
+    },
+    {
+      "phase": "error",
+      "width": 1440,
+      "contrast": {
+        "measured": 41,
+        "minimumTextRatio": 5.36,
+        "failures": [],
+        "controls": [
+          {
+            "surface": "--bg",
+            "border": 3.47,
+            "focus": 6.73
+          },
+          {
+            "surface": "--sf",
+            "border": 3.88,
+            "focus": 7.53
+          },
+          {
+            "surface": "--a3",
+            "border": 3.24,
+            "focus": 6.28
+          }
+        ],
+        "svgTextNotAutomaticallyMeasured": 0,
+        "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+      },
+      "text200": {
+        "rootFont": "32px",
+        "viewport": 1440,
+        "pageWidth": 1440,
+        "overflow": []
+      }
+    },
+    {
+      "phase": "review",
+      "width": 1440,
+      "contrast": {
+        "measured": 64,
+        "minimumTextRatio": 5.36,
+        "failures": [],
+        "controls": [
+          {
+            "surface": "--bg",
+            "border": 3.47,
+            "focus": 6.73
+          },
+          {
+            "surface": "--sf",
+            "border": 3.88,
+            "focus": 7.53
+          },
+          {
+            "surface": "--a3",
+            "border": 3.24,
+            "focus": 6.28
+          }
+        ],
+        "svgTextNotAutomaticallyMeasured": 0,
+        "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+      },
+      "text200": {
+        "rootFont": "32px",
+        "viewport": 1440,
+        "pageWidth": 1440,
+        "overflow": []
+      }
+    },
+    {
+      "phase": "placement",
+      "width": 1440,
+      "contrast": {
+        "measured": 63,
+        "minimumTextRatio": 1.2,
+        "failures": [
+          {
+            "element": "BUTTON",
+            "selector": "room-card-btn active",
+            "text": "Click map \u25b8",
+            "foreground": "rgb(255, 253, 248)",
+            "background": [
+              230,
+              235,
+              216
+            ],
+            "ratio": 1.2,
+            "minimum": 4.5
+          }
+        ],
+        "controls": [
+          {
+            "surface": "--bg",
+            "border": 3.47,
+            "focus": 6.73
+          },
+          {
+            "surface": "--sf",
+            "border": 3.88,
+            "focus": 7.53
+          },
+          {
+            "surface": "--a3",
+            "border": 3.24,
+            "focus": 6.28
+          }
+        ],
+        "svgTextNotAutomaticallyMeasured": 0,
+        "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+      },
+      "text200": {
+        "rootFont": "32px",
+        "viewport": 1440,
+        "pageWidth": 1440,
+        "overflow": []
+      }
+    },
+    {
+      "phase": "results",
+      "width": 1440,
+      "contrast": {
+        "measured": 45,
+        "minimumTextRatio": 5.01,
+        "failures": [],
+        "controls": [
+          {
+            "surface": "--bg",
+            "border": 3.47,
+            "focus": 6.73
+          },
+          {
+            "surface": "--sf",
+            "border": 3.88,
+            "focus": 7.53
+          },
+          {
+            "surface": "--a3",
+            "border": 3.24,
+            "focus": 6.28
+          }
+        ],
+        "svgTextNotAutomaticallyMeasured": 13,
+        "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+      },
+      "text200": {
+        "rootFont": "32px",
+        "viewport": 1440,
+        "pageWidth": 1440,
+        "overflow": []
+      }
+    },
+    {
+      "phase": "paywall",
+      "width": 1440,
+      "contrast": {
+        "measured": 12,
+        "minimumTextRatio": 6,
+        "failures": [],
+        "controls": [
+          {
+            "surface": "--bg",
+            "border": 3.47,
+            "focus": 6.73
+          },
+          {
+            "surface": "--sf",
+            "border": 3.88,
+            "focus": 7.53
+          },
+          {
+            "surface": "--a3",
+            "border": 3.24,
+            "focus": 6.28
+          }
+        ],
+        "svgTextNotAutomaticallyMeasured": 0,
+        "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+      },
+      "text200": {
+        "rootFont": "32px",
+        "viewport": 1440,
+        "pageWidth": 1440,
+        "overflow": []
+      }
+    },
+    {
+      "phase": "upload",
+      "width": 390,
+      "contrast": {
+        "measured": 35,
+        "minimumTextRatio": 5.36,
+        "failures": [],
+        "controls": [
+          {
+            "surface": "--bg",
+            "border": 3.47,
+            "focus": 6.73
+          },
+          {
+            "surface": "--sf",
+            "border": 3.88,
+            "focus": 7.53
+          },
+          {
+            "surface": "--a3",
+            "border": 3.24,
+            "focus": 6.28
+          }
+        ],
+        "svgTextNotAutomaticallyMeasured": 0,
+        "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+      },
+      "text200": {
+        "rootFont": "32px",
+        "viewport": 390,
+        "pageWidth": 390,
+        "overflow": []
+      }
+    },
+    {
+      "phase": "error",
+      "width": 390,
+      "contrast": {
+        "measured": 41,
+        "minimumTextRatio": 5.36,
+        "failures": [],
+        "controls": [
+          {
+            "surface": "--bg",
+            "border": 3.47,
+            "focus": 6.73
+          },
+          {
+            "surface": "--sf",
+            "border": 3.88,
+            "focus": 7.53
+          },
+          {
+            "surface": "--a3",
+            "border": 3.24,
+            "focus": 6.28
+          }
+        ],
+        "svgTextNotAutomaticallyMeasured": 0,
+        "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+      },
+      "text200": {
+        "rootFont": "32px",
+        "viewport": 390,
+        "pageWidth": 390,
+        "overflow": []
+      }
+    },
+    {
+      "phase": "review",
+      "width": 390,
+      "contrast": {
+        "measured": 64,
+        "minimumTextRatio": 5.36,
+        "failures": [],
+        "controls": [
+          {
+            "surface": "--bg",
+            "border": 3.47,
+            "focus": 6.73
+          },
+          {
+            "surface": "--sf",
+            "border": 3.88,
+            "focus": 7.53
+          },
+          {
+            "surface": "--a3",
+            "border": 3.24,
+            "focus": 6.28
+          }
+        ],
+        "svgTextNotAutomaticallyMeasured": 0,
+        "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+      },
+      "text200": {
+        "rootFont": "32px",
+        "viewport": 390,
+        "pageWidth": 393,
+        "overflow": [
+          {
+            "tag": "DIV",
+            "class": "",
+            "text": "Homeowner planning studioEvery room, considered.",
+            "width": 373.09375
+          },
+          {
+            "tag": "P",
+            "class": "eyebrow",
+            "text": "Homeowner planning studio",
+            "width": 373.09375
+          },
+          {
+            "tag": "H1",
+            "class": "",
+            "text": "Every room, considered.",
+            "width": 373.09375
+          },
+          {
+            "tag": "P",
+            "class": "",
+            "text": "Review the details at your own pace. Generated suggestions need a qual",
+            "width": 373.09375
+          }
+        ]
+      }
+    },
+    {
+      "phase": "placement",
+      "width": 390,
+      "contrast": {
+        "measured": 63,
+        "minimumTextRatio": 1.2,
+        "failures": [
+          {
+            "element": "BUTTON",
+            "selector": "room-card-btn active",
+            "text": "Click map \u25b8",
+            "foreground": "rgb(255, 253, 248)",
+            "background": [
+              230,
+              235,
+              216
+            ],
+            "ratio": 1.2,
+            "minimum": 4.5
+          }
+        ],
+        "controls": [
+          {
+            "surface": "--bg",
+            "border": 3.47,
+            "focus": 6.73
+          },
+          {
+            "surface": "--sf",
+            "border": 3.88,
+            "focus": 7.53
+          },
+          {
+            "surface": "--a3",
+            "border": 3.24,
+            "focus": 6.28
+          }
+        ],
+        "svgTextNotAutomaticallyMeasured": 0,
+        "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+      },
+      "text200": {
+        "rootFont": "32px",
+        "viewport": 390,
+        "pageWidth": 390,
+        "overflow": []
+      }
+    },
+    {
+      "phase": "results",
+      "width": 390,
+      "contrast": {
+        "measured": 45,
+        "minimumTextRatio": 5.01,
+        "failures": [],
+        "controls": [
+          {
+            "surface": "--bg",
+            "border": 3.47,
+            "focus": 6.73
+          },
+          {
+            "surface": "--sf",
+            "border": 3.88,
+            "focus": 7.53
+          },
+          {
+            "surface": "--a3",
+            "border": 3.24,
+            "focus": 6.28
+          }
+        ],
+        "svgTextNotAutomaticallyMeasured": 13,
+        "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+      },
+      "text200": {
+        "rootFont": "32px",
+        "viewport": 390,
+        "pageWidth": 390,
+        "overflow": []
+      }
+    },
+    {
+      "phase": "paywall",
+      "width": 390,
+      "contrast": {
+        "measured": 12,
+        "minimumTextRatio": 6,
+        "failures": [],
+        "controls": [
+          {
+            "surface": "--bg",
+            "border": 3.47,
+            "focus": 6.73
+          },
+          {
+            "surface": "--sf",
+            "border": 3.88,
+            "focus": 7.53
+          },
+          {
+            "surface": "--a3",
+            "border": 3.24,
+            "focus": 6.28
+          }
+        ],
+        "svgTextNotAutomaticallyMeasured": 0,
+        "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+      },
+      "text200": {
+        "rootFont": "32px",
+        "viewport": 390,
+        "pageWidth": 390,
+        "overflow": []
+      }
+    }
+  ]
+}

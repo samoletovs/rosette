@@ -45,7 +45,8 @@ main { flex: 1; min-width: 0; }
 .s-item.done .s-dot { background: var(--a3); border-color: var(--a); }
 .s-track { display: none; }
 .journey-intro { display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; align-items: end; padding: 36px 0 24px; }
-.journey-intro h1 { font: 3rem/1.12 var(--display); letter-spacing: -.04em; margin-top: 12px; }
+.journey-intro h1 { font: 3rem/1.12 var(--display); letter-spacing: -.04em; margin-top: 12px; overflow-wrap: anywhere; }
+.journey-intro > div { min-width: 0; }
 .journey-intro h1 em { color: var(--a); font-weight: 400; }
 .journey-intro > p { color: var(--tx2); max-width: 42ch; justify-self: end; }
 .eyebrow { color: var(--tx2); font-size: .75rem; font-weight: 650; letter-spacing: .11em; text-transform: uppercase; }
@@ -230,7 +231,8 @@ dialog::backdrop { background: rgb(48 47 40 / 45%); }
 .placement-legend-swatch { width: 16px; height: 12px; border-radius: 2px; }
 @media (hover: hover) and (pointer: fine) {
   .btn.primary:hover:not(:disabled) { background: var(--a2); }
-  .btn:not(.primary):hover:not(:disabled), .cnt-btn:hover:not(:disabled), .zoom-btn:hover, .room-card-btn:hover { background: var(--a3); }
+  .btn:not(.primary):hover:not(:disabled), .cnt-btn:hover:not(:disabled), .zoom-btn:hover, .room-card-btn:not(.active):hover { background: var(--a3); }
+  .room-card-btn.active:hover { background: var(--a2); }
   .btn-remove:hover { background: #fff2ec; }
 }
 @media (max-width: 1050px) {
@@ -249,7 +251,7 @@ dialog::backdrop { background: rgb(48 47 40 / 45%); }
   .user-bar { flex-basis: 100%; }
   .stepper { justify-content: space-between; gap: 8px; padding: 20px 0; }
   .s-item { flex-direction: column; gap: 6px; font-size: .75rem; }
-  .journey-intro { grid-template-columns: 1fr; gap: 20px; padding-top: 28px; }
+  .journey-intro { grid-template-columns: minmax(0, 1fr); gap: 20px; padding-top: 28px; }
   .journey-intro h1 { font-size: 2.5rem; }
   .journey-intro > p { justify-self: start; font-size: .9375rem; }
   .safety-note strong { display: block; }

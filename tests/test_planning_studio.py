@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 from urllib.request import urlopen
 
 from playwright.sync_api import Browser, Page, Route, expect, sync_playwright
+from browser_accessibility import measure_accessibility
 
 ROOT = Path(__file__).resolve().parents[1]
 ROOMS = [
@@ -125,8 +126,23 @@ def held_route(page: Page, state: dict, key: str) -> Route:
     return state[key]
 
 
-def journey(browser: Browser, url: str, output: Path, width: int) -> dict:
+def loaded_chunks(page: Page) -> set[str]:
+    return set(page.evaluate("performance.getEntriesByType('resource').map(e => new URL(e.name).pathname.replace(/^\\//, ''))"))
+
+
+def assert_deferred(chunks: set[str], features: dict, *names: str) -> None:
+    for name in names:
+        unexpected = chunks.intersection(features[name]["chunks"])
+        assert not unexpected, f"{name} code loaded before its feature was used: {sorted(unexpected)}"
+
+
+def assert_feature_loaded(page: Page, features: dict, name: str) -> None:
+    assert features[name]["entry"] in loaded_chunks(page), f"{name} did not load when requested"
+
+
+def journey(browser: Browser, url: str, output: Path, width: int, features: dict) -> dict:
     name = "desktop" if width >= 1024 else "mobile"
+    accessibility = []
     context = browser.new_context(viewport={"width": width, "height": 1080 if width >= 1024 else 844}, accept_downloads=True)
     # Simulate the existing unlocked state only for exercising the actual PDF exporter.
     if name == "desktop":
@@ -141,6 +157,11 @@ def journey(browser: Browser, url: str, output: Path, width: int) -> dict:
     page.goto(url)
     expect(page.get_by_role("button", name="Choose floor plan")).to_be_visible()
     expect(page.get_by_role("combobox", name="Country").locator("option")).to_have_count(3)
+    page.wait_for_load_state("networkidle")
+    initial_chunks = loaded_chunks(page)
+    assert_deferred(initial_chunks, features, "placement", "markdown", "pdf")
+    initial_js_bytes = page.evaluate("performance.getEntriesByType('resource').filter(e => new URL(e.name).pathname.endsWith('.js')).reduce((sum,e) => sum+e.decodedBodySize,0)")
+    accessibility.append(measure_accessibility(page, "upload"))
     page.get_by_role("combobox", name="Country").select_option("LV" if name == "desktop" else "EE")
     capture(page, output, f"{name}-upload")
     choose = page.get_by_role("button", name="Choose floor plan")
@@ -161,11 +182,13 @@ def journey(browser: Browser, url: str, output: Path, width: int) -> dict:
     fulfill(held_route(page, state, "held_analysis"), {"error": "Synthetic service failure. Try again."}, 503)
     expect(page.get_by_role("alert")).to_contain_text("Synthetic service failure")
     expect(page.locator(".file-name")).to_have_text("synthetic-plan.png")
+    accessibility.append(measure_accessibility(page, "analysis-error"))
     capture(page, output, f"{name}-analysis-error")
     page.get_by_role("button", name="Try analysis again").click()
     expect(page.get_by_role("heading", name="Review detected rooms")).to_be_visible()
     assert state["analyze"][0] == state["analyze"][1], "Retry changed the selected plan or property"
     expect(page.locator(".room-row")).to_have_count(5)
+    accessibility.append(measure_accessibility(page, "review"))
     page.get_by_role("button", name="Increase sockets for Living room", exact=True).press("Enter")
     page.get_by_role("button", name="Add missing room").click()
     page.get_by_label("Name", exact=True).fill("A very long synthetic room name " * 6)
@@ -175,6 +198,7 @@ def journey(browser: Browser, url: str, output: Path, width: int) -> dict:
     page.locator(".room-row").last.get_by_role("button", name=re.compile("^Remove ")).click()
     expect(page.locator(".room-row")).to_have_count(5)
     capture(page, output, f"{name}-review")
+    assert_deferred(loaded_chunks(page), features, "placement", "markdown", "pdf")
     page.get_by_role("button", name="Back to plan").click()
     expect(page.locator(".file-name")).to_have_text("synthetic-plan.png")
     # Do not reanalyze: return via browser-independent UI by analyzing the retained file.
@@ -183,8 +207,13 @@ def journey(browser: Browser, url: str, output: Path, width: int) -> dict:
     page.get_by_role("button", name="Increase sockets for Living room", exact=True).click()
     page.get_by_role("button", name="Place sockets").click()
     expect(page.get_by_role("heading", name="Place sockets & distribution board")).to_be_visible()
+    assert_feature_loaded(page, features, "placement")
+    assert_deferred(loaded_chunks(page), features, "markdown", "pdf")
     for room in ROOMS:
         page.get_by_role("button", name=f"Place sockets in {room['name']}", exact=True).press("Enter")
+        if room["id"] == "living":
+            page.get_by_role("button", name=f"Place sockets in {room['name']}", exact=True).hover()
+            accessibility.append(measure_accessibility(page, "placement-active-hover"))
         form = page.locator(".point-controls")
         position = room["position"]
         form.get_by_label("Horizontal position (%)").fill(str(position["x_pct"] + position["w_pct"] / 2))
@@ -210,6 +239,10 @@ def journey(browser: Browser, url: str, output: Path, width: int) -> dict:
     assert state["calculate"][1]["rooms"][0]["requested_sockets"] == 3
     expect(page.locator(".stat-n").nth(0)).to_have_text("11")
     expect(page.locator(".results")).to_contain_text("Synthetic browser fixture")
+    expect(page.locator(".spec-body")).to_contain_text("Synthetic review specification")
+    assert_feature_loaded(page, features, "markdown")
+    assert_deferred(loaded_chunks(page), features, "pdf")
+    accessibility.append(measure_accessibility(page, "results"))
     assert_no_overflow(page)
     for label in ("Room layouts", "Circuit diagram", "Wiring plan", "Floor plan"):
         page.get_by_role("button", name=label, exact=True).click()
@@ -230,26 +263,26 @@ def journey(browser: Browser, url: str, output: Path, width: int) -> dict:
         path = output / "desktop-planning.pdf"
         downloaded.value.save_as(str(path))
         assert path.read_bytes().startswith(b"%PDF"), "PDF export did not produce a PDF"
+        assert_feature_loaded(page, features, "pdf")
     else:
         page.get_by_role("button", name="Get A3 planning PDF").click()
         expect(page.get_by_role("dialog", name="PDF export paywall")).to_be_visible()
+        accessibility.append(measure_accessibility(page, "paywall"))
         page.keyboard.press("Escape")
         expect(page.get_by_role("dialog")).to_have_count(0)
+        assert_deferred(loaded_chunks(page), features, "pdf")
     capture(page, output, name)
     for check_width in (320, 390, 768, 1440):
         page.set_viewport_size({"width": check_width, "height": 900})
         assert_no_overflow(page)
-    page.evaluate("document.documentElement.style.fontSize = '200%'")
-    assert_no_overflow(page)
-    page.evaluate("document.documentElement.style.fontSize = ''")
     page.emulate_media(reduced_motion="reduce")
     assert page.evaluate("document.getAnimations().length") == 0
     page.get_by_role("button", name="Plan another property").click()
     expect(page.get_by_role("button", name="Choose floor plan")).to_be_visible()
     assert not state["external"], state["external"]
     assert not errors, errors
-    resources = page.evaluate("performance.getEntriesByType('resource').map(e => ({name:e.name, duration:e.duration, transferSize:e.transferSize}))")
-    result = {"viewport": name, "width": width, "passed": True, "calculateRequests": len(state["calculate"]), "resources": resources, "notes": "Mocked services; local resource timings are not field Core Web Vitals."}
+    resources = page.evaluate("performance.getEntriesByType('resource').map(e => ({name:e.name, duration:e.duration, transferSize:e.transferSize, decodedBodySize:e.decodedBodySize}))")
+    result = {"viewport": name, "width": width, "passed": True, "calculateRequests": len(state["calculate"]), "initialChunks": sorted(initial_chunks), "initialDecodedJavaScriptBytes": initial_js_bytes, "lazyFeatureChunks": features, "accessibility": accessibility, "resources": resources, "notes": "Mocked services; decoded body bytes are local uncompressed resources, not field Core Web Vitals."}
     context.close()
     return result
 
@@ -327,11 +360,16 @@ def main() -> int:
         if changes or staged or any(name and not name.startswith("docs/design-evidence/") for name in untracked):
             parser.error("Commit all source changes before product-evidence capture.")
     output.mkdir(parents=True, exist_ok=True)
+    with urlopen(args.url.rstrip("/") + "/lazy-chunks.json", timeout=10) as response:
+        features = json.loads(response.read())
+    for feature in ("placement", "markdown", "pdf"):
+        if not features.get(feature, {}).get("entry") or not features[feature].get("chunks"):
+            parser.error(f"The build has no module-based lazy-feature report for {feature}.")
     started = time.monotonic()
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         try:
-            results = [journey(browser, args.url, output, width) for width in (1440, 390)]
+            results = [journey(browser, args.url, output, width, features) for width in (1440, 390)]
             empty = empty_states(browser, args.url, output)
         finally:
             browser.close()

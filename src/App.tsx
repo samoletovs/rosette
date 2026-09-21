@@ -51,13 +51,7 @@ const DEFAULT_COUNTRIES: CountryItem[] = [
 
 const FLAG: Record<string, string> = { LV: "\u{1F1F1}\u{1F1FB}", LT: "\u{1F1F1}\u{1F1F9}", EE: "\u{1F1EA}\u{1F1EA}" };
 
-const Markdown = lazy(async () => {
-  const [{ default: ReactMarkdown }, { default: remarkGfm }] = await Promise.all([
-    import("react-markdown"),
-    import("remark-gfm"),
-  ]);
-  return { default: (props: { children?: string }) => <ReactMarkdown remarkPlugins={[remarkGfm]}>{props.children}</ReactMarkdown> };
-});
+const Markdown = lazy(() => import("./components/SpecificationMarkdown").then((module) => ({ default: module.SpecificationMarkdown })));
 const PlacementEditor = lazy(() => import("./components/PlacementEditor").then((m) => ({ default: m.PlacementEditor })));
 
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -718,7 +712,7 @@ export default function App() {
                 </div>
               </div>
               <div className="spec-body">
-                <Suspense fallback={<p className="muted">Loading specification…</p>}>
+                <Suspense fallback={<p className="muted" role="status">Loading specification…</p>}>
                   <Markdown>{specLang === "en" ? descEn : descLocal}</Markdown>
                 </Suspense>
               </div>
