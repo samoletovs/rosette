@@ -94,3 +94,15 @@ inactive controls and SVG/canvas/image text are excluded. Text enlargement is
 not browser zoom. Generated diagrams, physical devices, browser zoom, and
 assistive-technology/visual checks still require the independent review's stated
 scope. No WCAG conformance certificate or field Core Web Vitals result is claimed.
+
+## Scaffold branding, in the same validation batch
+
+The application favicon now uses `public/rosette.svg`: the original approved
+socket mark, with the existing olive/plaster palette and a light backing for
+legibility in browser tabs. The app-header mark, document title, charset and
+viewport metadata are preserved. No external asset or font was downloaded.
+
+The unit checks compare the favicon geometry to the existing app mark. The
+same production browser runner also checks the title, icon link and served SVG,
+so the parent can validate this together with loading, contrast and enlargement
+on the latest combined source—not in a separate favicon-only CI cycle.

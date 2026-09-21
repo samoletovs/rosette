@@ -156,6 +156,10 @@ def journey(browser: Browser, url: str, output: Path, width: int, features: dict
     state = install_mocks(page, origin)
     page.goto(url)
     expect(page.get_by_role("button", name="Choose floor plan")).to_be_visible()
+    assert page.title() == "rosette — Electric Socket Planner"
+    expect(page.locator('link[rel="icon"]')).to_have_attribute("href", "/rosette.svg")
+    favicon = page.request.get(origin + "/rosette.svg")
+    assert favicon.ok and favicon.headers.get("content-type", "").split(";")[0] == "image/svg+xml" and 'viewBox="0 0 36 36"' in favicon.text(), "The built Rosette favicon is missing or not served as SVG"
     expect(page.get_by_role("combobox", name="Country").locator("option")).to_have_count(3)
     page.wait_for_load_state("networkidle")
     initial_chunks = loaded_chunks(page)
