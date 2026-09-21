@@ -15,9 +15,9 @@ on:
     branches:
       - main
 
-# Keep PR preview cleanup separate from production: a closed PR can use main's ref.
+# Keep PR cleanup and manual validation separate from production deployments.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}${{ github.event_name == 'workflow_dispatch' && '-manual' || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
 
 jobs:
@@ -66,15 +66,23 @@ jobs:
       - name: Test
         run: npm test -- --coverage
 
-      - name: Build validation preview
+      - name: Install API dependencies
+        run: npm ci --prefix api
+
+      # Nested SDK installs must resolve to the same test doubles as a root-only install.
+      - name: Test with API dependencies
+        run: npm test
+
+      - name: Build frontend and API for manual validation
         id: validation_build
-        if: github.event_name == 'workflow_dispatch' && !cancelled()
+        if: github.event_name == 'workflow_dispatch'
         run: |
           npm run build
+          npm run build --prefix api
           printf '%s\n' "$GITHUB_SHA" > dist/source-revision.txt
 
       - name: Save exact-source validation preview
-        if: github.event_name == 'workflow_dispatch' && !cancelled() && steps.validation_build.outcome == 'success'
+        if: github.event_name == 'workflow_dispatch' && steps.validation_build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: rosette-preview-${{ github.sha }}

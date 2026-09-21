@@ -56,14 +56,15 @@ do not run source-ancestry validation, since squash merging changes ancestry.
 
 For a held branch, the existing workflow's manual dispatch runs quality
 validation **without deployment**. Its manual build records
-`dist/source-revision.txt` and uploads `rosette-preview-<exact SHA>`. The build
-may run after another check fails so the failure can be investigated with the
-real UI; the failed check remains failed. **An artifact does not certify green
-CI, independent review, or merge readiness.**
+`dist/source-revision.txt` and uploads `rosette-preview-<exact SHA>` after the
+existing quality checks and frontend/API builds succeed. **An artifact does not
+certify independent review or merge readiness.**
 
-The concurrent API-test/module-resolution work is separate. This branch does
-not duplicate its tests/config fix or merge that work. Reconcile the minimal
-workflow additions with the delivered `origin/main` before final remote checks.
+The API-test/module-resolution fix from PR #26 was merged by its owner as
+`7632f73c2c5eed18c689326a57636d6c1918f6d5`, then integrated from `origin/main`
+into this isolated pilot. Its mocks, Vitest configuration, API dependency checks,
+manual-build behavior, and separate manual concurrency group are preserved.
+The pilot adds only PR evidence enforcement and a source-stamped preview artifact.
 
 ## Gate provenance and local regression tests
 

@@ -66,12 +66,17 @@ npm run dev        # Start Vite dev server
 npm run build      # TypeScript check + Vite build
 npm run lint       # ESLint
 npm run format     # Prettier
-npm test           # Run tests (pending)
+npm test           # Run unit tests with external services mocked
 ```
+
+CI runs the unit suite both before and after `npm ci --prefix api`. Keep external
+SDK aliases in `vitest.config.ts` consistent: test files and API modules must use
+the same mock even when `api/node_modules` is present.
 
 ## Deployment
 
 - Push to `main` triggers GitHub Actions → Azure SWA deploy
 - PR preview cleanup has a separate concurrency group from production; only superseded active PR runs may cancel an earlier run.
 - API builds separately in `api/` folder
+- Manual CI dispatch validates lint, types, both test dependency layouts, and both builds; it never deploys and has a separate concurrency group so it cannot displace a queued production deployment.
 - Telegram notification on success/failure

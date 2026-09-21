@@ -59,6 +59,9 @@ def install_mocks(page: Page, origin: str) -> dict:
 
     def handler(route: Route) -> None:
         parsed = urlparse(route.request.url)
+        if parsed.scheme == "data" or (parsed.scheme == "blob" and parsed.path.startswith(origin + "/")):
+            route.continue_()
+            return
         if f"{parsed.scheme}://{parsed.netloc}" != origin:
             state["external"].append(route.request.url)
             route.abort()
@@ -313,11 +316,15 @@ def main() -> int:
             ["git", "-C", str(ROOT), "diff", "--name-only", "HEAD", "--", ".", ":(exclude)docs/design-evidence/**"],
             check=True, capture_output=True, text=True,
         ).stdout.strip()
+        staged = subprocess.run(
+            ["git", "-C", str(ROOT), "diff", "--cached", "--name-only", "HEAD", "--", ".", ":(exclude)docs/design-evidence/**"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
         untracked = subprocess.run(
             ["git", "-C", str(ROOT), "ls-files", "--others", "--exclude-standard", "-z"],
             check=True, capture_output=True, text=True,
         ).stdout.split("\0")
-        if changes or any(name and not name.startswith("docs/design-evidence/") for name in untracked):
+        if changes or staged or any(name and not name.startswith("docs/design-evidence/") for name in untracked):
             parser.error("Commit all source changes before product-evidence capture.")
     output.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()

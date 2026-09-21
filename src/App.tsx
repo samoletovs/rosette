@@ -101,6 +101,7 @@ export default function App() {
   const [calculationFailed, setCalculationFailed] = useState(false);
   const [calculationPhase, setCalculationPhase] = useState("Calculating your plan");
   const [floorPlanError, setFloorPlanError] = useState("");
+  const [theme, setTheme] = useState(() => localStorage.getItem("rosette-theme") || "ocean");
   const [showFeedback, setShowFeedback] = useState(false);
   const [fbType, setFbType] = useState("improvement");
   const [fbTitle, setFbTitle] = useState("");
@@ -129,6 +130,11 @@ export default function App() {
     if (initialStep.current) { initialStep.current = false; return; }
     mainRef.current?.focus();
   }, [step]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("rosette-theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     getCountries()
@@ -728,6 +734,12 @@ export default function App() {
       </main>
 
       <footer>
+        <div className="theme-bar">
+          {["ocean", "violet", "emerald", "rose", "midnight"].map((t) => (
+            <div key={t} className={`theme-dot ${theme === t ? "active" : ""}`} data-t={t}
+              onClick={() => setTheme(t)} title={t.charAt(0).toUpperCase() + t.slice(1)} />
+          ))}
+        </div>
         <button className="btn ghost feedback-btn" onClick={() => setShowFeedback(true)}>💬 Send feedback</button>
         <p>rosette © 2026 · Baltic electrical standards (LBN · STR · EVS)</p>
       </footer>
