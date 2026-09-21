@@ -243,7 +243,8 @@ def journey(browser: Browser, url: str, output: Path, width: int, features: dict
     assert state["calculate"][1]["rooms"][0]["requested_sockets"] == 3
     expect(page.locator(".stat-n").nth(0)).to_have_text("11")
     expect(page.locator(".results")).to_contain_text("Synthetic browser fixture")
-    expect(page.locator(".spec-body")).to_contain_text("Synthetic review specification")
+    expect(page.locator(".spec-body").get_by_role("heading", name="Synthetic review specification", exact=True)).to_be_visible()
+    expect(page.locator(".spec-fallback")).to_have_count(0)
     assert_feature_loaded(page, features, "markdown")
     assert_deferred(loaded_chunks(page), features, "pdf")
     accessibility.append(measure_accessibility(page, "results"))
@@ -256,7 +257,8 @@ def journey(browser: Browser, url: str, output: Path, width: int, features: dict
     downloaded.value.save_as(str(output / f"{name}-socket-plan.svg"))
     assert "<svg" in (output / f"{name}-socket-plan.svg").read_text(encoding="utf-8")
     page.get_by_role("button", name=re.compile(LANGUAGES[expected_country])).click()
-    expect(page.locator(".spec-body")).to_contain_text(f"{LANGUAGES[expected_country]} synthetic specification")
+    expect(page.locator(".spec-body").get_by_role("heading", name=f"{LANGUAGES[expected_country]} synthetic specification", exact=True)).to_be_visible()
+    expect(page.locator(".spec-fallback")).to_have_count(0)
     with page.expect_download() as downloaded:
         page.get_by_role("button", name="Download specification").click()
     downloaded.value.save_as(str(output / f"{name}-specification.md"))
@@ -287,6 +289,91 @@ def journey(browser: Browser, url: str, output: Path, width: int, features: dict
     assert not errors, errors
     resources = page.evaluate("performance.getEntriesByType('resource').map(e => ({name:e.name, duration:e.duration, transferSize:e.transferSize, decodedBodySize:e.decodedBodySize}))")
     result = {"viewport": name, "width": width, "passed": True, "calculateRequests": len(state["calculate"]), "initialChunks": sorted(initial_chunks), "initialDecodedJavaScriptBytes": initial_js_bytes, "lazyFeatureChunks": features, "accessibility": accessibility, "resources": resources, "notes": "Mocked services; decoded body bytes are local uncompressed resources, not field Core Web Vitals."}
+    context.close()
+    return result
+
+
+def markdown_chunk_failure(browser: Browser, url: str, output: Path, width: int, features: dict) -> dict:
+    name = "desktop" if width >= 1024 else "mobile"
+    context = browser.new_context(viewport={"width": width, "height": 1080 if width >= 1024 else 844}, accept_downloads=True)
+    page = context.new_page()
+    png = make_plan(page)
+    page.set_viewport_size({"width": width, "height": 1080 if width >= 1024 else 844})
+    origin = f"{urlparse(url).scheme}://{urlparse(url).netloc}"
+    state = install_mocks(page, origin)
+    targets = {f"{origin}/{features['markdown']['entry']}"}
+    blocked: list[str] = []
+    failed_requests: list[str] = []
+    errors: list[str] = []
+    page.on("pageerror", lambda error: errors.append(str(error)))
+    page.on("requestfailed", lambda request: failed_requests.append(request.url))
+
+    def block_formatter(route: Route) -> None:
+        blocked.append(route.request.url)
+        route.abort("failed")
+
+    for target in targets:
+        page.route(target, block_formatter)
+    page.goto(url)
+    expect(page.get_by_role("button", name="Choose floor plan")).to_be_visible()
+    page.wait_for_load_state("networkidle")
+    assert_deferred(loaded_chunks(page), features, "placement", "markdown", "pdf")
+    assert not blocked, "Formatter code was requested before results"
+    with page.expect_file_chooser() as chooser:
+        page.get_by_role("button", name="Choose floor plan").press("Enter")
+    chooser.value.set_files({"name": "synthetic-recovery.png", "mimeType": "image/png", "buffer": png})
+    page.get_by_role("button", name="Analyze floor plan").click()
+    expect(page.get_by_role("heading", name="Finding the rooms in your plan")).to_be_visible()
+    fulfill(held_route(page, state, "held_analysis"), {"rooms": ROOMS, "switchboard": BOARD, "total_area_m2": 64})
+    expect(page.locator(".room-row")).to_have_count(5)
+    page.get_by_role("button", name="Increase sockets for Living room", exact=True).click()
+    page.get_by_role("button", name="Place sockets").click()
+    expect(page.get_by_role("heading", name="Place sockets & distribution board")).to_be_visible()
+    for room in ROOMS:
+        page.get_by_role("button", name=f"Place sockets in {room['name']}", exact=True).click()
+        form = page.locator(".point-controls")
+        position = room["position"]
+        form.get_by_label("Horizontal position (%)").fill(str(position["x_pct"] + position["w_pct"] / 2))
+        form.get_by_label("Vertical position (%)").fill(str(position["y_pct"] + position["h_pct"] / 2))
+        form.get_by_role("button", name="Place at point").click()
+    page.get_by_role("button", name="Place distribution board", exact=True).click()
+    page.locator(".point-controls").get_by_role("button", name="Place at point").click()
+    page.get_by_role("button", name="Confirm placement").click()
+    expect(page.get_by_role("heading", name="Calculating your plan", exact=True)).to_be_visible()
+    fulfill(held_route(page, state, "held_calculation"), calculation(state["calculate"][0]))
+    expect(page.locator(".spec-fallback")).to_be_visible(timeout=20000)
+    expect(page.locator(".spec-fallback").get_by_role("alert")).to_contain_text("Formatted specification couldn’t load.")
+    expect(page.locator(".results")).to_be_visible()
+    expect(page.locator(".stat-n").nth(0)).to_have_text("11")
+    expect(page.locator(".stat-n").nth(2)).to_have_text("5")
+    expect(page.get_by_role("region", name="Plain-text specification")).to_contain_text("## Synthetic review specification")
+    assert state["calculate"][0]["rooms"][0]["requested_sockets"] == 3
+    accessibility = measure_accessibility(page, "markdown-chunk-failure")
+    page.get_by_role("button", name=re.compile("Latvian")).click()
+    expect(page.get_by_role("region", name="Plain-text specification")).to_contain_text("## Latvian synthetic specification")
+    with page.expect_download() as download:
+        page.get_by_role("button", name="Download specification").click()
+    specification = output / f"{name}-formatter-failure-specification.md"
+    download.value.save_as(str(specification))
+    assert "## Latvian synthetic specification" in specification.read_text(encoding="utf-8")
+    page.get_by_role("button", name="Room layouts", exact=True).click()
+    expect(page.locator(".plan-box svg")).to_be_visible()
+    with page.expect_download() as download:
+        page.get_by_role("button", name="Download room layouts").click()
+    diagram = output / f"{name}-formatter-failure-room-layouts.svg"
+    download.value.save_as(str(diagram))
+    assert "<svg" in diagram.read_text(encoding="utf-8")
+    expect(page.locator(".stat-n").nth(0)).to_have_text("11")
+    expect(page.locator(".stat-n").nth(2)).to_have_text("5")
+    assert len(state["calculate"]) == 1, "Recovery must not reset or recalculate the user's plan"
+    assert blocked, "The browser did not exercise the expected feature-chunk failure"
+    assert_no_overflow(page)
+    capture(page, output, f"{name}-markdown-chunk-failure")
+    page.wait_for_load_state("networkidle")
+    assert not errors, errors
+    assert not state["external"], state["external"]
+    assert set(failed_requests).issubset(targets), f"Unexpected failed requests: {set(failed_requests) - targets}"
+    result = {"viewport": name, "width": width, "expectedBlockedChunks": sorted(set(blocked)), "completedPlanPreserved": True, "plainSpecificationAndDownloadsVerified": True, "unhandledPageErrors": errors, "accessibility": accessibility, "note": "Controlled formatter network failure: explicit plain-text degradation, not successful Markdown formatting."}
     context.close()
     return result
 
@@ -374,10 +461,11 @@ def main() -> int:
         browser = playwright.chromium.launch()
         try:
             results = [journey(browser, args.url, output, width, features) for width in (1440, 390)]
+            formatter_failures = [markdown_chunk_failure(browser, args.url, output, width, features) for width in (1440, 390)]
             empty = empty_states(browser, args.url, output)
         finally:
             browser.close()
-    report = {"source": args.source, "results": results, "emptyStates": empty, "elapsedSeconds": round(time.monotonic() - started, 2), "limitations": ["Chromium only", "Mocked backend, not live service validation", "No physical-device test or WCAG certification"]}
+    report = {"source": args.source, "results": results, "formatterFailureCases": formatter_failures, "emptyStates": empty, "elapsedSeconds": round(time.monotonic() - started, 2), "limitations": ["Chromium only", "Mocked backend, not live service validation", "No physical-device test or WCAG certification"]}
     (output / "browser-results.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     logging.info("Planning-studio browser requirements passed at desktop and mobile.")
     return 0

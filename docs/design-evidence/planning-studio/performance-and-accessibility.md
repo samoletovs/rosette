@@ -53,6 +53,23 @@ vendor chunks, even though the PDF export wrapper was still deferred.
 New-source byte counts and a full phase-loading pass remain **unmeasured until
 the parent builds and captures the next exact candidate**.
 
+### Recoverable formatter loading
+
+The new lazy specification import now catches its own import/preload rejection
+and resolves to a lightweight, already-available plain-text view. It explicitly
+says that formatted specification loading failed; it does not report formatting
+success or reset the surrounding results. The original returned text, language
+switching, diagrams and downloads remain available. This is scoped to loading
+the formatter, not a global render-error boundary or a backend behavior change.
+
+The production browser runner deliberately aborts the build's real Markdown
+entry chunk at desktop and mobile widths, then checks retained plan data,
+plain specification text, language switching and downloads. Only those
+deliberate failed requests are allowed; unhandled page errors remain failures.
+Normal journeys additionally require actual Markdown headings and no fallback.
+These new cases await the same next exact-source build/capture, not a separate
+validation cycle or a fabricated pass receipt.
+
 ## Contrast and 200% text measurements
 
 Fresh local Chromium contexts measured six real baseline states at both

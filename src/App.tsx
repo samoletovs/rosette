@@ -16,6 +16,7 @@ import { StandardSelector } from "./components/StandardSelector";
 import { mapRoomType } from "./complianceChecker";
 import { PlanUpload } from "./components/PlanUpload";
 import { Dialog } from "./components/Dialog";
+import { SpecificationFallback } from "./components/SpecificationFallback";
 import { validatePlanFile } from "./planFile";
 
 type Step = "upload" | "analyzing" | "review" | "placement" | "calculating" | "results";
@@ -51,7 +52,11 @@ const DEFAULT_COUNTRIES: CountryItem[] = [
 
 const FLAG: Record<string, string> = { LV: "\u{1F1F1}\u{1F1FB}", LT: "\u{1F1F1}\u{1F1F9}", EE: "\u{1F1EA}\u{1F1EA}" };
 
-const Markdown = lazy(() => import("./components/SpecificationMarkdown").then((module) => ({ default: module.SpecificationMarkdown })));
+const Markdown = lazy(() =>
+  import("./components/SpecificationMarkdown")
+    .then((module) => ({ default: module.SpecificationMarkdown }))
+    .catch(() => ({ default: SpecificationFallback })),
+);
 const PlacementEditor = lazy(() => import("./components/PlacementEditor").then((m) => ({ default: m.PlacementEditor })));
 
 function getErrorMessage(error: unknown, fallback: string): string {

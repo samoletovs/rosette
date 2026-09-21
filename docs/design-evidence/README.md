@@ -118,6 +118,14 @@ long room names, all diagram views, local-language specification, SVG/Markdown
 downloads, the actual PDF exporter in a simulated already-unlocked state, and
 paywall Escape behavior. No purchase or real service call occurs.
 
+Separate desktop/mobile cases abort the actual Markdown-renderer entry chunk from
+the build report. They require an explicit formatting-failure notice, retained
+room/socket totals and edited counts, readable original specification text in
+both languages, and working specification/SVG downloads without recalculation
+or unhandled page errors. Healthy journeys require real rendered Markdown
+headings and reject the fallback, so graceful degradation cannot masquerade as
+successful formatting.
+
 It checks multiple widths, 200% **text enlargement** in each representative
 state (not claimed as browser zoom), measured HTML/form/placeholder contrast,
 active placement hover, reduced motion, and unexpected external requests.
