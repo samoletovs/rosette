@@ -75,4 +75,5 @@ the same mock even when `api/node_modules` is present.
 - Push to `main` triggers GitHub Actions → Azure SWA deploy
 - PR preview cleanup has a separate concurrency group from production; only superseded active PR runs may cancel an earlier run.
 - API builds separately in `api/` folder
+- Manual CI dispatch validates lint, types, both test dependency layouts, and both builds; it never deploys.
 - Telegram notification on success/failure
