@@ -20,9 +20,9 @@ on:
       - '.gitignore'
       - 'LICENSE'
 
-# Keep PR preview cleanup separate from production: a closed PR can use main's ref.
+# Keep PR cleanup and manual validation separate from production deployments.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}${{ github.event_name == 'workflow_dispatch' && '-manual' || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
 
 jobs:
