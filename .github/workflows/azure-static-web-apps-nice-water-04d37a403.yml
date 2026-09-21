@@ -1,6 +1,7 @@
 name: CI/CD
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -19,15 +20,15 @@ on:
       - '.gitignore'
       - 'LICENSE'
 
-# Keep PR preview cleanup separate from production: a closed PR can use main's ref.
+# Keep PR cleanup and manual validation separate from production deployments.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}${{ github.event_name == 'workflow_dispatch' && '-manual' || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
 
 jobs:
   # ── Quality Gate ────────────────────────────────────────────────────
   quality:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -52,6 +53,19 @@ jobs:
       # part, so the marginal cost is the ~2s the suite takes and no extra run.
       - name: Test
         run: npm test -- --coverage
+
+      - name: Install API dependencies
+        run: npm ci --prefix api
+
+      # Nested SDK installs must resolve to the same test doubles as a root-only install.
+      - name: Test with API dependencies
+        run: npm test
+
+      - name: Build frontend and API for manual validation
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          npm run build
+          npm run build --prefix api
 
   # ── Build & Deploy ─────────────────────────────────────────────────
   build_and_deploy_job:

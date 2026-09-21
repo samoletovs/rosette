@@ -7,9 +7,9 @@ const workflow = readFileSync(
 );
 
 describe('deployment concurrency contract', () => {
-  it('gives PR preview cleanup a different group from a production push', () => {
+  it('isolates PR preview cleanup and manual validation from production pushes', () => {
     expect(workflow.match(/^\s*group:\s*(.+)$/m)?.[1]).toBe(
-      '${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}',
+      "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}${{ github.event_name == 'workflow_dispatch' && '-manual' || '' }}",
     );
   });
 
