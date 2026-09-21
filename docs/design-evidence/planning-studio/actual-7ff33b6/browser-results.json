@@ -1,0 +1,780 @@
+{
+  "source": "7ff33b687e380fbd94b831bf104c285d8da18845",
+  "results": [
+    {
+      "viewport": "desktop",
+      "width": 1440,
+      "passed": true,
+      "calculateRequests": 2,
+      "initialChunks": [
+        ".auth/me",
+        "api/standards",
+        "api/standards/LV",
+        "assets/index-BJ0hfZkp.css",
+        "assets/index-J0_DRrvS.js",
+        "assets/rolldown-runtime-hePW80VL.js"
+      ],
+      "initialDecodedJavaScriptBytes": 263983,
+      "lazyFeatureChunks": {
+        "placement": {
+          "entry": "assets/PlacementEditor-COzpqK4s.js",
+          "chunks": [
+            "assets/PlacementEditor-COzpqK4s.js"
+          ]
+        },
+        "markdown": {
+          "entry": "assets/SpecificationMarkdown-m419t8-R.js",
+          "chunks": [
+            "assets/SpecificationMarkdown-m419t8-R.js"
+          ]
+        },
+        "pdf": {
+          "entry": "assets/pdfExport-8f8PV8Rj.js",
+          "chunks": [
+            "assets/html2canvas-Dn6bw578.js",
+            "assets/index.es-DwCC2LBz.js",
+            "assets/pdfExport-8f8PV8Rj.js"
+          ]
+        }
+      },
+      "accessibility": [
+        {
+          "phase": "upload",
+          "contrast": {
+            "measured": 35,
+            "minimumTextRatio": 5.36,
+            "failures": [],
+            "controls": [
+              {
+                "surface": "--bg",
+                "border": 3.47,
+                "focus": 6.73
+              },
+              {
+                "surface": "--sf",
+                "border": 3.88,
+                "focus": 7.53
+              },
+              {
+                "surface": "--a3",
+                "border": 3.24,
+                "focus": 6.28
+              }
+            ],
+            "svgTextNotAutomaticallyMeasured": 0,
+            "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+          },
+          "textEnlargement200": {
+            "rootFont": "32px",
+            "viewport": 1440,
+            "pageWidth": 1440
+          },
+          "note": "Text enlargement only; separate browser zoom and visual/assistive-technology review remain required."
+        },
+        {
+          "phase": "analysis-error",
+          "contrast": {
+            "measured": 41,
+            "minimumTextRatio": 5.36,
+            "failures": [],
+            "controls": [
+              {
+                "surface": "--bg",
+                "border": 3.47,
+                "focus": 6.73
+              },
+              {
+                "surface": "--sf",
+                "border": 3.88,
+                "focus": 7.53
+              },
+              {
+                "surface": "--a3",
+                "border": 3.24,
+                "focus": 6.28
+              }
+            ],
+            "svgTextNotAutomaticallyMeasured": 0,
+            "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+          },
+          "textEnlargement200": {
+            "rootFont": "32px",
+            "viewport": 1440,
+            "pageWidth": 1440
+          },
+          "note": "Text enlargement only; separate browser zoom and visual/assistive-technology review remain required."
+        },
+        {
+          "phase": "review",
+          "contrast": {
+            "measured": 64,
+            "minimumTextRatio": 5.36,
+            "failures": [],
+            "controls": [
+              {
+                "surface": "--bg",
+                "border": 3.47,
+                "focus": 6.73
+              },
+              {
+                "surface": "--sf",
+                "border": 3.88,
+                "focus": 7.53
+              },
+              {
+                "surface": "--a3",
+                "border": 3.24,
+                "focus": 6.28
+              }
+            ],
+            "svgTextNotAutomaticallyMeasured": 0,
+            "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+          },
+          "textEnlargement200": {
+            "rootFont": "32px",
+            "viewport": 1440,
+            "pageWidth": 1440
+          },
+          "note": "Text enlargement only; separate browser zoom and visual/assistive-technology review remain required."
+        },
+        {
+          "phase": "placement-active-hover",
+          "contrast": {
+            "measured": 63,
+            "minimumTextRatio": 5.01,
+            "failures": [],
+            "controls": [
+              {
+                "surface": "--bg",
+                "border": 3.47,
+                "focus": 6.73
+              },
+              {
+                "surface": "--sf",
+                "border": 3.88,
+                "focus": 7.53
+              },
+              {
+                "surface": "--a3",
+                "border": 3.24,
+                "focus": 6.28
+              }
+            ],
+            "svgTextNotAutomaticallyMeasured": 0,
+            "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+          },
+          "textEnlargement200": {
+            "rootFont": "32px",
+            "viewport": 1440,
+            "pageWidth": 1440
+          },
+          "note": "Text enlargement only; separate browser zoom and visual/assistive-technology review remain required."
+        },
+        {
+          "phase": "results",
+          "contrast": {
+            "measured": 45,
+            "minimumTextRatio": 5.01,
+            "failures": [],
+            "controls": [
+              {
+                "surface": "--bg",
+                "border": 3.47,
+                "focus": 6.73
+              },
+              {
+                "surface": "--sf",
+                "border": 3.88,
+                "focus": 7.53
+              },
+              {
+                "surface": "--a3",
+                "border": 3.24,
+                "focus": 6.28
+              }
+            ],
+            "svgTextNotAutomaticallyMeasured": 33,
+            "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+          },
+          "textEnlargement200": {
+            "rootFont": "32px",
+            "viewport": 1440,
+            "pageWidth": 1440
+          },
+          "note": "Text enlargement only; separate browser zoom and visual/assistive-technology review remain required."
+        }
+      ],
+      "resources": [
+        {
+          "name": "http://127.0.0.1:49285/assets/index-J0_DRrvS.js",
+          "duration": 12.400000035762787,
+          "transferSize": 263567,
+          "decodedBodySize": 263267
+        },
+        {
+          "name": "http://127.0.0.1:49285/assets/rolldown-runtime-hePW80VL.js",
+          "duration": 15.300000011920929,
+          "transferSize": 1016,
+          "decodedBodySize": 716
+        },
+        {
+          "name": "http://127.0.0.1:49285/assets/index-BJ0hfZkp.css",
+          "duration": 20.400000035762787,
+          "transferSize": 19779,
+          "decodedBodySize": 19479
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/standards/LV",
+          "duration": 13.099999964237213,
+          "transferSize": 579,
+          "decodedBodySize": 279
+        },
+        {
+          "name": "http://127.0.0.1:49285/.auth/me",
+          "duration": 13.800000011920929,
+          "transferSize": 325,
+          "decodedBodySize": 25
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/standards",
+          "duration": 20.900000035762787,
+          "transferSize": 430,
+          "decodedBodySize": 130
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/analyze",
+          "duration": 109.80000001192093,
+          "transferSize": 350,
+          "decodedBodySize": 50
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/upload",
+          "duration": 10.600000023841858,
+          "transferSize": 402,
+          "decodedBodySize": 102
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/analyze",
+          "duration": 20.600000023841858,
+          "transferSize": 1401,
+          "decodedBodySize": 1101
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/upload",
+          "duration": 23.799999952316284,
+          "transferSize": 402,
+          "decodedBodySize": 102
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/analyze",
+          "duration": 12.699999988079071,
+          "transferSize": 1401,
+          "decodedBodySize": 1101
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/upload",
+          "duration": 13.699999988079071,
+          "transferSize": 402,
+          "decodedBodySize": 102
+        },
+        {
+          "name": "http://127.0.0.1:49285/assets/PlacementEditor-COzpqK4s.js",
+          "duration": 53.90000003576279,
+          "transferSize": 347963,
+          "decodedBodySize": 347663
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/calculate",
+          "duration": 233.70000004768372,
+          "transferSize": 347,
+          "decodedBodySize": 47
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/calculate",
+          "duration": 10.199999988079071,
+          "transferSize": 2804,
+          "decodedBodySize": 2504
+        },
+        {
+          "name": "http://127.0.0.1:49285/assets/planGenerator-cqtzNuxx.js",
+          "duration": 11.699999988079071,
+          "transferSize": 21117,
+          "decodedBodySize": 20817
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/generate-description",
+          "duration": 6.300000011920929,
+          "transferSize": 1059,
+          "decodedBodySize": 759
+        },
+        {
+          "name": "http://127.0.0.1:49285/assets/SpecificationMarkdown-m419t8-R.js",
+          "duration": 42.60000002384186,
+          "transferSize": 153656,
+          "decodedBodySize": 153356
+        },
+        {
+          "name": "http://127.0.0.1:49285/assets/pdfExport-8f8PV8Rj.js",
+          "duration": 17.80000001192093,
+          "transferSize": 491825,
+          "decodedBodySize": 491525
+        }
+      ],
+      "notes": "Mocked services; decoded body bytes are local uncompressed resources, not field Core Web Vitals."
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "passed": true,
+      "calculateRequests": 2,
+      "initialChunks": [
+        ".auth/me",
+        "api/standards",
+        "api/standards/LV",
+        "assets/index-BJ0hfZkp.css",
+        "assets/index-J0_DRrvS.js",
+        "assets/rolldown-runtime-hePW80VL.js"
+      ],
+      "initialDecodedJavaScriptBytes": 263983,
+      "lazyFeatureChunks": {
+        "placement": {
+          "entry": "assets/PlacementEditor-COzpqK4s.js",
+          "chunks": [
+            "assets/PlacementEditor-COzpqK4s.js"
+          ]
+        },
+        "markdown": {
+          "entry": "assets/SpecificationMarkdown-m419t8-R.js",
+          "chunks": [
+            "assets/SpecificationMarkdown-m419t8-R.js"
+          ]
+        },
+        "pdf": {
+          "entry": "assets/pdfExport-8f8PV8Rj.js",
+          "chunks": [
+            "assets/html2canvas-Dn6bw578.js",
+            "assets/index.es-DwCC2LBz.js",
+            "assets/pdfExport-8f8PV8Rj.js"
+          ]
+        }
+      },
+      "accessibility": [
+        {
+          "phase": "upload",
+          "contrast": {
+            "measured": 35,
+            "minimumTextRatio": 5.36,
+            "failures": [],
+            "controls": [
+              {
+                "surface": "--bg",
+                "border": 3.47,
+                "focus": 6.73
+              },
+              {
+                "surface": "--sf",
+                "border": 3.88,
+                "focus": 7.53
+              },
+              {
+                "surface": "--a3",
+                "border": 3.24,
+                "focus": 6.28
+              }
+            ],
+            "svgTextNotAutomaticallyMeasured": 0,
+            "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+          },
+          "textEnlargement200": {
+            "rootFont": "32px",
+            "viewport": 390,
+            "pageWidth": 390
+          },
+          "note": "Text enlargement only; separate browser zoom and visual/assistive-technology review remain required."
+        },
+        {
+          "phase": "analysis-error",
+          "contrast": {
+            "measured": 41,
+            "minimumTextRatio": 5.36,
+            "failures": [],
+            "controls": [
+              {
+                "surface": "--bg",
+                "border": 3.47,
+                "focus": 6.73
+              },
+              {
+                "surface": "--sf",
+                "border": 3.88,
+                "focus": 7.53
+              },
+              {
+                "surface": "--a3",
+                "border": 3.24,
+                "focus": 6.28
+              }
+            ],
+            "svgTextNotAutomaticallyMeasured": 0,
+            "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+          },
+          "textEnlargement200": {
+            "rootFont": "32px",
+            "viewport": 390,
+            "pageWidth": 390
+          },
+          "note": "Text enlargement only; separate browser zoom and visual/assistive-technology review remain required."
+        },
+        {
+          "phase": "review",
+          "contrast": {
+            "measured": 64,
+            "minimumTextRatio": 5.36,
+            "failures": [],
+            "controls": [
+              {
+                "surface": "--bg",
+                "border": 3.47,
+                "focus": 6.73
+              },
+              {
+                "surface": "--sf",
+                "border": 3.88,
+                "focus": 7.53
+              },
+              {
+                "surface": "--a3",
+                "border": 3.24,
+                "focus": 6.28
+              }
+            ],
+            "svgTextNotAutomaticallyMeasured": 0,
+            "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+          },
+          "textEnlargement200": {
+            "rootFont": "32px",
+            "viewport": 390,
+            "pageWidth": 390
+          },
+          "note": "Text enlargement only; separate browser zoom and visual/assistive-technology review remain required."
+        },
+        {
+          "phase": "placement-active-hover",
+          "contrast": {
+            "measured": 63,
+            "minimumTextRatio": 5.01,
+            "failures": [],
+            "controls": [
+              {
+                "surface": "--bg",
+                "border": 3.47,
+                "focus": 6.73
+              },
+              {
+                "surface": "--sf",
+                "border": 3.88,
+                "focus": 7.53
+              },
+              {
+                "surface": "--a3",
+                "border": 3.24,
+                "focus": 6.28
+              }
+            ],
+            "svgTextNotAutomaticallyMeasured": 0,
+            "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+          },
+          "textEnlargement200": {
+            "rootFont": "32px",
+            "viewport": 390,
+            "pageWidth": 390
+          },
+          "note": "Text enlargement only; separate browser zoom and visual/assistive-technology review remain required."
+        },
+        {
+          "phase": "results",
+          "contrast": {
+            "measured": 45,
+            "minimumTextRatio": 5.01,
+            "failures": [],
+            "controls": [
+              {
+                "surface": "--bg",
+                "border": 3.47,
+                "focus": 6.73
+              },
+              {
+                "surface": "--sf",
+                "border": 3.88,
+                "focus": 7.53
+              },
+              {
+                "surface": "--a3",
+                "border": 3.24,
+                "focus": 6.28
+              }
+            ],
+            "svgTextNotAutomaticallyMeasured": 33,
+            "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+          },
+          "textEnlargement200": {
+            "rootFont": "32px",
+            "viewport": 390,
+            "pageWidth": 390
+          },
+          "note": "Text enlargement only; separate browser zoom and visual/assistive-technology review remain required."
+        },
+        {
+          "phase": "paywall",
+          "contrast": {
+            "measured": 12,
+            "minimumTextRatio": 6,
+            "failures": [],
+            "controls": [
+              {
+                "surface": "--bg",
+                "border": 3.47,
+                "focus": 6.73
+              },
+              {
+                "surface": "--sf",
+                "border": 3.88,
+                "focus": 7.53
+              },
+              {
+                "surface": "--a3",
+                "border": 3.24,
+                "focus": 6.28
+              }
+            ],
+            "svgTextNotAutomaticallyMeasured": 0,
+            "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+          },
+          "textEnlargement200": {
+            "rootFont": "32px",
+            "viewport": 390,
+            "pageWidth": 390
+          },
+          "note": "Text enlargement only; separate browser zoom and visual/assistive-technology review remain required."
+        }
+      ],
+      "resources": [
+        {
+          "name": "http://127.0.0.1:49285/assets/index-J0_DRrvS.js",
+          "duration": 20.30000001192093,
+          "transferSize": 263567,
+          "decodedBodySize": 263267
+        },
+        {
+          "name": "http://127.0.0.1:49285/assets/rolldown-runtime-hePW80VL.js",
+          "duration": 24.099999964237213,
+          "transferSize": 1016,
+          "decodedBodySize": 716
+        },
+        {
+          "name": "http://127.0.0.1:49285/assets/index-BJ0hfZkp.css",
+          "duration": 26,
+          "transferSize": 19779,
+          "decodedBodySize": 19479
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/standards/LV",
+          "duration": 14,
+          "transferSize": 579,
+          "decodedBodySize": 279
+        },
+        {
+          "name": "http://127.0.0.1:49285/.auth/me",
+          "duration": 21.900000035762787,
+          "transferSize": 325,
+          "decodedBodySize": 25
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/standards",
+          "duration": 29.100000023841858,
+          "transferSize": 430,
+          "decodedBodySize": 130
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/standards/EE",
+          "duration": 13.800000011920929,
+          "transferSize": 580,
+          "decodedBodySize": 280
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/analyze",
+          "duration": 171.60000002384186,
+          "transferSize": 350,
+          "decodedBodySize": 50
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/upload",
+          "duration": 22.899999976158142,
+          "transferSize": 402,
+          "decodedBodySize": 102
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/analyze",
+          "duration": 10,
+          "transferSize": 1401,
+          "decodedBodySize": 1101
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/upload",
+          "duration": 12.399999976158142,
+          "transferSize": 402,
+          "decodedBodySize": 102
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/analyze",
+          "duration": 20.600000023841858,
+          "transferSize": 1401,
+          "decodedBodySize": 1101
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/upload",
+          "duration": 24.69999998807907,
+          "transferSize": 402,
+          "decodedBodySize": 102
+        },
+        {
+          "name": "http://127.0.0.1:49285/assets/PlacementEditor-COzpqK4s.js",
+          "duration": 51.299999952316284,
+          "transferSize": 347963,
+          "decodedBodySize": 347663
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/calculate",
+          "duration": 162.20000004768372,
+          "transferSize": 347,
+          "decodedBodySize": 47
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/calculate",
+          "duration": 22.80000001192093,
+          "transferSize": 2804,
+          "decodedBodySize": 2504
+        },
+        {
+          "name": "http://127.0.0.1:49285/assets/planGenerator-cqtzNuxx.js",
+          "duration": 22.30000001192093,
+          "transferSize": 21117,
+          "decodedBodySize": 20817
+        },
+        {
+          "name": "http://127.0.0.1:49285/api/generate-description",
+          "duration": 11.600000023841858,
+          "transferSize": 1061,
+          "decodedBodySize": 761
+        },
+        {
+          "name": "http://127.0.0.1:49285/assets/SpecificationMarkdown-m419t8-R.js",
+          "duration": 29.5,
+          "transferSize": 153656,
+          "decodedBodySize": 153356
+        }
+      ],
+      "notes": "Mocked services; decoded body bytes are local uncompressed resources, not field Core Web Vitals."
+    }
+  ],
+  "formatterFailureCases": [
+    {
+      "viewport": "desktop",
+      "width": 1440,
+      "expectedBlockedChunks": [
+        "http://127.0.0.1:49285/assets/SpecificationMarkdown-m419t8-R.js"
+      ],
+      "completedPlanPreserved": true,
+      "plainSpecificationAndDownloadsVerified": true,
+      "unhandledPageErrors": [],
+      "accessibility": {
+        "phase": "markdown-chunk-failure",
+        "contrast": {
+          "measured": 42,
+          "minimumTextRatio": 5.01,
+          "failures": [],
+          "controls": [
+            {
+              "surface": "--bg",
+              "border": 3.47,
+              "focus": 6.73
+            },
+            {
+              "surface": "--sf",
+              "border": 3.88,
+              "focus": 7.53
+            },
+            {
+              "surface": "--a3",
+              "border": 3.24,
+              "focus": 6.28
+            }
+          ],
+          "svgTextNotAutomaticallyMeasured": 33,
+          "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+        },
+        "textEnlargement200": {
+          "rootFont": "32px",
+          "viewport": 1440,
+          "pageWidth": 1440
+        },
+        "note": "Text enlargement only; separate browser zoom and visual/assistive-technology review remain required."
+      },
+      "note": "Controlled formatter network failure: explicit plain-text degradation, not successful Markdown formatting."
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "expectedBlockedChunks": [
+        "http://127.0.0.1:49285/assets/SpecificationMarkdown-m419t8-R.js"
+      ],
+      "completedPlanPreserved": true,
+      "plainSpecificationAndDownloadsVerified": true,
+      "unhandledPageErrors": [],
+      "accessibility": {
+        "phase": "markdown-chunk-failure",
+        "contrast": {
+          "measured": 42,
+          "minimumTextRatio": 5.01,
+          "failures": [],
+          "controls": [
+            {
+              "surface": "--bg",
+              "border": 3.47,
+              "focus": 6.73
+            },
+            {
+              "surface": "--sf",
+              "border": 3.88,
+              "focus": 7.53
+            },
+            {
+              "surface": "--a3",
+              "border": 3.24,
+              "focus": 6.28
+            }
+          ],
+          "svgTextNotAutomaticallyMeasured": 33,
+          "scope": "Visible HTML text, native form values and placeholders in the active dialog or document; excludes inactive controls, SVG/canvas and rendered-image text. Border/focus figures compare actual CSS tokens against the three declared surfaces."
+        },
+        "textEnlargement200": {
+          "rootFont": "32px",
+          "viewport": 390,
+          "pageWidth": 390
+        },
+        "note": "Text enlargement only; separate browser zoom and visual/assistive-technology review remain required."
+      },
+      "note": "Controlled formatter network failure: explicit plain-text degradation, not successful Markdown formatting."
+    }
+  ],
+  "emptyStates": {
+    "emptyAnalysisRetainsFile": true,
+    "emptyReviewRecoverable": true
+  },
+  "elapsedSeconds": 49.7,
+  "limitations": [
+    "Chromium only",
+    "Mocked backend, not live service validation",
+    "No physical-device test or WCAG certification"
+  ]
+}

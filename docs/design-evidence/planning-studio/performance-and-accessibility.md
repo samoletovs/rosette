@@ -50,8 +50,8 @@ Four unit checks cover the loading assertions. Applying the new assertion to
 the baseline's recorded pre-analysis resources also rejected both offending
 vendor chunks, even though the PDF export wrapper was still deferred.
 
-New-source byte counts and a full phase-loading pass remain **unmeasured until
-the parent builds and captures the next exact candidate**.
+At this checkpoint, new-source byte counts and phase loading were unmeasured.
+The final compiled-source results below supersede that pending status.
 
 ### Recoverable formatter loading
 
@@ -67,8 +67,8 @@ entry chunk at desktop and mobile widths, then checks retained plan data,
 plain specification text, language switching and downloads. Only those
 deliberate failed requests are allowed; unhandled page errors remain failures.
 Normal journeys additionally require actual Markdown headings and no fallback.
-These new cases await the same next exact-source build/capture, not a separate
-validation cycle or a fabricated pass receipt.
+These cases were subsequently exercised on the exact final source below, in the
+same validation cycle rather than asserted from this source description.
 
 ## Contrast and 200% text measurements
 
@@ -123,3 +123,32 @@ The unit checks compare the favicon geometry to the existing app mark. The
 same production browser runner also checks the title, icon link and served SVG,
 so the parent can validate this together with loading, contrast and enlargement
 on the latest combined source—not in a separate favicon-only CI cycle.
+
+## Final compiled-source verification
+
+Source `7ff33b687e380fbd94b831bf104c285d8da18845` passed
+[CI run 35604154294](https://github.com/samoletovs/rosette/actions/runs/35604154294).
+The parent verified the artifact's source marker before executing the committed
+browser runner against the real production build with synthetic services.
+
+The [final browser report](actual-7ff33b6/browser-results.json) records:
+
+- Initial decoded JavaScript **263,983 bytes** on both viewports, down from
+  **1,102,450 bytes**: a **76.05%** initial-payload reduction.
+- All three features deferred until their required phase; healthy Markdown
+  rendering and existing exports verified when requested.
+- Thirteen HTML contrast/text-enlargement state combinations with no measured
+  failures; minimum text ratio **5.01:1**, including the formerly broken active
+  hover state and the recoverable formatter-failure state.
+- Deliberately blocked Markdown entry downloads at desktop and mobile preserve
+  results/plain specification and downloads; no unhandled page errors.
+
+The separate [native browser-zoom report](actual-7ff33b6/browser-zoom-results.json)
+also closes the browser-zoom coverage gap noted above: Chromium's actual zoom API
+reported 2, viewport width halved from 1422 to 711 CSS pixels, and DPR doubled.
+Upload, review, placement and results remained usable without horizontal page
+overflow. This did not use CSS zoom or device-scale emulation.
+
+See [the evidence index](README.md) for review status and remaining coverage
+limits. Earlier baseline and stylesheet-injection artifacts are retained without
+relabeling them as full compiled-source passes.
