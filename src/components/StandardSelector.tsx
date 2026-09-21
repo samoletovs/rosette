@@ -64,7 +64,7 @@ export function StandardSelector({
       .catch(() => {
         if (cancelled) return;
         setLoaded(null);
-        setLoadError('Standards unavailable — defaults will be used.');
+        setLoadError('Standards could not be loaded. Analysis will retry; check your connection if it fails.');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

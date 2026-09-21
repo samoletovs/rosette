@@ -14,6 +14,9 @@ import type { AnalysisResult, CalculationResult, CountryItem, Room, SocketPlacem
 import { usePaywall, PaywallModal } from "./components/PaywallModal";
 import { StandardSelector } from "./components/StandardSelector";
 import { mapRoomType } from "./complianceChecker";
+import { PlanUpload } from "./components/PlanUpload";
+import { Dialog } from "./components/Dialog";
+import { validatePlanFile } from "./planFile";
 
 type Step = "upload" | "analyzing" | "review" | "placement" | "calculating" | "results";
 
@@ -88,15 +91,16 @@ export default function App() {
   const [svgFloorPlan, setSvgFloorPlan] = useState("");
   const [diagramTab, setDiagramTab] = useState<"rooms" | "circuits" | "wiring" | "plan">("plan");
   const [error, setError] = useState("");
-  const [dragging, setDragging] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileReadVersion = useRef(0);
+  const mainRef = useRef<HTMLElement>(null);
+  const initialStep = useRef(true);
   const [socketOverrides, setSocketOverrides] = useState<Record<string, number>>({});
   const [proposedPlacements, setProposedPlacements] = useState<SocketPlacement[]>([]);
   const [proposedSwitchboard, setProposedSwitchboard] = useState<Switchboard | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisResult | null>(null);
-  const [_confirmedPlacements, setConfirmedPlacements] = useState<SocketPlacement[]>([]);
-  const [_confirmedSwitchboard, setConfirmedSwitchboard] = useState<Switchboard | null>(null);
-  const [theme, setTheme] = useState(() => localStorage.getItem("rosette-theme") || "ocean");
+  const [calculationFailed, setCalculationFailed] = useState(false);
+  const [calculationPhase, setCalculationPhase] = useState("Calculating your plan");
+  const [floorPlanError, setFloorPlanError] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
   const [fbType, setFbType] = useState("improvement");
   const [fbTitle, setFbTitle] = useState("");
@@ -121,11 +125,10 @@ export default function App() {
     });
   }, []);
 
-  // Apply theme to document
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("rosette-theme", theme);
-  }, [theme]);
+    if (initialStep.current) { initialStep.current = false; return; }
+    mainRef.current?.focus();
+  }, [step]);
 
   useEffect(() => {
     getCountries()
@@ -142,19 +145,25 @@ export default function App() {
   }, [previewUrl]);
 
   const handleFile = useCallback((f: File) => {
+    const problem = validatePlanFile(f);
+    if (problem) { setError(problem); return; }
+    const version = ++fileReadVersion.current;
     setFile(f);
     setPreviewUrl(URL.createObjectURL(f));
+    setBase64Url("");
     setError("");
     const reader = new FileReader();
-    reader.onload = () => setBase64Url(reader.result as string);
+    reader.onload = () => {
+      if (version === fileReadVersion.current && typeof reader.result === "string") setBase64Url(reader.result);
+    };
+    reader.onerror = () => {
+      if (version === fileReadVersion.current) {
+        setFile(null); setPreviewUrl("");
+        setError("This file could not be read. Choose it again or use another image.");
+      }
+    };
     reader.readAsDataURL(f);
   }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-  }, [handleFile]);
 
   const startAnalysis = async () => {
     if (!file || !base64Url) return;
@@ -234,8 +243,6 @@ export default function App() {
   };
 
   const handlePlacementConfirm = (placements: SocketPlacement[], switchboard: Switchboard) => {
-    setConfirmedPlacements(placements);
-    setConfirmedSwitchboard(switchboard);
     startCalculation(placements, switchboard);
   };
 
@@ -249,6 +256,9 @@ export default function App() {
       return;
     }
     setStep("calculating");
+    setCalculationFailed(false);
+    setCalculationPhase("Calculating your plan");
+    setFloorPlanError("");
     setError("");
     try {
       // Augment rooms with user's socket overrides
@@ -308,9 +318,11 @@ export default function App() {
             finalPlacements, rooms, confirmedDb || undefined,
           ));
         };
+        img.onerror = () => setFloorPlanError("The floor-plan image could not be rendered. The other diagrams and specification remain available.");
         img.src = base64Url;
       }
 
+      setCalculationPhase("Preparing your English and local-language specification");
       const desc = await generateDescription(roomsWithOverrides, result, countryCode, propertyType);
       setDescEn(desc.description_en || "");
       setDescLocal(desc.description_local || "");
@@ -318,6 +330,7 @@ export default function App() {
       setStep("results");
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Calculation failed"));
+      setCalculationFailed(true);
       setStep("placement");
     }
   };
@@ -327,6 +340,7 @@ export default function App() {
     a.download = name;
     a.href = data.startsWith("data:") ? data : URL.createObjectURL(new Blob([data], { type: mime }));
     a.click();
+    if (!data.startsWith("data:")) setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   };
 
   const handlePdfExport = async () => {
@@ -357,13 +371,14 @@ export default function App() {
   };
 
   const reset = () => {
+    fileReadVersion.current += 1;
     setStep("upload"); setFile(null); setPreviewUrl(""); setBase64Url("");
     setRooms([]); setStandards(null); setPlacements(null); setAnalysisData(null);
     setDescEn(""); setDescLocal(""); setSvgRoomLayouts(""); setSvgCircuitDiagram(""); setSvgWiringDiagram(""); setSvgFloorPlan("");
     setError(""); setSocketOverrides({});
     setProposedPlacements([]); setProposedSwitchboard(null);
-    setConfirmedPlacements([]); setConfirmedSwitchboard(null);
     setPdfGenerating(false);
+    setCalculationFailed(false); setFloorPlanError("");
   };
 
   const handleFeedbackSubmit = async () => {
@@ -401,19 +416,18 @@ export default function App() {
     { key: "placement", label: "Place" },
     { key: "results", label: "Results" },
   ];
-  const stepOrder: string[] = ["upload", "analyzing", "review", "placement", "calculating", "results"];
-  const _stepIdx = stepOrder.indexOf(step);
   // Map intermediate steps to their display step
-  const displayStep = step === "analyzing" ? "review" : step === "calculating" ? "results" : step;
+  const displayStep = step === "analyzing" ? "upload" : step === "calculating" ? "placement" : step;
   const displayIdx = stepsData.findIndex((s) => s.key === displayStep);
   // Results is the final step — show it as "done" (green) when active
   const isLastStep = step === "results";
 
   return (
     <div className="app">
-      <header>
-        <div className="brand"><span className="brand-icon">⚡</span><h1>rosette</h1></div>
-        <p className="tagline">Electric socket planner — Baltic standards</p>
+      <a className="skip-link" href="#main">Skip to planning</a>
+      <header className="app-header">
+        <div className="brand"><svg className="brand-mark" viewBox="0 0 36 36" aria-hidden="true"><rect x="3" y="3" width="30" height="30" rx="9"/><circle cx="18" cy="18" r="9"/><path d="M14 16v4m8-4v4M18 8v3m0 14v3"/></svg><span>rosette</span></div>
+        <p className="tagline">A more considered home.</p>
         {user && (
           <div className="user-bar">
             <span className="user-name">{user.userDetails}</span>
@@ -422,9 +436,9 @@ export default function App() {
         )}
       </header>
 
-      <nav className="stepper">
+      <nav className="stepper" aria-label="Planning progress">
         {stepsData.map((s, i) => (
-          <div key={s.key} className={`s-item ${(i === displayIdx && isLastStep) || i < displayIdx ? "done" : i === displayIdx ? "current" : ""}`}>
+          <div key={s.key} aria-current={i === displayIdx ? "step" : undefined} className={`s-item ${(i === displayIdx && isLastStep) || i < displayIdx ? "done" : i === displayIdx ? "current" : ""}`}>
             <div className="s-dot">{i < displayIdx || (i === displayIdx && isLastStep) ? "✓" : i + 1}</div>
             <span className="s-label">{s.label}</span>
           </div>
@@ -432,14 +446,15 @@ export default function App() {
         <div className="s-track"><div className="s-fill" style={{ width: `${(displayIdx / (stepsData.length - 1)) * 100}%` }} /></div>
       </nav>
 
-      {error && <div className="alert">{error}<button onClick={() => setError("")}>×</button></div>}
-
-      <main>
+      <main id="main" ref={mainRef} tabIndex={-1}>
+        <section className="journey-intro">
+          <div><p className="eyebrow">Homeowner planning studio</p><h1>{step === "upload" || step === "analyzing" ? <>Make room for<br/><em>the way you live.</em></> : step === "review" ? "Every room, considered." : step === "results" ? "A starting point for your electrician." : "Put your plan in place."}</h1></div>
+          <p>{step === "upload" ? "Bring your floor plan. We’ll help you prepare the details for a more useful conversation with your electrician." : "Review the details at your own pace. Generated suggestions need a qualified electrician’s checks before use."}</p>
+        </section>
+        <p className="safety-note"><strong>Planning aid for electrician review.</strong> Not an approved electrical design or installation instruction.</p>
+        {error && <div className="alert" role="alert"><div><strong>We couldn’t complete that step.</strong><p>{error}</p>{file && <p className="sm">Your selected plan is still available.</p>}{calculationFailed && <p>Your placements are retained. Check them below, then retry calculation.</p>}</div><button className="dismiss-error" onClick={() => setError("")} aria-label="Dismiss error">×</button></div>}
         {step === "upload" && (
-          <section className="card fade-in">
-            <h2>Upload floor plan</h2>
-            <p className="muted">Select country, property type, and upload your plan</p>
-            <div className="form-row">
+          <PlanUpload file={file} previewUrl={previewUrl} ready={Boolean(base64Url)} retry={Boolean(error && file)} onFile={handleFile} onAnalyze={startAnalysis}>
               <StandardSelector
                 countries={countries.length > 0 ? countries : DEFAULT_COUNTRIES}
                 value={countryCode}
@@ -453,33 +468,29 @@ export default function App() {
                   {PROPERTY_TYPES.map((t) => (<option key={t.value} value={t.value}>{t.label}</option>))}
                 </select>
               </label>
-            </div>
-            <div className={`drop ${dragging ? "over" : ""} ${file ? "filled" : ""}`}
-              onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-              onDragLeave={() => setDragging(false)} onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}>
-              <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,application/pdf"
-                onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
-              {previewUrl
-                ? <><img src={previewUrl} alt="Preview" /><span className="pill">{file?.name}</span></>
-                : <><div className="drop-icon">📐</div><p>Drop floor plan here</p><p className="muted sm">PNG, JPEG, WebP or PDF — max 10 MB</p></>}
-            </div>
-            <div className="btn-row" style={{justifyContent:'flex-end'}}><button className="btn primary" disabled={!file} onClick={startAnalysis}>Analyze floor plan →</button></div>
-          </section>
+          </PlanUpload>
         )}
 
         {(step === "analyzing" || step === "calculating") && (
-          <section className="card fade-in center-content">
-            <div className="pulse-ring" /><div className="pulse-icon">⚡</div>
-            <h3>{step === "analyzing" ? "Analyzing floor plan" : "Calculating circuits & wiring"}</h3>
-            <p className="muted">{step === "analyzing" ? "AI is identifying rooms…" : `Applying ${countryCode} standards…`}</p>
+          <section className="card waiting-state" role="status" aria-live="polite" aria-busy="true">
+            <div className="waiting-sheet" aria-hidden="true"><span/><span/><span/></div>
+            <p className="eyebrow">Working on your plan</p>
+            <h2>{step === "analyzing" ? "Finding the rooms in your plan" : calculationPhase}</h2>
+            <p className="muted">{step === "analyzing" ? "Analysis can take up to 90 seconds. You’ll review the rooms before continuing." : "Calculation can take up to 90 seconds, followed by up to 3 minutes for the specification. Keep this page open; your placements are retained if a request fails."}</p>
+            <p className="sm">{file?.name}</p>
           </section>
         )}
 
         {step === "review" && (
+          <div className="review-layout">
+            <figure className="plan-sheet review-plan">
+              <div className="sheet-heading"><span className="eyebrow">Your floor plan</span><span>{rooms.length} rooms</span></div>
+              {file?.type !== "application/pdf" && previewUrl ? <img src={previewUrl} alt="Uploaded floor plan for checking the detected rooms"/> : <p className="muted">An image preview is not available for this file. Use an image version for interactive placement.</p>}
+              <figcaption>{file?.name} · Check detected dimensions against your own plan.</figcaption>
+            </figure>
           <section className="card fade-in">
             <h2>Review detected rooms</h2>
-            <p className="muted">{rooms.length} rooms detected — add, remove, or adjust socket counts</p>
+            <p className="muted">{rooms.length ? `${rooms.length} rooms detected — check the names, dimensions and requested socket counts.` : "No rooms remain. Add a room below before continuing."}</p>
             <div className="std-review">
               <StandardSelector
                 countries={countries.length > 0 ? countries : DEFAULT_COUNTRIES}
@@ -500,9 +511,9 @@ export default function App() {
                     </div>
                     <div className="room-row-actions">
                       <div className="socket-control">
-                        <button className="cnt-btn" onClick={() => setSocketOverrides(p => ({...p, [r.id]: Math.max(0, count - 1)}))} aria-label="Decrease">−</button>
-                        <span className="cnt-val">{count}</span>
-                        <button className="cnt-btn" onClick={() => setSocketOverrides(p => ({...p, [r.id]: count + 1}))} aria-label="Increase">+</button>
+                        <button className="cnt-btn" disabled={count === 0} onClick={() => setSocketOverrides(p => ({...p, [r.id]: Math.max(0, count - 1)}))} aria-label={`Decrease sockets for ${r.name || r.type}`}>−</button>
+                        <span className="cnt-val" role="status" aria-label={`Socket count for ${r.name || r.type}`}>{count}</span>
+                        <button className="cnt-btn" onClick={() => setSocketOverrides(p => ({...p, [r.id]: count + 1}))} aria-label={`Increase sockets for ${r.name || r.type}`}>+</button>
                         <span className="cnt-label">sockets</span>
                         {min !== null && min !== undefined && count < min && <span className="cnt-warn">below min ({min})</span>}
                       </div>
@@ -565,6 +576,10 @@ export default function App() {
                 </div>
                 <div className="add-room-btns">
                   <button className="btn primary" onClick={() => {
+                    const width = Number(newRoomWidth), height = Number(newRoomHeight);
+                    if (!Number.isFinite(width) || !Number.isFinite(height) || width < 1 || width > 20 || height < 1 || height > 20) {
+                      setError("Enter room dimensions between 1 and 20 metres."); return;
+                    }
                     nextRoomCounter += 1;
                     const w = parseFloat(newRoomWidth) || 3;
                     const h = parseFloat(newRoomHeight) || 3;
@@ -596,13 +611,15 @@ export default function App() {
             )}
 
             <div className="btn-row">
-              <button className="btn ghost" onClick={reset}>← Back</button>
+              <button className="btn ghost" onClick={() => setStep("upload")}>← Back to plan</button>
               <button className="btn primary" disabled={rooms.length === 0} onClick={goToPlacement}>Place sockets →</button>
             </div>
           </section>
+          </div>
         )}
 
-        {step === "placement" && proposedSwitchboard && (
+        {(step === "placement" || step === "calculating") && proposedSwitchboard && (
+          <div hidden={step !== "placement"}>
           <Suspense fallback={<section className="card fade-in center-content"><p className="muted">Loading placement editor…</p></section>}>
             <PlacementEditor
               imageUrl={base64Url}
@@ -610,10 +627,12 @@ export default function App() {
               placements={proposedPlacements}
               switchboard={proposedSwitchboard}
               standards={standards}
+              retry={calculationFailed}
               onConfirm={handlePlacementConfirm}
               onBack={() => setStep("review")}
             />
           </Suspense>
+          </div>
         )}
 
         {step === "results" && placements && (
@@ -634,7 +653,7 @@ export default function App() {
             {/* PDF Export */}
             <div className="pdf-export-bar">
               <button className="btn primary pdf-btn" disabled={pdfGenerating} onClick={() => requestDownload(handlePdfExport)}>
-                {pdfGenerating ? "Generating PDF…" : unlocked ? "📄 Download A3 PDF — Full Electrical Plan" : "📄 Get A3 PDF — Full Electrical Plan · €5"}
+                {pdfGenerating ? "Generating PDF…" : unlocked ? "Download A3 planning PDF" : "Get A3 planning PDF · €5"}
               </button>
               <span className="muted sm">{unlocked ? "A3 landscape · Room layouts, circuit diagram, wiring plan, bill of materials" : "One-time payment · A3 landscape with all diagrams"}</span>
             </div>
@@ -644,10 +663,10 @@ export default function App() {
               <div className="spec-head">
                 <h3>Electrical diagrams</h3>
                 <div className="toggle-group">
-                  <button className={`toggle-btn ${diagramTab === "rooms" ? "on" : ""}`} onClick={() => setDiagramTab("rooms")}>Room layouts</button>
-                  <button className={`toggle-btn ${diagramTab === "circuits" ? "on" : ""}`} onClick={() => setDiagramTab("circuits")}>Circuit diagram</button>
-                  <button className={`toggle-btn ${diagramTab === "wiring" ? "on" : ""}`} onClick={() => setDiagramTab("wiring")}>Wiring plan</button>
-                  <button className={`toggle-btn ${diagramTab === "plan" ? "on" : ""}`} onClick={() => setDiagramTab("plan")}>Floor plan</button>
+                  <button aria-pressed={diagramTab === "rooms"} className={`toggle-btn ${diagramTab === "rooms" ? "on" : ""}`} onClick={() => setDiagramTab("rooms")}>Room layouts</button>
+                  <button aria-pressed={diagramTab === "circuits"} className={`toggle-btn ${diagramTab === "circuits" ? "on" : ""}`} onClick={() => setDiagramTab("circuits")}>Circuit diagram</button>
+                  <button aria-pressed={diagramTab === "wiring"} className={`toggle-btn ${diagramTab === "wiring" ? "on" : ""}`} onClick={() => setDiagramTab("wiring")}>Wiring plan</button>
+                  <button aria-pressed={diagramTab === "plan"} className={`toggle-btn ${diagramTab === "plan" ? "on" : ""}`} onClick={() => setDiagramTab("plan")}>Floor plan</button>
                 </div>
               </div>
 
@@ -675,10 +694,10 @@ export default function App() {
                     <div className="plan-box svg-box" dangerouslySetInnerHTML={{ __html: svgFloorPlan }} />
                   ) : (
                     <div className="plan-box" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 200 }}>
-                      <p className="muted">Generating floor plan with sockets…</p>
+                      <p className="muted" role="status">{floorPlanError || "Generating floor plan with sockets…"}</p>
                     </div>
                   )}
-                  <p className="muted sm" style={{textAlign:"center", margin:"8px 0"}}>Socket positions on the actual floor plan — ready for the electrician</p>
+                  <p className="muted sm" style={{textAlign:"center", margin:"8px 0"}}>Proposed positions on your floor plan — review with a qualified electrician before use.</p>
                   <button className="btn outline" disabled={!svgFloorPlan} onClick={() => svgFloorPlan && download(svgFloorPlan, "rosette-socket-plan.svg", "image/svg+xml")}>↓ Download socket plan</button>
                 </>
               )}
@@ -688,8 +707,8 @@ export default function App() {
               <div className="spec-head">
                 <h3>Installation specification</h3>
                 <div className="toggle-group">
-                  <button className={`toggle-btn ${specLang === "en" ? "on" : ""}`} onClick={() => setSpecLang("en")}>🇬🇧 English</button>
-                  <button className={`toggle-btn ${specLang === "local" ? "on" : ""}`} onClick={() => setSpecLang("local")}>{FLAG[countryCode] || "🌍"} {langName}</button>
+                  <button aria-pressed={specLang === "en"} className={`toggle-btn ${specLang === "en" ? "on" : ""}`} onClick={() => setSpecLang("en")}>🇬🇧 English</button>
+                  <button aria-pressed={specLang === "local"} className={`toggle-btn ${specLang === "local" ? "on" : ""}`} onClick={() => setSpecLang("local")}>{FLAG[countryCode] || "🌍"} {langName}</button>
                 </div>
               </div>
               <div className="spec-body">
@@ -709,18 +728,12 @@ export default function App() {
       </main>
 
       <footer>
-        <div className="theme-bar">
-          {["ocean", "violet", "emerald", "rose", "midnight"].map((t) => (
-            <div key={t} className={`theme-dot ${theme === t ? "active" : ""}`} data-t={t}
-              onClick={() => setTheme(t)} title={t.charAt(0).toUpperCase() + t.slice(1)} />
-          ))}
-        </div>
         <button className="btn ghost feedback-btn" onClick={() => setShowFeedback(true)}>💬 Send feedback</button>
         <p>rosette © 2026 · Baltic electrical standards (LBN · STR · EVS)</p>
       </footer>
 
       {showFeedback && (
-        <div className="modal-overlay" onClick={() => !fbSending && setShowFeedback(false)}>
+        <Dialog className="modal-dialog" label="Send feedback" busy={fbSending} onClose={() => setShowFeedback(false)}>
           <div className="modal fade-in" onClick={(e) => e.stopPropagation()}>
             {fbSuccess ? (
               <div className="center-content" style={{padding: "40px 24px"}}>
@@ -732,7 +745,7 @@ export default function App() {
               <>
                 <div className="modal-head">
                   <h3>Send feedback</h3>
-                  <button className="modal-close" onClick={() => setShowFeedback(false)}>×</button>
+                  <button className="modal-close" disabled={fbSending} aria-label="Close feedback" onClick={() => setShowFeedback(false)}>×</button>
                 </div>
                 <div className="modal-body">
                   <label className="form-field">
@@ -754,10 +767,10 @@ export default function App() {
                     <textarea className="fb-textarea" placeholder="Describe in detail…" value={fbDesc}
                       onChange={(e) => setFbDesc(e.target.value)} rows={4} maxLength={2000} />
                   </label>
-                  {fbError && <p className="fb-error">{fbError}</p>}
+                  {fbError && <p className="fb-error" role="alert">{fbError}</p>}
                 </div>
                 <div className="modal-foot">
-                  <button className="btn ghost" onClick={() => setShowFeedback(false)}>Cancel</button>
+                  <button className="btn ghost" disabled={fbSending} onClick={() => setShowFeedback(false)}>Cancel</button>
                   <button className="btn primary" disabled={fbSending || !fbTitle.trim() || !fbDesc.trim()} onClick={handleFeedbackSubmit}>
                     {fbSending ? "Sending…" : "Submit"}
                   </button>
@@ -765,7 +778,7 @@ export default function App() {
               </>
             )}
           </div>
-        </div>
+        </Dialog>
       )}
 
       {showPaywall && (

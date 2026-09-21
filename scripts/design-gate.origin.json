@@ -1,0 +1,7 @@
+{
+  "repository": "samoletovs/nauroLabs-github",
+  "commit": "8303fd429a2907834881733ce77ee7a371a431ca",
+  "path": "scripts/design-gate.py",
+  "review": "Governance PR #287: independent review and full governance CI passed, as confirmed by the coordinating parent.",
+  "modifications": "None. Keep the copied Python file byte-equivalent after LF normalization; project-specific PR scope detection lives in check-design-pr.py."
+}

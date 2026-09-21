@@ -25,6 +25,10 @@ Thumbs.db
 screenshots/
 test-screenshots/
 *.png
+!docs/design-evidence/**/*.png
+.test-artifacts/
+__pycache__/
+*.py[cod]
 *.swo
 
 # Playwright MCP
