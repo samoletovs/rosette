@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">
+  <title>Rosette</title>
+  <rect width="36" height="36" rx="10" fill="#f4f0e7"/>
+  <g fill="none" stroke="#4e603b" stroke-width="1.5">
+    <rect x="3" y="3" width="30" height="30" rx="9"/>
+    <circle cx="18" cy="18" r="9"/>
+    <path d="M14 16v4m8-4v4M18 8v3m0 14v3"/>
+  </g>
+</svg>

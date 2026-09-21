@@ -135,7 +135,7 @@ def setup_api_mocks(page: Page):
         url = route.request.url
         if "/api/analyze" in url:
             route.fulfill(status=200, content_type="application/json", body=json.dumps(MOCK_ANALYZE))
-        elif "/api/standards" in url and "?" in url:
+        elif "/api/standards/" in url:
             route.fulfill(status=200, content_type="application/json", body=json.dumps(MOCK_STANDARDS))
         elif "/api/standards" in url:
             route.fulfill(status=200, content_type="application/json",
@@ -177,11 +177,12 @@ def test_full_flow(viewport_name: str, width: int, height: int):
         page.wait_for_load_state("networkidle")
         page.screenshot(path=f"{SCREENSHOTS}/{viewport_name}-01-upload.png", full_page=True)
 
-        assert page.locator("h2").inner_text() == "Upload floor plan", "Upload heading not found"
+        assert page.get_by_role("button", name="Choose floor plan").is_visible(), "Visible upload control not found"
 
         # Upload a file
-        file_input = page.locator("input[type='file']")
-        file_input.set_input_files({
+        with page.expect_file_chooser() as chooser:
+            page.get_by_role("button", name="Choose floor plan").press("Enter")
+        chooser.value.set_files({
             "name": "test-plan.png",
             "mimeType": "image/png",
             "buffer": TINY_PNG,

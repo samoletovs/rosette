@@ -40,7 +40,7 @@ def setup_mocks(page):
     def handle(route):
         url = route.request.url
         if "/api/analyze" in url: route.fulfill(status=200, content_type="application/json", body=json.dumps(MOCK_ANALYZE))
-        elif "/api/standards" in url and "?" in url: route.fulfill(status=200, content_type="application/json", body=json.dumps(MOCK_STANDARDS))
+        elif "/api/standards/" in url: route.fulfill(status=200, content_type="application/json", body=json.dumps(MOCK_STANDARDS))
         elif "/api/standards" in url: route.fulfill(status=200, content_type="application/json", body=json.dumps({"countries": [{"code": "LV", "country": "Latvia"}]}))
         elif "/api/upload" in url: route.fulfill(status=200, content_type="application/json", body=json.dumps({"ok": True}))
         elif "/api/calculate" in url: route.fulfill(status=200, content_type="application/json", body=json.dumps(build_calc()))
@@ -67,7 +67,9 @@ def test_pdf():
         # Upload
         page.goto(URL)
         page.wait_for_load_state("networkidle")
-        page.locator("input[type='file']").set_input_files({"name": "test.png", "mimeType": "image/png", "buffer": TINY_PNG})
+        with page.expect_file_chooser() as chooser:
+            page.get_by_role("button", name="Choose floor plan").press("Enter")
+        chooser.value.set_files({"name": "test.png", "mimeType": "image/png", "buffer": TINY_PNG})
         page.wait_for_timeout(500)
         page.locator("button.primary", has_text="Analyze floor plan").click()
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Dialog } from "./Dialog";
 
 const STORAGE_KEY = "rosette-pdf-unlocked";
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/TODO_REPLACE_WITH_REAL_LINK";
@@ -73,15 +74,15 @@ export function PaywallModal({ onClose, onUnlocked }: PaywallModalProps) {
   }, [onUnlocked]);
 
   return (
-    <div className="paywall-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="PDF export paywall">
+    <Dialog className="paywall-dialog" onClose={onClose} label="PDF export paywall">
       <div className="paywall-modal" onClick={(e) => e.stopPropagation()}>
         <button className="paywall-close" onClick={onClose} aria-label="Close">&times;</button>
 
         <div className="paywall-icon">📄</div>
-        <h2 className="paywall-title">Professional Electrical Plan</h2>
+        <h2 className="paywall-title">Your planning pack</h2>
         <p className="paywall-desc">
           Get your complete A3 PDF with room layouts, circuit diagrams, wiring plans,
-          and bill of materials — ready for your electrician.
+          and bill of materials — for review with your electrician, not an approved electrical design.
         </p>
 
         <ul className="paywall-features">
@@ -90,7 +91,7 @@ export function PaywallModal({ onClose, onUnlocked }: PaywallModalProps) {
           <li>✓ Circuit diagram with breaker sizing</li>
           <li>✓ Wiring plan with cable routes</li>
           <li>✓ Bill of materials with quantities</li>
-          <li>✓ Country-specific standards compliance</li>
+          <li>✓ Country-specific standards references</li>
         </ul>
 
         <button className="btn primary paywall-pay-btn" onClick={handlePay}>
@@ -101,6 +102,6 @@ export function PaywallModal({ onClose, onUnlocked }: PaywallModalProps) {
           One-time payment · Secure checkout via Stripe · Instant download after payment
         </p>
       </div>
-    </div>
+    </Dialog>
   );
 }

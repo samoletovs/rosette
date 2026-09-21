@@ -14,11 +14,6 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
-      - '.gitignore'
-      - 'LICENSE'
 
 # Keep PR cleanup and manual validation separate from production deployments.
 concurrency:
@@ -32,6 +27,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          # On PRs, test the same synthetic merge commit that preview deployment uses.
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Test design evidence enforcement
+        run: python tests/test_design_gate.py
+
+      # PR merges retain reviewed-source ancestry; the later squash on main does not.
+      - name: Require source-bound evidence for UI changes
+        if: github.event_name == 'pull_request'
+        env:
+          DESIGN_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python scripts/check-design-pr.py --repo . --base "$DESIGN_BASE_SHA"
 
       - uses: actions/setup-node@v5
         with:
@@ -62,10 +75,20 @@ jobs:
         run: npm test
 
       - name: Build frontend and API for manual validation
+        id: validation_build
         if: github.event_name == 'workflow_dispatch'
         run: |
           npm run build
           npm run build --prefix api
+          printf '%s\n' "$GITHUB_SHA" > dist/source-revision.txt
+
+      - name: Save exact-source validation preview
+        if: github.event_name == 'workflow_dispatch' && steps.validation_build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rosette-preview-${{ github.sha }}
+          path: dist/
+          retention-days: 7
 
   # ── Build & Deploy ─────────────────────────────────────────────────
   build_and_deploy_job:
@@ -84,6 +107,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
+          ref: ${{ github.sha }}
           submodules: true
           lfs: false
 

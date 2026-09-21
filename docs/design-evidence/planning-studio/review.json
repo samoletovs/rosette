@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "source_commit": "7ff33b687e380fbd94b831bf104c285d8da18845",
+  "brief_sha256": "989121a272db525728c1a52a29888eca819b0b5e7ff67fe34f4bd30b10bdd282",
+  "direction": {
+    "mode": "new",
+    "selected": "A",
+    "owner_decision": "On 2026-09-21 the owner selected A - Planning studio (Recommended) after comparing two rendered directions, for homeowners planning renovations with electrician review. No additional rationale was supplied.",
+    "options": [
+      {
+        "id": "A",
+        "path": "docs/design-evidence/planning-studio/concept-a-desktop.png",
+        "sha256": "f35a29360c5dac03366809b3ab6b414ee1a4374fa371f671218cdaf2f9a3fab1"
+      },
+      {
+        "id": "B",
+        "path": "docs/design-evidence/planning-studio/concept-b-desktop.png",
+        "sha256": "41e33674019eda180aa36dcd46f6eede007a381fbc1c5c19ebaff7df5f706b2c"
+      }
+    ]
+  },
+  "author": "rosette-concepts implementation agent 3de38f2f-326b-4da3-b085-a9303e8475ae",
+  "reviewer": "design-foundation-review independent agent fceff45a-bc89-4923-8781-5ab1951f0540",
+  "review_notes": "Independent source, visual and evidence review completed for 7ff33b6. All reported source findings resolved; representative final desktop/mobile, recovery, formatter-failure and native-zoom captures and stamped reports reviewed with no significant issues. Execution was performed by the parent, not independently rerun. Coverage limits are recorded in README.md.",
+  "unresolved_findings": [],
+  "checks": {
+    "primary_task": {
+      "status": "pass",
+      "evidence": "Exact-source CI run 35604154294 passed lint/types, 116 Vitest tests in both dependency layouts and frontend/API builds. The SHA-marked artifact passed tests/test_planning_studio.py at 1440px and 390px with API-shaped synthetic fixtures: upload, analysis, room editing, placement, calculation, country/language behavior and existing SVG/Markdown/PDF exports. See actual-7ff33b6/browser-results.json."
+    },
+    "keyboard": {
+      "status": "pass",
+      "evidence": "The visible Choose floor plan button was keyboard-activated through the browser file chooser, not bypassed with direct hidden-input automation. Room count/placement controls, dialog focus/escape and primary actions were exercised; native 200% browser zoom also completed keyboard upload and the primary journey."
+    },
+    "responsive": {
+      "status": "pass",
+      "evidence": "Representative 1440px/390px flows and 320px/768px layout checks passed, including long content. Thirteen 200% root-text state checks had no page-wide overflow. Separate native Chromium zoom 2 changed viewport 1422 to 711 CSS pixels and DPR 1 to 2; upload/review/placement/results completed without page-wide overflow. See actual-7ff33b6/browser-zoom-results.json."
+    },
+    "states": {
+      "status": "pass",
+      "evidence": "Waiting, analysis and calculation errors, explicit retries with unchanged task data, empty analysis/review recovery, edited rooms, long content and successful exports passed. Aborting the real Markdown entry chunk at both widths preserved completed results, plain specification, language switching and downloads with explicit failure feedback and no unhandled page errors."
+    },
+    "accessibility": {
+      "status": "pass",
+      "evidence": "Keyboard/focus and reduced-motion checks passed. Thirteen measured HTML state/viewport combinations had no contrast or 200% text-overflow failures; minimum text ratio 5.01:1, border tokens at least 3.24:1 and focus tokens at least 6.28:1 on declared surfaces. Actual native browser zoom was checked separately. SVG/canvas/image text is outside automatic ratio coverage; no screen-reader, physical-device or full-WCAG certification is claimed."
+    },
+    "performance": {
+      "status": "pass",
+      "evidence": "The actual module/chunk graph rejects eager feature imports at build time, and browser checks prove placement, Markdown and PDF are absent before their phase and work when requested. Initial decoded JavaScript is 263983 bytes versus baseline 1102450 (76.05% less). No new production dependency or external font request. These are payload/local browser measurements, not field Core Web Vitals."
+    },
+    "visual_intent": {
+      "status": "pass",
+      "evidence": "Independent review compared the final compiled normal, error/recovery, formatter-failure and native-zoom captures against owner-selected A. Warm architectural typography/palette, actual plan-led review, readable controls and explicit degradation remain consistent with the approved brief. No significant visual issues were identified within this scope."
+    }
+  },
+  "screenshots": [
+    {
+      "viewport": "desktop",
+      "path": "docs/design-evidence/planning-studio/actual-7ff33b6/desktop-review.png",
+      "sha256": "484915d415456b37d2a14fb7436593ae8c6a69365b249ada8ca8b19d846f7684"
+    },
+    {
+      "viewport": "mobile",
+      "path": "docs/design-evidence/planning-studio/actual-7ff33b6/mobile-review.png",
+      "sha256": "d120facffcf77c291b01c3efa743c3b131d05c9f20e7a8a14b9083e2e9ceb022"
+    }
+  ]
+}

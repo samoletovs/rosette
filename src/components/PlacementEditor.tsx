@@ -34,6 +34,7 @@ interface PlacementEditorProps {
   placements: SocketPlacement[];
   switchboard: Switchboard;
   standards?: StandardsData | null;
+  retry?: boolean;
   onConfirm: (placements: SocketPlacement[], switchboard: Switchboard) => void;
   onBack: () => void;
 }
@@ -113,12 +114,14 @@ function fanFromPoint(cx: number, cy: number, count: number, spacing: number): {
 }
 
 export function PlacementEditor({
-  imageUrl, rooms, placements: initialPlacements, switchboard: initialSwitchboard, standards = null, onConfirm, onBack,
+  imageUrl, rooms, placements: initialPlacements, switchboard: initialSwitchboard, standards = null, retry = false, onConfirm, onBack,
 }: PlacementEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
   const [image, setImage] = useState<HTMLImageElement | null>(null);
+  const [imageError, setImageError] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [point, setPoint] = useState({ x: "50", y: "50" });
 
   const prefixedPlacements = useMemo(() => assignPrefixedIds(initialPlacements, rooms), [initialPlacements, rooms]);
 
@@ -133,18 +136,28 @@ export function PlacementEditor({
   const [selectedSocket, setSelectedSocket] = useState<string | null>(null);
   const [showDbPanel, setShowDbPanel] = useState(false);
 
-  useEffect(() => { const img = new window.Image(); img.onload = () => setImage(img); img.src = imageUrl; }, [imageUrl]);
+  useEffect(() => {
+    const img = new window.Image();
+    setImageError(false);
+    img.onload = () => setImage(img);
+    img.onerror = () => setImageError(true);
+    img.src = imageUrl;
+    return () => { img.onload = null; img.onerror = null; };
+  }, [imageUrl]);
 
   useEffect(() => {
     function resize() {
       if (!containerRef.current || !image) return;
       const maxW = containerRef.current.clientWidth;
+      if (maxW <= 0) return;
       const ratio = image.naturalHeight / image.naturalWidth;
       setStageSize({ width: Math.min(maxW, 1200), height: Math.min(maxW, 1200) * ratio });
     }
     resize();
+    const observer = new ResizeObserver(resize);
+    if (containerRef.current) observer.observe(containerRef.current);
     window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
+    return () => { observer.disconnect(); window.removeEventListener("resize", resize); };
   }, [image]);
 
   const socketsByRoom = useMemo(() => {
@@ -164,13 +177,8 @@ export function PlacementEditor({
     return `${prefix}${sockets.filter((s) => s.room_id === room.id).length + 1}`;
   }, [sockets]);
 
-  const handleStageClick = useCallback((e: KonvaEventObject<MouseEvent | TouchEvent>) => {
-    if (!placing) { setSelectedSocket(null); setShowDbPanel(false); return; }
-    const stage = e.target.getStage(); if (!stage) return;
-    const pointer = stage.getPointerPosition(); if (!pointer) return;
-    const xPct = pixelToPct(pointer.x / zoom, stageSize.width);
-    const yPct = pixelToPct(pointer.y / zoom, stageSize.height);
-
+  const placeAtPoint = useCallback((xPct: number, yPct: number) => {
+    if (!placing) return;
     if (placing.type === 'db') {
       const room = findContainingRoom(xPct, yPct, rooms);
       setSwitchboard((prev) => ({ ...prev, x_pct: xPct, y_pct: yPct, room_id: room?.id ?? prev.room_id, room_name: room?.name ?? prev.room_name, wall: room ? deriveWall(xPct, yPct, room) : prev.wall }));
@@ -193,7 +201,14 @@ export function PlacementEditor({
       // Focus on the first socket of the newly placed room
       if (newSockets.length > 0) { setSelectedSocket(newSockets[0].socket_id); setShowDbPanel(false); }
     }
-  }, [placing, stageSize, rooms, socketsByRoom, zoom]);
+  }, [placing, rooms, socketsByRoom]);
+
+  const handleStageClick = useCallback((e: KonvaEventObject<MouseEvent | TouchEvent>) => {
+    if (!placing) { setSelectedSocket(null); setShowDbPanel(false); return; }
+    const stage = e.target.getStage(); if (!stage) return;
+    const pointer = stage.getPointerPosition(); if (!pointer) return;
+    placeAtPoint(pixelToPct(pointer.x / zoom, stageSize.width), pixelToPct(pointer.y / zoom, stageSize.height));
+  }, [placing, stageSize, zoom, placeAtPoint]);
 
   const handleSocketDragEnd = useCallback((socketId: string, e: KonvaEventObject<DragEvent>) => {
     const xPct = pixelToPct(e.target.x() / zoom, stageSize.width);
@@ -265,7 +280,7 @@ export function PlacementEditor({
       <h2>Place sockets &amp; distribution board</h2>
 
       {/* Static instruction bar — always visible */}
-      <div className={`instruction-bar ${placing ? "active" : ""}`}>
+      <div className={`instruction-bar ${placing ? "active" : ""}`} role="status">
         <span>{instructionText}</span>
         {placing && <button className="banner-cancel" onClick={() => setPlacing(null)}>Cancel</button>}
       </div>
@@ -283,6 +298,7 @@ export function PlacementEditor({
               <div className="room-card-count">{isPlaced ? `${placed} placed` : `${proposed} sockets`}</div>
               {!isPlaced && proposed > 0 && (
                 <button className={`room-card-btn ${isPlacing ? "active" : ""}`}
+                  aria-label={`Place sockets in ${room.name}`} aria-pressed={isPlacing}
                   onClick={() => setPlacing(isPlacing ? null : { type: 'room', roomId: room.id })}>
                   {isPlacing ? "Click map ▸" : "Place ▸"}
                 </button>
@@ -296,11 +312,25 @@ export function PlacementEditor({
           <div className="room-card-count">{dbPlaced ? "✓ Placed" : "Not placed"}</div>
           {!dbPlaced && (
             <button className={`room-card-btn ${placing?.type === 'db' ? "active" : ""}`}
+              aria-label="Place distribution board" aria-pressed={placing?.type === 'db'}
               onClick={() => setPlacing(placing?.type === 'db' ? null : { type: 'db' })}>
               {placing?.type === 'db' ? "Click map ▸" : "Place ▸"}
             </button>
           )}
         </div>
+
+        {placing && (
+          <form className="point-controls" onSubmit={(event) => {
+            event.preventDefault();
+            const x = Number(point.x), y = Number(point.y);
+            if (point.x !== "" && point.y !== "" && Number.isFinite(x) && Number.isFinite(y) && x >= 0 && x <= 100 && y >= 0 && y <= 100) placeAtPoint(x, y);
+          }}>
+            <p>Use the plan, or choose a point with these keyboard controls. Percentages describe image position, not physical measurements.</p>
+            <label className="form-field"><span>Horizontal position (%)</span><input type="number" min="0" max="100" step="0.5" required value={point.x} onChange={(event) => setPoint((previous) => ({ ...previous, x: event.target.value }))}/></label>
+            <label className="form-field"><span>Vertical position (%)</span><input type="number" min="0" max="100" step="0.5" required value={point.y} onChange={(event) => setPoint((previous) => ({ ...previous, y: event.target.value }))}/></label>
+            <button className="btn" type="submit" disabled={!image}>Place at point</button>
+          </form>
+        )}
       </div>
 
       {/* Toolbar with zoom */}
@@ -413,8 +443,19 @@ export function PlacementEditor({
             </Stage>
           )}
         </div>
-        {!image && <div className="placement-loading"><div className="pulse-ring" /><p className="muted">Loading…</p></div>}
+        {!image && <div className="placement-loading" role="status"><p className="muted">{imageError ? "This file cannot be displayed as an interactive image. Go back to your plan and choose a PNG, JPEG or WebP version. Your room review remains available." : "Opening your floor-plan image…"}</p></div>}
       </div>
+
+      {(sockets.length > 0 || dbPlaced) && <label className="form-field edit-selection"><span>Edit a placed item</span>
+        <select value={showDbPanel ? "distribution-board" : selectedSocket || ""} onChange={(event) => {
+          const board = event.target.value === "distribution-board";
+          setShowDbPanel(board); setSelectedSocket(board ? null : event.target.value || null); setPlacing(null);
+        }}>
+          <option value="">Choose an item</option>
+          {sockets.map((socket) => <option key={socket.socket_id} value={socket.socket_id}>{socket.socket_id} · {socket.room_name}</option>)}
+          {dbPlaced && <option value="distribution-board">Distribution board</option>}
+        </select>
+      </label>}
 
       {/* Socket detail panel */}
       {selectedData && (
@@ -425,6 +466,18 @@ export function PlacementEditor({
             <button className="modal-close" onClick={() => setSelectedSocket(null)} aria-label="Close">×</button>
           </div>
           <div className="placement-panel-body">
+            <div className="panel-row">
+              <label className="form-field"><span>Horizontal position (%)</span><input type="number" min="0" max="100" step="0.5" value={selectedData.x_pct} onChange={(event) => {
+                const value = event.target.valueAsNumber; if (!Number.isFinite(value) || value < 0 || value > 100) return;
+                const room = findContainingRoom(value, selectedData.y_pct, rooms);
+                updateSocket(selectedData.socket_id, { x_pct: value, wall: room ? deriveWall(value, selectedData.y_pct, room) : selectedData.wall, room_id: room?.id ?? selectedData.room_id, room_name: room?.name ?? selectedData.room_name });
+              }}/></label>
+              <label className="form-field"><span>Vertical position (%)</span><input type="number" min="0" max="100" step="0.5" value={selectedData.y_pct} onChange={(event) => {
+                const value = event.target.valueAsNumber; if (!Number.isFinite(value) || value < 0 || value > 100) return;
+                const room = findContainingRoom(selectedData.x_pct, value, rooms);
+                updateSocket(selectedData.socket_id, { y_pct: value, wall: room ? deriveWall(selectedData.x_pct, value, room) : selectedData.wall, room_id: room?.id ?? selectedData.room_id, room_name: room?.name ?? selectedData.room_name });
+              }}/></label>
+            </div>
             <div className="panel-row">
               <label className="form-field" style={{ flex: 1 }}>
                 <span>Type</span>
@@ -541,7 +594,7 @@ export function PlacementEditor({
 
       <div className="compliance-panel">
         <div className="compliance-head">
-          <strong>Compliance check</strong>
+          <strong>Automated standards checks</strong>
           <span className={`compliance-score ${compliance.errors > 0 ? "err" : compliance.warnings > 0 ? "warn" : "ok"}`}>
             {compliance.score}%
           </span>
@@ -549,6 +602,7 @@ export function PlacementEditor({
             {compliance.errors} error{compliance.errors === 1 ? "" : "s"} · {compliance.warnings} warning{compliance.warnings === 1 ? "" : "s"}
           </span>
         </div>
+        <p className="muted sm">Passing these checks is not professional approval. A qualified electrician must verify the complete design.</p>
         {compliance.issues.length === 0 ? (
           <p className="muted sm compliance-empty">✓ All {compliance.checks} checks pass for the selected standards.</p>
         ) : (
@@ -585,7 +639,7 @@ export function PlacementEditor({
 
       <div className="btn-row">
         <button className="btn ghost" onClick={onBack}>← Back</button>
-        <button className="btn primary" disabled={sockets.length === 0} onClick={() => onConfirm(sockets, switchboard)}>Confirm placement →</button>
+        <button className="btn primary" disabled={sockets.length === 0} onClick={() => onConfirm(sockets, switchboard)}>{retry ? "Retry calculation" : "Confirm placement"} →</button>
       </div>
     </section>
   );

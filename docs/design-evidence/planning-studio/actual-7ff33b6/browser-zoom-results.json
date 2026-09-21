@@ -1,0 +1,94 @@
+{
+  "source": "7ff33b687e380fbd94b831bf104c285d8da18845",
+  "method": "Native Chromium chrome.tabs.setZoom(2) in an isolated temporary profile; no CSS zoom or DPR emulation",
+  "browserZoom": 2,
+  "before": {
+    "width": 1422,
+    "dpr": 1
+  },
+  "after": {
+    "width": 711,
+    "dpr": 2
+  },
+  "phases": [
+    {
+      "phase": "upload",
+      "innerWidth": 711,
+      "scrollWidth": 711,
+      "dpr": 2,
+      "contentSizeDIP": {
+        "x": 0,
+        "y": 0,
+        "width": 1422,
+        "height": 2294
+      },
+      "contentSizeCSS": {
+        "x": 0,
+        "y": 0,
+        "width": 711,
+        "height": 1147
+      }
+    },
+    {
+      "phase": "review",
+      "innerWidth": 711,
+      "scrollWidth": 711,
+      "dpr": 2,
+      "contentSizeDIP": {
+        "x": 0,
+        "y": 0,
+        "width": 1422,
+        "height": 4017
+      },
+      "contentSizeCSS": {
+        "x": 0,
+        "y": 0,
+        "width": 711,
+        "height": 2008
+      }
+    },
+    {
+      "phase": "placement",
+      "innerWidth": 711,
+      "scrollWidth": 711,
+      "dpr": 2,
+      "contentSizeDIP": {
+        "x": 0,
+        "y": 0,
+        "width": 1422,
+        "height": 4930
+      },
+      "contentSizeCSS": {
+        "x": 0,
+        "y": 0,
+        "width": 711,
+        "height": 2465
+      }
+    },
+    {
+      "phase": "results",
+      "innerWidth": 711,
+      "scrollWidth": 711,
+      "dpr": 2,
+      "contentSizeDIP": {
+        "x": 0,
+        "y": 0,
+        "width": 1422,
+        "height": 4517
+      },
+      "contentSizeCSS": {
+        "x": 0,
+        "y": 0,
+        "width": 711,
+        "height": 2258
+      }
+    }
+  ],
+  "captureMethod": "CDP full content in device-independent pixels (native zoom changes DIP/CSS ratio)",
+  "keyboardUploadAndPrimaryJourneyPassed": true,
+  "limitations": [
+    "Chromium only",
+    "Synthetic backend",
+    "No physical device or screen reader assessment"
+  ]
+}
