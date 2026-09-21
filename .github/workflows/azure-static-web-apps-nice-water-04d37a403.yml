@@ -67,54 +67,6 @@ jobs:
           npm run build
           npm run build --prefix api
 
-  baseline_reproduction:
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: c285ccf561592c79cbb6e7f35c28c2d37c9b99ad
-
-      - uses: actions/setup-node@v5
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install exact baseline dependency trees
-        run: |
-          npm ci
-          npm ci --prefix api
-
-      - name: Confirm the five original Table Storage test failures
-        run: |
-          set +e
-          npm test -- --reporter=json --outputFile=baseline-tests.json
-          test_exit=$?
-          set -e
-          test "$test_exit" -eq 1
-          node --input-type=module <<'NODE'
-          import assert from 'node:assert/strict';
-          import { readFileSync } from 'node:fs';
-          const results = JSON.parse(readFileSync('baseline-tests.json', 'utf8'));
-          const failures = results.testResults.flatMap(file =>
-            file.assertionResults.filter(test => test.status === 'failed'));
-          const expected = [
-            'feedback endpoints creates feedback and returns 201',
-            'feedback endpoints lists feedback entries',
-            'feedback endpoints returns 404 when updating missing feedback item',
-            'feedback endpoints updates feedback status',
-            'log-login endpoint logs login and returns success',
-          ];
-          assert.equal(results.numTotalTests, 98);
-          assert.equal(results.numFailedTests, 5);
-          assert.equal(failures.length, expected.length);
-          for (const name of expected) {
-            assert(failures.some(test => test.fullName.endsWith(name)), `Missing failure: ${name}`);
-          }
-          console.log(JSON.stringify(failures.map(({ fullName, failureMessages }) =>
-            ({ fullName, failureMessages })), null, 2));
-          NODE
-
   # ── Build & Deploy ─────────────────────────────────────────────────
   build_and_deploy_job:
     needs: quality
