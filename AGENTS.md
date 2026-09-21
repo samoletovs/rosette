@@ -41,6 +41,9 @@ rosette/
 
 ## Coding Standards
 
+- Canonical design brief: [`.impeccable.md`](.impeccable.md). The owner chose **A — Planning studio** on 2026-09-21. Preserve the original concepts as exploration history.
+- UI PRs require source-bound evidence and independent review; see [`docs/design-evidence/README.md`](docs/design-evidence/README.md). PR-only gate integration is part of the pilot and is not installed yet.
+
 - TypeScript strict mode enabled
 - All API functions return proper HTTP status codes (400, 413, 500)
 - Input validation: check required fields, enforce size limits
