@@ -29,7 +29,8 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          # On PRs, test the same synthetic merge commit that preview deployment uses.
+          ref: ${{ github.sha }}
 
       - uses: actions/setup-python@v6
         with:
@@ -38,7 +39,7 @@ jobs:
       - name: Test design evidence enforcement
         run: python tests/test_design_gate.py
 
-      # PR-only: the reviewed source's ancestry does not survive a squash merge.
+      # PR merges retain reviewed-source ancestry; the later squash on main does not.
       - name: Require source-bound evidence for UI changes
         if: github.event_name == 'pull_request'
         env:
@@ -106,6 +107,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
+          ref: ${{ github.sha }}
           submodules: true
           lfs: false
 

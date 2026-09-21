@@ -3,11 +3,18 @@ import { describe, expect, it } from "vitest";
 
 const workflow = readFileSync(new URL("../.github/workflows/azure-static-web-apps-nice-water-04d37a403.yml", import.meta.url), "utf8");
 const quality = workflow.split("  quality:")[1].split("  build_and_deploy_job:")[0];
+const deployment = workflow.split("  build_and_deploy_job:")[1].split("  close_pull_request_job:")[0];
+
+function checkoutRef(job: string): string | undefined {
+  const checkout = job.split("- uses: actions/checkout@v5")[1]?.split(/\r?\n {6}- /)[0];
+  return checkout?.match(/^\s*ref:\s*(.+)$/m)?.[1];
+}
 
 describe("source-bound design evidence workflow", () => {
-  it("fetches the full history and validates the PR source head, not a synthetic merge", () => {
+  it("tests and deploys the same event commit, including synthetic PR merges", () => {
     expect(quality).toContain("fetch-depth: 0");
-    expect(quality).toContain("ref: ${{ github.event.pull_request.head.sha || github.sha }}");
+    expect(checkoutRef(quality)).toBe("${{ github.sha }}");
+    expect(checkoutRef(deployment)).toBe(checkoutRef(quality));
   });
   it("runs source ancestry enforcement only on pull requests, not after squash on main", () => {
     expect(quality).toMatch(/name: Require source-bound evidence for UI changes\s+if: github\.event_name == 'pull_request'/);

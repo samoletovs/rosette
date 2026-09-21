@@ -165,6 +165,48 @@ class DesignGateTests(unittest.TestCase):
         self.commit("delete UI")
         self.assertEqual(self.run_gate().returncode, 1)
 
+    def test_synthetic_merge_preserves_review_ancestry_for_an_unchanged_tree(self) -> None:
+        self.git("switch", "-c", "pr-branch")
+        source = self.ui_commit()
+        self.receipt(source)
+        self.commit("reviewed evidence")
+        self.git("switch", "-c", "base-update", self.base)
+        self.git("commit", "--allow-empty", "-qm", "base history advance")
+        base = self.git("rev-parse", "HEAD")
+        self.git("switch", "pr-branch")
+        self.git("merge", "--no-ff", "-m", "synthetic PR merge", "base-update")
+        self.git("merge-base", "--is-ancestor", source, "HEAD")
+        result = self.run_gate(base)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_nonconflicting_base_ui_drift_invalidates_review_on_the_merge_tree(self) -> None:
+        self.git("switch", "-c", "pr-branch")
+        source = self.ui_commit()
+        self.receipt(source)
+        self.commit("reviewed evidence")
+        self.git("switch", "-c", "base-update", self.base)
+        self.write("src/index.css", "body { color: blue; }\n")
+        base = self.commit("independent base UI change")
+        self.git("switch", "pr-branch")
+        self.git("merge", "--no-ff", "-m", "synthetic PR merge", "base-update")
+        self.git("merge-base", "--is-ancestor", source, "HEAD")
+        result = self.run_gate(base)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("source changed since review", result.stderr)
+
+    def test_backend_only_pr_on_a_changed_ui_base_needs_no_new_visual_receipt(self) -> None:
+        self.git("switch", "-c", "pr-branch")
+        self.write("api/src/example.ts", "export const backend = true;\n")
+        self.commit("backend-only PR")
+        self.git("switch", "-c", "base-update", self.base)
+        self.write("src/index.css", "body { color: blue; }\n")
+        base = self.commit("independent base UI change")
+        self.git("switch", "pr-branch")
+        self.git("merge", "--no-ff", "-m", "synthetic PR merge", "base-update")
+        result = self.run_gate(base)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("No product UI paths changed", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

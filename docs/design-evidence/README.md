@@ -43,7 +43,9 @@ or type-check pass.
 
 The existing quality job now:
 
-1. Fetches full history and checks the PR head revision, not a synthetic merge.
+1. Fetches full history and checks the exact event SHA, also explicitly used by
+   deployment. On PRs this is the synthetic merge, so quality, evidence and the
+   preview deployment cover the same tree.
 2. Runs the offline gate regression suite.
 3. On **pull requests only**, detects changed `src/`, `public/`, entry/config/
    dependency/brief files and gate code, then requires a current receipt.
@@ -53,6 +55,13 @@ Backend-only changes under `api/` do not require visual evidence. UI additions,
 edits, deletions, missing Git history, missing receipts, and stale receipts are
 not silently skipped. PR evidence-only updates trigger CI again. Pushes to `main`
 do not run source-ancestry validation, since squash merging changes ancestry.
+
+A synthetic PR merge retains the reviewed branch commit as an ancestor. It
+passes only when its non-evidence tree still matches that reviewed source.
+Non-conflicting base-branch drift on a UI PR therefore blocks stale evidence
+before preview deployment. Update the isolated task branch with the current
+base and repeat capture/review; do not merely substitute a SHA in the receipt.
+Backend-only PRs still need no new visual receipt for inherited base UI changes.
 
 For a held branch, the existing workflow's manual dispatch runs quality
 validation **without deployment**. Its manual build records
@@ -78,9 +87,10 @@ python tests\test_design_gate.py
 python scripts\check-design-pr.py --repo . --base <full-PR-base-SHA>
 ```
 
-Eight offline regression tests exercise the actual entry point: missing
+Eleven offline regression tests exercise the actual entry point: missing
 evidence, backend-only scope, evidence-only commits, stale committed source,
-concealed staged source, modified PNGs, missing history, and deleted UI files.
+concealed staged source, modified PNGs, missing history, deleted UI files, and
+three synthetic-merge/base-drift cases.
 The generated PNGs are test fixtures inside `.test-artifacts/`, never claimed
 as rendered product evidence.
 
