@@ -6,6 +6,7 @@ export default defineConfig({
     alias: {
       '@azure/functions': fileURLToPath(new URL('./tests/mocks/azure-functions.ts', import.meta.url)),
       '@azure/storage-blob': fileURLToPath(new URL('./tests/mocks/azure-storage-blob.ts', import.meta.url)),
+      '@azure/data-tables': fileURLToPath(new URL('./tests/mocks/azure-data-tables.ts', import.meta.url)),
       openai: fileURLToPath(new URL('./tests/mocks/openai.ts', import.meta.url)),
     },
   },

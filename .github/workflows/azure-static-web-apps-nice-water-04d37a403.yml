@@ -53,6 +53,13 @@ jobs:
       - name: Test
         run: npm test -- --coverage
 
+      - name: Install API dependencies
+        run: npm ci --prefix api
+
+      # Nested SDK installs must resolve to the same test doubles as a root-only install.
+      - name: Test with API dependencies
+        run: npm test
+
   # ── Build & Deploy ─────────────────────────────────────────────────
   build_and_deploy_job:
     needs: quality

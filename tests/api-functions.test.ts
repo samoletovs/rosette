@@ -280,7 +280,40 @@ describe('feedback endpoints', () => {
     });
 
     expect(response.status).toBe(201);
+    expect(mocks.tableCreateEntityMock).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        partitionKey: 'feedback',
+        rowKey: response.jsonBody.id,
+        type: 'feature',
+        title: 'Need feature',
+        description: 'Please add X',
+        status: 'open',
+      }),
+    );
+  });
+
+  it('creates feedback when the table already exists', async () => {
+    mocks.tableCreateTableMock.mockRejectedValueOnce({ statusCode: 409 });
+
+    const response = await getHandler('feedbackSubmit')({
+      json: async () => ({ title: 'Need feature', description: 'Please add X', type: 'feature' }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(mocks.tableCreateTableMock).toHaveBeenCalledExactlyOnceWith('feedback');
     expect(mocks.tableCreateEntityMock).toHaveBeenCalledOnce();
+  });
+
+  it('returns 500 without writing feedback when table creation fails', async () => {
+    mocks.tableCreateTableMock.mockRejectedValueOnce({ statusCode: 503 });
+
+    const response = await getHandler('feedbackSubmit')({
+      json: async () => ({ title: 'Need feature', description: 'Please add X', type: 'feature' }),
+    });
+
+    expect(response.status).toBe(500);
+    expect(mocks.tableCreateTableMock).toHaveBeenCalledExactlyOnceWith('feedback');
+    expect(mocks.tableCreateEntityMock).not.toHaveBeenCalled();
   });
 
   it('lists feedback entries', async () => {
@@ -336,7 +369,11 @@ describe('feedback endpoints', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(mocks.tableUpdateEntityMock).toHaveBeenCalledOnce();
+    expect(mocks.tableGetEntityMock).toHaveBeenCalledExactlyOnceWith('feedback', 'abc');
+    expect(mocks.tableUpdateEntityMock).toHaveBeenCalledExactlyOnceWith(
+      { partitionKey: 'feedback', rowKey: 'abc', status: 'in-progress' },
+      'Merge',
+    );
   });
 });
 
@@ -363,6 +400,14 @@ describe('log-login endpoint', () => {
 
     expect(response.status).toBe(200);
     expect(response.jsonBody.logged).toBe(true);
-    expect(mocks.tableCreateEntityMock).toHaveBeenCalledOnce();
+    expect(mocks.tableCreateTableMock).toHaveBeenCalledExactlyOnceWith('logins');
+    expect(mocks.tableCreateEntityMock).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        partitionKey: 'user@example.com',
+        email: 'user@example.com',
+        provider: 'google',
+        userId: '123',
+      }),
+    );
   });
 });

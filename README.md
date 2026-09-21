@@ -52,6 +52,11 @@ npm test -- --coverage
 npm run build
 ```
 
+Unit tests mock external services and support both root-only dependencies and a
+full install including `api/node_modules`. CI tests both layouts. SDK aliases in
+`vitest.config.ts` keep API imports and test mocks on the same module regardless
+of where the real SDK is installed.
+
 ## Status
 
 **Active research experiment.** Floor-plan analysis, standards lookup,
