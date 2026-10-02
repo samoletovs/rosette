@@ -2,6 +2,14 @@ name: CI/CD
 
 on:
   workflow_dispatch:
+    inputs:
+      delivery_pr:
+        description: 'Recover production delivery for one already merged PR (default branch only)'
+        required: false
+        type: string
+  workflow_run:
+    workflows: ["Auto-merge Dependabot PRs", "Auto-merge Copilot PRs"]
+    types: [completed]
   push:
     branches:
       - main
@@ -17,13 +25,22 @@ on:
 
 # Keep PR cleanup and manual validation separate from production deployments.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}${{ github.event_name == 'workflow_dispatch' && '-manual' || '' }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}${{ github.event_name == 'workflow_dispatch' && !inputs.delivery_pr && '-manual' || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
 
 jobs:
   # ── Quality Gate ────────────────────────────────────────────────────
   quality:
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    outputs:
+      source: ${{ steps.delivery.outputs.source || github.sha }}
+      pr: ${{ steps.delivery.outputs.pr }}
+      merge: ${{ steps.delivery.outputs.merge }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -36,7 +53,27 @@ jobs:
         with:
           python-version: '3.13'
 
+      - name: Resolve confirmed bot merge from trusted default-branch code
+        id: delivery
+        if: github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.delivery_pr)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/merged-pr-delivery.py resolve
+
+      - name: Check out the current merged production source
+        if: steps.delivery.outputs.source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.delivery.outputs.source }}
+          persist-credentials: false
+
+      - name: Test merged-PR delivery policy
+        if: github.event_name != 'workflow_run' || steps.delivery.outputs.pr
+        run: python tests/test_merged_pr_delivery.py
+
       - name: Test design evidence enforcement
+        if: github.event_name != 'workflow_run' || steps.delivery.outputs.pr
         run: python tests/test_design_gate.py
 
       # PR merges retain reviewed-source ancestry; the later squash on main does not.
@@ -47,17 +84,21 @@ jobs:
         run: python scripts/check-design-pr.py --repo . --base "$DESIGN_BASE_SHA"
 
       - uses: actions/setup-node@v5
+        if: github.event_name != 'workflow_run' || steps.delivery.outputs.pr
         with:
           node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
+        if: github.event_name != 'workflow_run' || steps.delivery.outputs.pr
         run: npm ci
 
       - name: Lint
+        if: github.event_name != 'workflow_run' || steps.delivery.outputs.pr
         run: npm run lint
 
       - name: Type check
+        if: github.event_name != 'workflow_run' || steps.delivery.outputs.pr
         run: npx tsc --noEmit
 
       # 96 unit tests existed in this repo and no workflow ran any of them, so
@@ -65,13 +106,16 @@ jobs:
       # this job already pays for checkout and `npm ci`, which is the expensive
       # part, so the marginal cost is the ~2s the suite takes and no extra run.
       - name: Test
+        if: github.event_name != 'workflow_run' || steps.delivery.outputs.pr
         run: npm test -- --coverage
 
       - name: Install API dependencies
+        if: github.event_name != 'workflow_run' || steps.delivery.outputs.pr
         run: npm ci --prefix api
 
       # Nested SDK installs must resolve to the same test doubles as a root-only install.
       - name: Test with API dependencies
+        if: github.event_name != 'workflow_run' || steps.delivery.outputs.pr
         run: npm test
 
       - name: Build frontend and API for manual validation
@@ -80,34 +124,39 @@ jobs:
         run: |
           npm run build
           npm run build --prefix api
-          printf '%s\n' "$GITHUB_SHA" > dist/source-revision.txt
+          git rev-parse HEAD > dist/source-revision.txt
 
       - name: Save exact-source validation preview
         if: github.event_name == 'workflow_dispatch' && steps.validation_build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
-          name: rosette-preview-${{ github.sha }}
+          name: rosette-preview-${{ steps.delivery.outputs.source || github.sha }}
           path: dist/
           retention-days: 7
 
   # ── Build & Deploy ─────────────────────────────────────────────────
   build_and_deploy_job:
     needs: quality
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
     # Fork PRs get a read-only token and no secrets, so the SWA token is empty
     # and this job could only fail for them. Phrased negatively on purpose:
     # github.event.pull_request is null on push/workflow_run, so a bare
     # `head.repo.full_name == github.repository` reads false there and would
     # disable deployment entirely. This constrains pull_request events only.
     if: >-
-      (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed'))
+      (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+       || ((github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch') && needs.quality.outputs.pr))
       && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-      && github.actor != 'dependabot[bot]'
+      && (github.actor != 'dependabot[bot]' || github.event_name == 'workflow_run')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ needs.quality.outputs.source }}
           submodules: true
           lfs: false
 
@@ -122,6 +171,14 @@ jobs:
           npm ci
           npm run build
           cp staticwebapp.config.json dist/
+          git rev-parse HEAD > dist/source-revision.txt
+
+      - name: Refuse an obsolete production source
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHECKED_SOURCE: ${{ needs.quality.outputs.source }}
+        run: python scripts/merged-pr-delivery.py current --source "$CHECKED_SOURCE"
 
       - name: Build And Deploy
         id: builddeploy
@@ -135,6 +192,26 @@ jobs:
           output_location: ""
           skip_app_build: true
           api_build_command: "npm install && npm run build"
+
+      - name: Prepare verified merged preview cleanup
+        id: cleanup
+        if: needs.quality.outputs.pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MERGED_PR: ${{ needs.quality.outputs.pr }}
+          MERGE_SHA: ${{ needs.quality.outputs.merge }}
+        run: python scripts/merged-pr-delivery.py cleanup --pr "$MERGED_PR" --merge "$MERGE_SHA"
+
+      - name: Close the confirmed merged PR preview
+        if: needs.quality.outputs.pr
+        uses: Azure/static-web-apps-deploy@v1
+        env:
+          GITHUB_EVENT_PATH: ${{ steps.cleanup.outputs.event_path }}
+          GITHUB_EVENT_NAME: pull_request
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_NICE_WATER_04D37A403 }}
+          action: close
+          app_location: /
 
       - name: Notify Telegram (success)
         if: success() && github.event_name == 'push'
