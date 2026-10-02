@@ -14,7 +14,8 @@ describe("source-bound design evidence workflow", () => {
   it("tests and deploys the same event commit, including synthetic PR merges", () => {
     expect(quality).toContain("fetch-depth: 0");
     expect(checkoutRef(quality)).toBe("${{ github.sha }}");
-    expect(checkoutRef(deployment)).toBe(checkoutRef(quality));
+    expect(quality).toContain("source: ${{ steps.delivery.outputs.source || github.sha }}");
+    expect(checkoutRef(deployment)).toBe("${{ needs.quality.outputs.source }}");
   });
   it("runs source ancestry enforcement only on pull requests, not after squash on main", () => {
     expect(quality).toMatch(/name: Require source-bound evidence for UI changes\s+if: github\.event_name == 'pull_request'/);
@@ -30,8 +31,14 @@ describe("source-bound design evidence workflow", () => {
     expect(quality).not.toContain("continue-on-error");
   });
   it("labels a manual build artifact with the exact served source revision", () => {
-    expect(quality).toContain('printf \'%s\\n\' "$GITHUB_SHA" > dist/source-revision.txt');
-    expect(quality).toContain("name: rosette-preview-${{ github.sha }}");
+    expect(quality).toContain("git rev-parse HEAD > dist/source-revision.txt");
+    expect(quality).toContain("name: rosette-preview-${{ steps.delivery.outputs.source || github.sha }}");
     expect(quality).toContain("steps.validation_build.outcome == 'success'");
+  });
+  it("requires a verified merged PR before manual recovery can deploy", () => {
+    const condition = deployment.split("    if: >-")[1].split("    runs-on:")[0];
+    expect(condition).toContain("github.event_name == 'workflow_dispatch') && needs.quality.outputs.pr");
+    expect(quality).toContain("run: python scripts/merged-pr-delivery.py resolve");
+    expect(deployment).toContain('current --source "$CHECKED_SOURCE"');
   });
 });
