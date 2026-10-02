@@ -26,7 +26,8 @@ on:
 # Keep PR cleanup and manual validation separate from production deployments.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}${{ github.event_name == 'workflow_dispatch' && !inputs.delivery_pr && '-manual' || '' }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+  cancel-in-progress: false
+  queue: max
 
 permissions:
   contents: read
@@ -204,14 +205,17 @@ jobs:
 
       - name: Close the confirmed merged PR preview
         if: needs.quality.outputs.pr
-        uses: Azure/static-web-apps-deploy@v1
+        timeout-minutes: 5
         env:
-          GITHUB_EVENT_PATH: ${{ steps.cleanup.outputs.event_path }}
-          GITHUB_EVENT_NAME: pull_request
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_NICE_WATER_04D37A403 }}
-          action: close
-          app_location: /
+          DEPLOYMENT_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_NICE_WATER_04D37A403 }}
+          CLEANUP_EVENT: ${{ steps.cleanup.outputs.event_path }}
+        run: |
+          set -euo pipefail
+          : "${DEPLOYMENT_TOKEN:?SWA token is required for verified preview cleanup}"
+          docker run --rm --env DEPLOYMENT_TOKEN --env DEPLOYMENT_PROVIDER=GitHub \
+            --volume "$GITHUB_WORKSPACE:/github/workspace:ro" \
+            --entrypoint /bin/staticsites/StaticSitesClient \
+            mcr.microsoft.com/appsvc/staticappsclient:stable close --event "$CLEANUP_EVENT"
 
       - name: Notify Telegram (success)
         if: success() && github.event_name == 'push'

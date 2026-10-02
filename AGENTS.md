@@ -80,7 +80,9 @@ the same mock even when `api/node_modules` is present.
 ## Deployment
 
 - Push to `main` triggers GitHub Actions → Azure SWA deploy
-- PR preview cleanup has a separate concurrency group from production; only superseded active PR runs may cancel an earlier run.
+- PR preview cleanup and ordinary manual validation have separate concurrency
+  groups from production. Runs queue without replacement (`queue: max`, at most
+  100 waiting runs) so a later no-op completion cannot lose a merged PR's delivery.
 - API builds separately in `api/` folder
 - Manual CI dispatch without `delivery_pr` validates lint, types, both test
   dependency layouts, and both builds; it never deploys and has a separate
@@ -90,6 +92,8 @@ the same mock even when `api/node_modules` is present.
   path uses the same checks automatically when `GITHUB_TOKEN` suppressed push
   events. Both paths pin and recheck the current default source, then close only
   the confirmed merged preview. Ordinary manual validation remains nondeploying.
+- Preview cleanup passes verified full PR metadata explicitly to the official
+  SWA client's `close --event`; reserved GitHub event variables are not overridden.
 - `scripts/merged-pr-delivery.py` and `tests/test_merged_pr_delivery.py` are shared
   governance copies; keep their policy and regression tests synchronized.
 - Telegram notification on success/failure

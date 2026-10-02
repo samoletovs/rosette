@@ -224,14 +224,37 @@ class TestMergedPRDelivery(unittest.TestCase):
                     "ref: ${{ needs.quality.outputs.source }}",
                     "python scripts/merged-pr-delivery.py current",
                     "python scripts/merged-pr-delivery.py cleanup",
-                    "GITHUB_EVENT_PATH: ${{ steps.cleanup.outputs.event_path }}",
+                    'close --event "$CLEANUP_EVENT"',
+                    "--env DEPLOYMENT_TOKEN",
+                    '--volume "$GITHUB_WORKSPACE:/github/workspace:ro"',
+                    "queue: max",
+                    "cancel-in-progress: false",
                     "github.event_name == 'workflow_dispatch' && !inputs.delivery_pr",
                     "needs.quality.outputs.pr",
                 ):
                     self.assertIn(required, text)
                 for forbidden in ("workflow_run.head_sha }}", "workflow_run.head_branch }}",
-                                  "download-artifact@", "schedule:", "--admin"):
+                                  "download-artifact@", "schedule:", "--admin",
+                                  "GITHUB_EVENT_PATH:", "GITHUB_EVENT_NAME:"):
                     self.assertNotIn(forbidden, text)
+
+    def test_pending_merge_is_not_displaced_by_a_later_noop_completion(self) -> None:
+        template = ROOT / "workflow-templates" / "swa-deploy.yml"
+        paths = [template] if template.is_file() else [
+            path for path in (ROOT / ".github" / "workflows").glob("*.yml")
+            if path.name in {"ci-cd.yml", "azure-static-web-apps-nice-water-04d37a403.yml"}
+        ]
+        for path in paths:
+            text = path.read_text(encoding="utf-8")
+            concurrency = text.split("\nconcurrency:\n", 1)[1].split("\n\n", 1)[0]
+            self.assertIn("queue: max", concurrency)
+            self.assertIn("cancel-in-progress: false", concurrency)
+            pending = []
+            for completion in ("confirmed-merge-B", "unrelated-noop-C"):
+                if "queue: max" not in concurrency:
+                    pending.clear()
+                pending.append(completion)
+            self.assertEqual(pending, ["confirmed-merge-B", "unrelated-noop-C"])
 
 
 if __name__ == "__main__":
