@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "source_commit": "f782f5fd6e699d9ca11e2d4da0c2b1007838261d",
+  "brief_sha256": "989121a272db525728c1a52a29888eca819b0b5e7ff67fe34f4bd30b10bdd282",
+  "direction": {
+    "mode": "reuse",
+    "selected": "A - Planning studio",
+    "owner_decision": "Retain direction A approved by the owner on 2026-09-21 and recorded in the unchanged .impeccable.md. The owner requested processing the open PR queue; this is dependency maintenance, not a new design direction."
+  },
+  "author": "Dependabot and fleet maintenance session f095daee-3103-42e8-abc0-4df0b6e7ec7d",
+  "reviewer": "Independent evidence-review agent b69df03b-78af-4055-80df-fd3d10cde3a3",
+  "review_notes": "Independent read-only review passed for the five-update source b4e607b and a final follow-up passed on f782f5f after adding the brace-expansion and DOMPurify patches. The reviewer verified the exact lockfile delta, remote/local source, successful CI run 37004876673, artifact 11225527147, served build marker, refreshed browser report, compiled asset sizes and representative screenshots. No blocking findings within the bounded maintenance scope. Browser execution was performed by the maintenance agent; the reviewer inspected its evidence rather than claiming an independent rerun. The original design gate is unchanged and must pass separately.",
+  "unresolved_findings": [],
+  "checks": {
+    "primary_task": {
+      "status": "pass",
+      "evidence": "Exact-source CI run 37004876673 passed lint/types, all 116 Vitest tests in both root-only and API-installed layouts, and frontend/API builds. The unmodified test_planning_studio.py ran against its source-stamped compiled artifact and exercised upload, review, placement, calculation, results, language/country behavior, SVG/specification downloads and desktop PDF export. See browser-results.json."
+    },
+    "keyboard": {
+      "status": "pass",
+      "evidence": "Existing harness assertions exercised Enter/Space activation, visible upload controls, native coordinate-entry placement and Escape dismissal. This is coverage of the tested controls, not an exhaustive keyboard-only traversal."
+    },
+    "responsive": {
+      "status": "pass",
+      "evidence": "Fresh complete journeys and captures passed at 1440px desktop and 390px mobile. Existing results-page overflow assertions also passed at 320px and 768px; long-content and 200% root-text cases retained their task data without page-wide overflow."
+    },
+    "states": {
+      "status": "pass",
+      "evidence": "Analysis/calculation waiting and failures, explicit retries, empty analysis/review recovery and successful exports passed. Blocking the real Markdown chunk at both primary widths retained the completed plan, explicit plain-text degradation and downloads with no unhandled page errors. Review, placement, results and formatter-failure PNGs are retained as the representative visual set."
+    },
+    "accessibility": {
+      "status": "pass",
+      "evidence": "Measured HTML text contrast across 13 recorded state/viewport cases had a minimum of 5.01:1 and no failures. Declared border/focus tokens met their measured thresholds; 200% root-text enlargement had no page-wide overflow. The existing reduced-motion assertion passed. SVG/canvas/image-text contrast, native browser zoom, assistive technology and full WCAG conformance are not certified by this run."
+    },
+    "performance": {
+      "status": "pass",
+      "evidence": "Final artifact initial decoded JavaScript measured 263974 bytes at both primary widths, versus 263983 in the prior approved pilot. Placement, Markdown and PDF chunks remained absent before their relevant phase and worked when requested. Recorded asset sizes and lazy-feature manifests match the compiled artifact; no field performance or Lighthouse score is claimed."
+    },
+    "visual_intent": {
+      "status": "pass",
+      "evidence": "Independent inspection of the refreshed desktop/mobile review, placement, results and formatter-failure captures found no meaningful regression from approved direction A: paper/plaster/olive surfaces, editorial hierarchy, core actions and qualified-electrician-review framing remain intact. Application, styling and brief files are unchanged."
+    }
+  },
+  "screenshots": [
+    {
+      "viewport": "desktop",
+      "path": "docs/design-evidence/dependency-refresh-2026-10-02/desktop-review.png",
+      "sha256": "484915d415456b37d2a14fb7436593ae8c6a69365b249ada8ca8b19d846f7684"
+    },
+    {
+      "viewport": "mobile",
+      "path": "docs/design-evidence/dependency-refresh-2026-10-02/mobile-review.png",
+      "sha256": "d120facffcf77c291b01c3efa743c3b131d05c9f20e7a8a14b9083e2e9ceb022"
+    }
+  ],
+  "limitations": [
+    "Chromium with synthetic API-shaped fixtures; no live backend, authentication, payment, AI-quality or electrical-validity certification.",
+    "Targeted keyboard and responsive assertions, not exhaustive device or assistive-technology coverage.",
+    "No new native browser-zoom, screen-reader, physical-device, full WCAG or broad aesthetic certification.",
+    "SVG/canvas/image-text contrast and field performance remain outside the measured scope.",
+    "Manual CI built the evidence artifact but did not run the PR design gate; the unchanged source-bound gate is validated after recording this completed review."
+  ]
+}
