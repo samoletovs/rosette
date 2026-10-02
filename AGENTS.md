@@ -1,5 +1,9 @@
 # Rosette — AI Electric Socket Planner
 
+Feedback triage uses `gpt-6-luna` on the existing personal-agents Azure account,
+with reasoning disabled and a 300-token output ceiling. This retirement migration
+does not change the application's GPT-4o vision model.
+
 ## Overview
 
 AI-powered tool for planning electrical socket placement in Baltic properties, using GPT-4o vision for floor plan analysis and country-specific electrical standards (Latvia, Lithuania, Estonia).
