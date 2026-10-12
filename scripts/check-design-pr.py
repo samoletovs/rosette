@@ -17,6 +17,7 @@ UI_FILES = {
 DEPENDENCY_FIELDS = {
     "dependencies", "devDependencies", "optionalDependencies",
     "peerDependencies", "peerDependenciesMeta", "overrides", "resolutions",
+    "bundleDependencies", "bundledDependencies",
 }
 
 

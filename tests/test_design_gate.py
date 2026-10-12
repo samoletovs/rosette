@@ -129,6 +129,30 @@ class DesignGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("No product UI paths changed", result.stderr)
 
+    def test_bundle_dependencies_change_needs_no_visual_receipt(self) -> None:
+        self.write(
+            "package.json",
+            json.dumps({
+                "scripts": {"test": "vitest"},
+                "dependencies": {"react": "1.0.0"},
+                "bundleDependencies": ["react"],
+            }),
+        )
+        self.commit("bundle dependency")
+        self.assertEqual(self.run_gate().returncode, 0)
+
+    def test_bundled_dependencies_alias_needs_no_visual_receipt(self) -> None:
+        self.write(
+            "package.json",
+            json.dumps({
+                "scripts": {"test": "vitest"},
+                "dependencies": {"react": "1.0.0"},
+                "bundledDependencies": ["react"],
+            }),
+        )
+        self.commit("bundle dependency alias")
+        self.assertEqual(self.run_gate().returncode, 0)
+
     def test_package_script_change_still_requires_visual_receipt(self) -> None:
         self.write(
             "package.json",
