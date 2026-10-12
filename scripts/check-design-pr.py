@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import re
 import subprocess
@@ -9,10 +10,31 @@ import sys
 from pathlib import Path
 
 UI_FILES = {
-    "index.html", ".impeccable.md", "package.json", "package-lock.json",
+    "index.html", ".impeccable.md",
     "vite.config.ts", "tsconfig.json", "scripts/design-gate.py",
     "scripts/check-design-pr.py",
 }
+DEPENDENCY_FIELDS = {
+    "dependencies", "devDependencies", "optionalDependencies",
+    "peerDependencies", "peerDependenciesMeta", "overrides", "resolutions",
+}
+
+
+def package_metadata_changed(repo: Path, base: str) -> bool:
+    """Return whether package.json changed beyond dependency declarations."""
+    documents = []
+    for revision in (base, "HEAD"):
+        result = subprocess.run(
+            ["git", "-C", str(repo), "show", f"{revision}:package.json"],
+            check=False, capture_output=True, text=True,
+        )
+        if result.returncode:
+            return True
+        document = json.loads(result.stdout)
+        for field in DEPENDENCY_FIELDS:
+            document.pop(field, None)
+        documents.append(document)
+    return documents[0] != documents[1]
 
 
 def changed_ui_paths(repo: Path, base: str) -> list[str]:
@@ -22,10 +44,14 @@ def changed_ui_paths(repo: Path, base: str) -> list[str]:
         ["git", "-C", str(repo), "diff", "--name-only", "--no-renames", "-z", f"{base}...HEAD"],
         check=True, capture_output=True,
     )
-    return [
-        name for name in result.stdout.decode("utf-8").split("\0")
-        if name and (name.startswith(("src/", "public/")) or name in UI_FILES)
+    changed = [name for name in result.stdout.decode("utf-8").split("\0") if name]
+    relevant = [
+        name for name in changed
+        if name.startswith(("src/", "public/")) or name in UI_FILES
     ]
+    if "package.json" in changed and package_metadata_changed(repo, base):
+        relevant.append("package.json")
+    return relevant
 
 
 def check(repo: Path, base: str) -> int:
