@@ -40,6 +40,11 @@ class DesignGateTests(unittest.TestCase):
         self.git("config", "core.autocrlf", "false")
         self.write(".impeccable.md", "Approved test-only direction A.\n")
         self.write("src/App.tsx", "export const label = 'Before';\n")
+        self.write(
+            "package.json",
+            json.dumps({"scripts": {"test": "vitest"}, "dependencies": {"react": "1.0.0"}}),
+        )
+        self.write("package-lock.json", json.dumps({"lockfileVersion": 3}))
         for name in ("design-gate.py", "check-design-pr.py"):
             self.write(f"scripts/{name}", (ROOT / "scripts" / name).read_text(encoding="utf-8"))
         self.base = self.commit("base")
@@ -112,6 +117,62 @@ class DesignGateTests(unittest.TestCase):
         result = self.run_gate()
         self.assertEqual(result.returncode, 1)
         self.assertIn("Missing", result.stderr)
+
+    def test_dependency_only_change_needs_no_visual_receipt(self) -> None:
+        self.write(
+            "package.json",
+            json.dumps({"scripts": {"test": "vitest"}, "dependencies": {"react": "1.1.0"}}),
+        )
+        self.write("package-lock.json", json.dumps({"lockfileVersion": 3, "updated": True}))
+        self.commit("dependency refresh")
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("No product UI paths changed", result.stderr)
+
+    def test_bundle_dependencies_change_needs_no_visual_receipt(self) -> None:
+        self.write(
+            "package.json",
+            json.dumps({
+                "scripts": {"test": "vitest"},
+                "dependencies": {"react": "1.0.0"},
+                "bundleDependencies": ["react"],
+            }),
+        )
+        self.commit("bundle dependency")
+        self.assertEqual(self.run_gate().returncode, 0)
+
+    def test_bundled_dependencies_alias_needs_no_visual_receipt(self) -> None:
+        self.write(
+            "package.json",
+            json.dumps({
+                "scripts": {"test": "vitest"},
+                "dependencies": {"react": "1.0.0"},
+                "bundledDependencies": ["react"],
+            }),
+        )
+        self.commit("bundle dependency alias")
+        self.assertEqual(self.run_gate().returncode, 0)
+
+    def test_package_script_change_still_requires_visual_receipt(self) -> None:
+        self.write(
+            "package.json",
+            json.dumps({"scripts": {"test": "vitest", "build": "vite build"}, "dependencies": {"react": "1.0.0"}}),
+        )
+        self.commit("change package behavior")
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("package.json", result.stderr)
+
+    def test_dependency_change_does_not_hide_source_ui_change(self) -> None:
+        self.write(
+            "package.json",
+            json.dumps({"scripts": {"test": "vitest"}, "dependencies": {"react": "1.1.0"}}),
+        )
+        self.write("src/App.tsx", "export const label = 'Changed UI';\n")
+        self.commit("dependency and UI change")
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("src/App.tsx", result.stderr)
 
     def test_backend_only_change_needs_no_visual_receipt(self) -> None:
         self.write("api/src/example.ts", "export const backend = true;\n")
