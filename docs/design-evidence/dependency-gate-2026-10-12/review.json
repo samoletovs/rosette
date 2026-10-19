@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "source_commit": "cd4721f09dc10b1ae5e4bca3341e8a7ee2cc3b2e",
+  "brief_sha256": "989121a272db525728c1a52a29888eca819b0b5e7ff67fe34f4bd30b10bdd282",
+  "direction": {
+    "mode": "reuse",
+    "selected": "A - Planning studio",
+    "owner_decision": "Retain the already approved direction A. This PR changes CI classification only and makes no product UI change."
+  },
+  "author": "Copilot implementation session 8790f88b-fe46-4b8f-a22f-3bc2f8437d05",
+  "reviewer": "Independent code-review agent 5cca580c-6c72-4ba3-9990-9911da98d3e6",
+  "review_notes": "Independent read-only review inspected the exact gate diff and tests. It identified the omitted bundleDependencies and bundledDependencies fields as a blocking medium finding. Both aliases and focused regression cases were added; all 16 tests pass. The reviewer found no product UI change. Existing screenshots are reused because the rendered source is unchanged, not presented as a new browser run.",
+  "unresolved_findings": [],
+  "checks": {
+    "primary_task": {
+      "status": "pass",
+      "evidence": "The gate change is dependency-maintenance policy, not product UI. All 16 offline gate tests pass, including the reviewed bundled-dependency follow-up."
+    },
+    "keyboard": {
+      "status": "pass",
+      "evidence": "No product source, markup, focus behavior, or interaction code changed; keyboard behavior is byte-identical to main."
+    },
+    "responsive": {
+      "status": "pass",
+      "evidence": "No src/, public/, or configuration affecting rendered layout changed; the approved desktop and mobile direction remains unchanged."
+    },
+    "states": {
+      "status": "pass",
+      "evidence": "No application state or error, empty, or loading behavior changed; only CI classification and its offline tests changed."
+    },
+    "accessibility": {
+      "status": "pass",
+      "evidence": "No rendered content, semantics, styles, or behavior changed; accessibility characteristics are unchanged from the approved source."
+    },
+    "performance": {
+      "status": "pass",
+      "evidence": "No runtime dependency or product bundle changed in this PR; the CI-only Python gate is not shipped to users."
+    },
+    "visual_intent": {
+      "status": "pass",
+      "evidence": "The PR changes only scripts/check-design-pr.py and tests/test_design_gate.py. Existing approved screenshots are retained to demonstrate the unchanged product direction."
+    }
+  },
+  "screenshots": [
+    {
+      "viewport": "desktop",
+      "path": "docs/design-evidence/dependency-gate-2026-10-12/desktop.png",
+      "sha256": "484915d415456b37d2a14fb7436593ae8c6a69365b249ada8ca8b19d846f7684"
+    },
+    {
+      "viewport": "mobile",
+      "path": "docs/design-evidence/dependency-gate-2026-10-12/mobile.png",
+      "sha256": "d120facffcf77c291b01c3efa743c3b131d05c9f20e7a8a14b9083e2e9ceb022"
+    }
+  ],
+  "limitations": [
+    "No new browser run: product source is unchanged and screenshots are exact copies of previously approved evidence.",
+    "Review covers the CI classification change and offline regression suite; dependency PRs still require their own full CI before merge."
+  ]
+}
