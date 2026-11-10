@@ -1,10 +1,11 @@
 import { app, HttpRequest, HttpResponseInit } from "@azure/functions";
 import { AzureOpenAI } from "openai";
 import { buildDetailedErrorMessage } from "../utils/errorMessage";
+import { completionOptions } from "../utils/openaiRequest";
 
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT || "";
 const apiKey = process.env.AZURE_OPENAI_KEY || "";
-const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4o";
+const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-6-luna";
 
 const COUNTRY_INFO: Record<string, { lang: string; code: string; standards: string; authority: string; voltage: string; socketType: string; tipLocale: string }> = {
   LV: {
@@ -202,8 +203,7 @@ Write 5-8 practical tips in simple language:
           { role: "system", content: `${specPrompt}\n\nWrite in English.` },
           { role: "user", content: `Generate the specification.\n\nRooms:\n${JSON.stringify(roomsClean, null, 2)}\n\nPlacements:\n${JSON.stringify(placementsClean, null, 2)}` },
         ],
-        max_tokens: 10000,
-        temperature: 0.15,
+        ...completionOptions(deployment, 10000, 0.15),
       });
 
       const englishSpec = enResponse.choices[0]?.message?.content || "";
@@ -233,8 +233,7 @@ CRITICAL RULES:
             content: `Translate this specification to ${info.lang}. Keep every detail:\n\n${englishSpec}`,
           },
         ],
-        max_tokens: 10000,
-        temperature: 0.1,
+        ...completionOptions(deployment, 10000, 0.1),
       });
 
       return {

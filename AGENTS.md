@@ -1,18 +1,26 @@
 # Rosette — AI Electric Socket Planner
 
-Feedback triage uses `gpt-6-luna` on the existing personal-agents Azure account,
-with reasoning disabled and a 300-token output ceiling. This retirement migration
-does not change the application's GPT-4o vision model.
+Application vision/text and feedback triage default to `gpt-6-luna` on the
+existing personal-agents Azure account, with reasoning disabled. Feedback triage
+keeps its 300-token output ceiling.
+
+All five application completions use `api/src/utils/openaiRequest.ts`: always
+send `max_completion_tokens`, preserve each call's temperature, and include
+`reasoning_effort: "none"` only for the exact runtime deployment `gpt-6-luna`.
+Keep API version `2024-10-21`. Existing deployment overrides remain compatible
+until the orchestrator flips `AZURE_OPENAI_DEPLOYMENT` after deployment.
+The two description calls retain their 10,000-token ceilings; disabled reasoning
+leaves the budget available for visible output.
 
 ## Overview
 
-AI-powered tool for planning electrical socket placement in Baltic properties, using GPT-4o vision for floor plan analysis and country-specific electrical standards (Latvia, Lithuania, Estonia).
+AI-powered tool for planning electrical socket placement in Baltic properties, using gpt-6-luna vision for floor plan analysis and country-specific electrical standards (Latvia, Lithuania, Estonia).
 
 ## Tech Stack
 
 - **Frontend**: React 19, TypeScript, Vite 8
 - **Backend**: Azure Functions (Node.js 20, TypeScript)
-- **AI**: Azure OpenAI GPT-4o (vision + text)
+- **AI**: Azure OpenAI gpt-6-luna (vision + text)
 - **Storage**: Azure Blob Storage (uploads), Azure Table Storage (feedback, login tracking)
 - **Auth**: Azure SWA built-in Google OAuth
 - **Hosting**: Azure Static Web Apps
@@ -28,7 +36,7 @@ rosette/
 │   └── index.css             # Light theme styles
 ├── api/                      # Azure Functions backend
 │   ├── src/functions/
-│   │   ├── analyze.ts        # Floor plan analysis via GPT-4o vision
+│   │   ├── analyze.ts        # Floor plan analysis via gpt-6-luna vision
 │   │   ├── upload.ts         # File upload to Blob Storage
 │   │   ├── calculate.ts      # Socket placement calculation
 │   │   ├── generateDescription.ts  # Multi-language descriptions

@@ -1,10 +1,11 @@
 import { app, HttpRequest, HttpResponseInit } from "@azure/functions";
 import { AzureOpenAI } from "openai";
 import { buildDetailedErrorMessage } from "../utils/errorMessage";
+import { completionOptions } from "../utils/openaiRequest";
 
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT || "";
 const apiKey = process.env.AZURE_OPENAI_KEY || "";
-const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4o";
+const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-6-luna";
 
 app.http("proposePlacements", {
   methods: ["POST"],
@@ -103,8 +104,7 @@ Rooms:
 ${JSON.stringify(body.rooms, null, 2)}`,
           },
         ],
-        max_tokens: 6000,
-        temperature: 0.2,
+        ...completionOptions(deployment, 6000, 0.2),
         response_format: { type: "json_object" },
       });
 
