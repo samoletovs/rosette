@@ -148,6 +148,8 @@ def setup_api_mocks(page: Page):
             route.fulfill(status=200, content_type="application/json", body=json.dumps(build_mock_calculation()))
         elif "/api/generate-description" in url:
             route.fulfill(status=200, content_type="application/json", body=json.dumps(MOCK_DESCRIPTION))
+        elif "/api/translate-description" in url:
+            route.fulfill(status=200, content_type="application/json", body=json.dumps(MOCK_DESCRIPTION))
         elif "/api/log-login" in url:
             route.fulfill(status=200, content_type="application/json", body=json.dumps({"ok": True}))
         elif "/.auth/" in url:

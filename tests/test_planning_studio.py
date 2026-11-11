@@ -97,6 +97,11 @@ def install_mocks(page: Page, origin: str) -> dict:
             code = route.request.post_data_json["countryCode"]
             fulfill(route, {
                 "description_en": "## Synthetic review specification\n\nNOT AN ELECTRICAL DESIGN.\n\n| Room | Conversation |\n|---|---|\n| Living room | " + "Long-content test " * 24 + "|\n",
+                "language": {"name": LANGUAGES[code], "code": code.lower()},
+            })
+        elif path == "/api/translate-description":
+            code = route.request.post_data_json["countryCode"]
+            fulfill(route, {
                 "description_local": f"## {LANGUAGES[code]} synthetic specification\n\nĀ ē ī ū — synthetic language/output fixture only.",
                 "language": {"name": LANGUAGES[code], "code": code.lower()},
             })

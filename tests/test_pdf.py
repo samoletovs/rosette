@@ -45,6 +45,7 @@ def setup_mocks(page):
         elif "/api/upload" in url: route.fulfill(status=200, content_type="application/json", body=json.dumps({"ok": True}))
         elif "/api/calculate" in url: route.fulfill(status=200, content_type="application/json", body=json.dumps(build_calc()))
         elif "/api/generate-description" in url: route.fulfill(status=200, content_type="application/json", body=json.dumps(MOCK_DESC))
+        elif "/api/translate-description" in url: route.fulfill(status=200, content_type="application/json", body=json.dumps(MOCK_DESC))
         elif "/api/log-login" in url: route.fulfill(status=200, content_type="application/json", body=json.dumps({"ok": True}))
         elif "/.auth/" in url: route.fulfill(status=200, content_type="application/json", body=json.dumps({"clientPrincipal": None}))
         else: route.continue_()

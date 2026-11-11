@@ -119,6 +119,7 @@ export async function generateDescription(
   countryCode: string,
   propertyType: string
 ): Promise<DescriptionResponse> {
+  // Two requests, because each SWA API call is cut off at 45 s.
   const res = await fetch(`${API_BASE}/generate-description`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -126,7 +127,17 @@ export async function generateDescription(
     signal: withTimeout(TIMEOUT * 2),
   });
   if (!res.ok) throw new Error(await safeJsonError(res, "Description generation failed"));
-  return res.json();
+  const english: Omit<DescriptionResponse, "description_local"> = await res.json();
+
+  const translated = await fetch(`${API_BASE}/translate-description`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ description_en: english.description_en, countryCode }),
+    signal: withTimeout(TIMEOUT * 2),
+  });
+  if (!translated.ok) throw new Error(await safeJsonError(translated, "Description translation failed"));
+  const local: Pick<DescriptionResponse, "description_local" | "language"> = await translated.json();
+  return { ...english, ...local };
 }
 
 // ── Feedback API ──

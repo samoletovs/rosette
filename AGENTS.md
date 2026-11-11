@@ -9,8 +9,15 @@ send `max_completion_tokens`, preserve each call's temperature, and include
 `reasoning_effort: "none"` only for the exact runtime deployment `gpt-6-luna`.
 Keep API version `2024-10-21`. Existing deployment overrides remain compatible
 until the orchestrator flips `AZURE_OPENAI_DEPLOYMENT` after deployment.
-The two description calls retain their 10,000-token ceilings; disabled reasoning
-leaves the budget available for visible output.
+The specification is written and translated in parallel parts
+(`api/src/utils/specification.ts`), because the SWA managed API cuts a request
+off at 45 s and one luna call for the whole document took 40-58 s.
+`generate-description` returns the English document; the client then calls
+`translate-description`. Each part has a 4,000-token ceiling and fails loudly
+if it comes back empty or truncated, so a socket can never silently disappear.
+Parallel parts need token-rate headroom: `gpt-6-luna` (150k TPM) has it, but
+`gpt-4o` (10k TPM) answers 429. Rolling back to `gpt-4o` therefore also needs
+this split reverted.
 
 ## Overview
 
@@ -39,10 +46,12 @@ rosette/
 │   │   ├── analyze.ts        # Floor plan analysis via gpt-6-luna vision
 │   │   ├── upload.ts         # File upload to Blob Storage
 │   │   ├── calculate.ts      # Socket placement calculation
-│   │   ├── generateDescription.ts  # Multi-language descriptions
+│   │   ├── generateDescription.ts  # English specification (parallel parts)
+│   │   ├── translateDescription.ts # Local-language translation (parallel chunks)
 │   │   ├── standards.ts      # Electrical standards API
 │   │   ├── feedback.ts       # Feedback to Table Storage
 │   │   └── logLogin.ts       # Login tracking
+│   ├── src/utils/specification.ts  # Spec prompts, part planning, chunking
 │   └── src/standardsData.ts  # Auto-generated standards (LV/LT/EE)
 ├── standards/                # Country electrical standards (Markdown)
 │   ├── lv.md                 # Latvia — LBN 261-23
