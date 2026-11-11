@@ -69,16 +69,22 @@ const endpoints = [
   {
     name: 'generate-description',
     body: { rooms: [], countryCode: 'LV', propertyType: 'apartment', placements: {} },
-    replies: ['# English specification', '# Latvian specification'],
+    replies: ['# Title', '## 2. Rooms', '## 3. Circuits', '## 6. Materials'],
     expectedResponse: {
-      description_en: '# English specification',
+      description_en: '# Title\n\n## 2. Rooms\n\n## 3. Circuits\n\n## 6. Materials',
+      language: { name: 'Latvian', code: 'lv' },
+    },
+    calls: [1000, 600, 1000, 2500].map((ceiling) => ({ ceiling, temperature: 0.15, json: false })),
+  },
+  {
+    name: 'translate-description',
+    body: { description_en: '# English specification', countryCode: 'LV' },
+    replies: ['# Latvian specification'],
+    expectedResponse: {
       description_local: '# Latvian specification',
       language: { name: 'Latvian', code: 'lv' },
     },
-    calls: [
-      { ceiling: 10000, temperature: 0.15, json: false },
-      { ceiling: 10000, temperature: 0.1, json: false },
-    ],
+    calls: [{ ceiling: 800, temperature: 0.1, json: false }],
   },
 ];
 
@@ -102,6 +108,7 @@ describe.each(scenarios)('model request contract: $configured -> $resolved', ({ 
     await import('../api/src/functions/calculate');
     await import('../api/src/functions/proposePlacements');
     await import('../api/src/functions/generateDescription');
+    await import('../api/src/functions/translateDescription');
 
     for (const content of endpoint.replies) {
       mocks.create.mockResolvedValueOnce({ choices: [{ message: { content } }] });
@@ -135,8 +142,8 @@ describe.each(scenarios)('model request contract: $configured -> $resolved', ({ 
           image_url: { url: 'https://example.com/plan.png', detail: 'high' },
         });
       }
-      if (endpoint.name === 'generate-description' && index === 1) {
-        expect(request.messages[1].content).toContain(endpoint.replies[0]);
+      if (endpoint.name === 'translate-description') {
+        expect(request.messages[1].content).toContain('# English specification');
       }
     });
   });

@@ -206,10 +206,10 @@ describe('proposePlacements endpoint', () => {
 });
 
 describe('generate-description endpoint', () => {
-  it('returns generated English and local descriptions', async () => {
-    mocks.openAICreateMock
-      .mockResolvedValueOnce({ choices: [{ message: { content: '# English' } }] })
-      .mockResolvedValueOnce({ choices: [{ message: { content: '# Latvian' } }] });
+  it('returns the English description assembled from its parts', async () => {
+    for (const content of ['# English', '## 2. Rooms', '## 3. Circuits', '## 6. Materials']) {
+      mocks.openAICreateMock.mockResolvedValueOnce({ choices: [{ message: { content } }] });
+    }
 
     const response = await getHandler('generate-description')({
       json: async () => ({
@@ -221,9 +221,9 @@ describe('generate-description endpoint', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(response.jsonBody.description_en).toBe('# English');
-    expect(response.jsonBody.description_local).toBe('# Latvian');
-    expect(mocks.openAICreateMock).toHaveBeenCalledTimes(2);
+    expect(response.jsonBody.description_en).toBe('# English\n\n## 2. Rooms\n\n## 3. Circuits\n\n## 6. Materials');
+    expect(response.jsonBody).not.toHaveProperty('description_local');
+    expect(mocks.openAICreateMock).toHaveBeenCalledTimes(4);
   });
 });
 
