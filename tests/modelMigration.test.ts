@@ -74,7 +74,7 @@ const endpoints = [
       description_en: '# Title\n\n## 2. Rooms\n\n## 3. Circuits\n\n## 6. Materials',
       language: { name: 'Latvian', code: 'lv' },
     },
-    calls: Array.from({ length: 4 }, () => ({ ceiling: 4000, temperature: 0.15, json: false })),
+    calls: [1000, 600, 1000, 2500].map((ceiling) => ({ ceiling, temperature: 0.15, json: false })),
   },
   {
     name: 'translate-description',
@@ -84,7 +84,7 @@ const endpoints = [
       description_local: '# Latvian specification',
       language: { name: 'Latvian', code: 'lv' },
     },
-    calls: [{ ceiling: 4000, temperature: 0.1, json: false }],
+    calls: [{ ceiling: 800, temperature: 0.1, json: false }],
   },
 ];
 

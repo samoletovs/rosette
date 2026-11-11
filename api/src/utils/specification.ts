@@ -48,7 +48,22 @@ export function countryInfo(countryCode: string | undefined): CountryInfo {
 // call to roughly 34 s on luna.
 export const PART_TOKEN_CEILING = 4000;
 export const MAX_SOCKETS_PER_ROOM_BATCH = 12;
+export const MAX_ROOMS_PER_ROOM_BATCH = 6;
 export const MAX_TRANSLATION_CHUNK_CHARS = 3500;
+
+// Azure OpenAI counts each request's prompt plus its token ceiling against the
+// deployment's tokens-per-minute quota as the request arrives, and the parts run
+// at the same time. So each ceiling is sized to what its part writes, with about
+// 2x headroom over measured output, rather than every part reserving the maximum.
+const OVERVIEW_TOKENS = 1000; // measured 212
+const CLOSING_TOKENS = 2500; // sections 6-8, measured 1,043
+const capped = (tokens: number) => Math.min(PART_TOKEN_CEILING, tokens);
+// Measured 407-650 for batches of 8-12 sockets in 1-3 rooms.
+const roomBatchTokens = (rooms: number, sockets: number) => capped(600 + 250 * rooms + 80 * sockets);
+// Measured 1,180 for 6 circuits; each circuit adds a schedule row, a wiring row and a board slot.
+const scheduleTokens = (circuits: number) => capped(1000 + 250 * circuits);
+// Latvian measured about 0.5 output tokens per English character.
+export const translationTokens = (chunk: string) => capped(Math.max(800, Math.ceil(chunk.length * 0.9) + 200));
 
 export interface SpecRoom {
   id?: unknown;
@@ -64,6 +79,7 @@ export interface SpecPart {
   scope: string;
   rooms: SpecRoom[];
   placements: SpecPlacements;
+  maxTokens: number;
 }
 
 export function buildSpecPrompt(cc: string, info: CountryInfo, propertyType: string): string {
@@ -221,7 +237,7 @@ function roomBatches(rooms: SpecRoom[], placements: SpecPlacements): SpecRoom[][
   let sockets = 0;
   for (const room of rooms) {
     const count = placements.placements.filter((p) => p.room_id === room.id).length;
-    if (current.length > 0 && sockets + count > MAX_SOCKETS_PER_ROOM_BATCH) {
+    if (current.length > 0 && (sockets + count > MAX_SOCKETS_PER_ROOM_BATCH || current.length === MAX_ROOMS_PER_ROOM_BATCH)) {
       batches.push(current);
       current = [];
       sockets = 0;
@@ -233,13 +249,39 @@ function roomBatches(rooms: SpecRoom[], placements: SpecPlacements): SpecRoom[][
   return batches;
 }
 
+function omit<T extends object>(value: T, keys: string[]): T {
+  return Object.fromEntries(Object.entries(value).filter(([key]) => !keys.includes(key))) as T;
+}
+
+function countCircuits(placements: SpecPlacements): number {
+  const listed = (key: string) => (Array.isArray(placements[key]) ? (placements[key] as unknown[]).length : 0);
+  const assigned = new Set(placements.placements.map((p) => p.circuit).filter((id) => id !== undefined)).size;
+  return Math.max(assigned, listed("circuits"), listed("wiring"));
+}
+
 export function planSpecificationParts(rooms: SpecRoom[], placements: SpecPlacements): SpecPart[] {
+  // Only section 2 says where each socket sits, so only it gets coordinates,
+  // walls and room outlines, and it does not need the cable routes.
+  const summaryRooms = rooms.map((room) => omit(room, ["position"]));
+  const summaryPlacements = { ...placements, placements: placements.placements.map((p) => omit(p, ["x_pct", "y_pct", "wall"])) };
+  const roomPlacements = omit(placements, ["wiring"]);
+
   const parts: SpecPart[] = [
-    { scope: "the title block, the --- line after it, and section 1 (Project Overview)", rooms, placements },
+    {
+      scope: "the title block, the --- line after it, and section 1 (Project Overview)",
+      rooms: summaryRooms,
+      placements: summaryPlacements,
+      maxTokens: OVERVIEW_TOKENS,
+    },
   ];
   const batches = roomBatches(rooms, placements);
   if (batches.length === 0) {
-    parts.push({ scope: 'section 2 (the "## 2. Room-by-Room Specification" heading and its content)', rooms, placements });
+    parts.push({
+      scope: 'section 2 (the "## 2. Room-by-Room Specification" heading and its content)',
+      rooms,
+      placements: roomPlacements,
+      maxTokens: roomBatchTokens(0, placements.placements.length),
+    });
   }
   let next = 1;
   batches.forEach((batch, index) => {
@@ -247,23 +289,27 @@ export function planSpecificationParts(rooms: SpecRoom[], placements: SpecPlacem
     const ids = new Set(batch.map((room) => room.id));
     const heading = index === 0 ? 'the "## 2. Room-by-Room Specification" heading, then ' : "";
     const range = last === next ? `room subsection 2.${next}` : `room subsections 2.${next} to 2.${last}`;
+    const sockets = placements.placements.filter((p) => ids.has(p.room_id));
     parts.push({
       scope: `${heading}${range} — one subsection per room, in the order given, numbered from 2.${next}`,
       rooms: batch,
-      placements: { ...placements, placements: placements.placements.filter((p) => ids.has(p.room_id)) },
+      placements: { ...roomPlacements, placements: sockets },
+      maxTokens: roomBatchTokens(batch.length, sockets.length),
     });
     next = last + 1;
   });
   parts.push(
     {
       scope: "sections 3, 4 and 5 (Circuit Schedule, Wiring Schedule with its colour legend and note, Distribution Board Layout)",
-      rooms,
-      placements,
+      rooms: summaryRooms,
+      placements: summaryPlacements,
+      maxTokens: scheduleTokens(countCircuits(placements)),
     },
     {
       scope: "sections 6, 7 and 8 (Material List, Safety & Compliance, User Guide for Homeowners), then the closing --- line and footer",
-      rooms,
-      placements,
+      rooms: summaryRooms,
+      placements: summaryPlacements,
+      maxTokens: CLOSING_TOKENS,
     },
   );
   return parts;
@@ -296,6 +342,23 @@ export function splitForTranslation(markdown: string, maxChars = MAX_TRANSLATION
   return chunks.filter((c) => c.trim().length > 0);
 }
 
+// A part occasionally restates a heading another part owns (seen live: a later
+// room batch opening with "## 2. Room-by-Room Specification"). Keep the first
+// title and the first heading of each numbered section.
+export function dropRepeatedHeadings(markdown: string): string {
+  const seen = new Set<string>();
+  return markdown
+    .split("\n")
+    .filter((line) => {
+      const key = line.match(/^(#|## \d+\.)\s/)?.[1];
+      if (!key) return true;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .join("\n");
+}
+
 async function complete(
   client: AzureOpenAI,
   deployment: string,
@@ -303,6 +366,7 @@ async function complete(
   system: string,
   user: string,
   temperature: number,
+  maxTokens: number,
 ): Promise<string> {
   const response = await client.chat.completions.create({
     model: deployment,
@@ -310,13 +374,13 @@ async function complete(
       { role: "system", content: system },
       { role: "user", content: user },
     ],
-    ...completionOptions(deployment, PART_TOKEN_CEILING, temperature),
+    ...completionOptions(deployment, maxTokens, temperature),
   });
   const choice = response.choices[0];
   const text = choice?.message?.content?.trim() || "";
   // A missing or cut-off part would silently drop sockets from an electrical spec.
   if (!text) throw new Error(`${label} came back empty`);
-  if (choice?.finish_reason === "length") throw new Error(`${label} hit the ${PART_TOKEN_CEILING}-token limit`);
+  if (choice?.finish_reason === "length") throw new Error(`${label} hit its ${maxTokens}-token limit`);
   return text;
 }
 
@@ -335,12 +399,13 @@ export async function generateSpecification(
         deployment,
         `Specification part ${index + 1} of ${parts.length}`,
         `${specPrompt}\n\nWrite in English.\n\nThis document is produced in ${parts.length} parts that are joined afterwards. Write ONLY part ${index + 1}: ${part.scope}. Follow the format above exactly for that part. Do not write any other section, preamble or closing remark.`,
-        `Generate part ${index + 1} of the specification.\n\nRooms:\n${JSON.stringify(part.rooms, null, 2)}\n\nPlacements:\n${JSON.stringify(part.placements, null, 2)}`,
+        `Generate part ${index + 1} of the specification.\n\nRooms:\n${JSON.stringify(part.rooms)}\n\nPlacements:\n${JSON.stringify(part.placements)}`,
         0.15,
+        part.maxTokens,
       ),
     ),
   );
-  return texts.join("\n\n");
+  return dropRepeatedHeadings(texts.join("\n\n"));
 }
 
 export async function translateSpecification(
@@ -359,6 +424,7 @@ export async function translateSpecification(
         `${translationPrompt(lang)}\n\nThe specification is translated in ${chunks.length} consecutive parts. This is part ${index + 1}. Translate only this part and return only the translation, without any preamble or comment.`,
         `Translate this specification to ${lang}. Keep every detail:\n\n${chunk}`,
         0.1,
+        translationTokens(chunk),
       ),
     ),
   );

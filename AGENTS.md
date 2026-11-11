@@ -13,11 +13,15 @@ The specification is written and translated in parallel parts
 (`api/src/utils/specification.ts`), because the SWA managed API cuts a request
 off at 45 s and one luna call for the whole document took 40-58 s.
 `generate-description` returns the English document; the client then calls
-`translate-description`. Each part has a 4,000-token ceiling and fails loudly
-if it comes back empty or truncated, so a socket can never silently disappear.
-Parallel parts need token-rate headroom: `gpt-6-luna` (150k TPM) has it, but
-`gpt-4o` (10k TPM) answers 429. Rolling back to `gpt-4o` therefore also needs
-this split reverted.
+`translate-description`. Each part fails loudly if it comes back empty or
+truncated, so a socket can never silently disappear.
+Azure counts every request's prompt plus its token ceiling against the
+deployment's tokens-per-minute quota as it arrives, and the parts run at once.
+So each ceiling is sized to its part (at most 4,000), only the section-2 parts
+get socket geometry, and data is sent as compact JSON. One description reserves
+about 47k tokens (measured), so `gpt-6-luna` (150k TPM) fits about three a
+minute; `tests/descriptionSpec.test.ts` fails above 60k. `gpt-4o` (10k TPM)
+answers 429, so rolling back to `gpt-4o` also needs this split reverted.
 
 ## Overview
 
