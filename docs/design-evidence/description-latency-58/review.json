@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "source_commit": "22d84995d168fd3ee30343f3c6d7b9d81f0e0440",
+  "brief_sha256": "989121a272db525728c1a52a29888eca819b0b5e7ff67fe34f4bd30b10bdd282",
+  "direction": {
+    "mode": "reuse",
+    "selected": "A - Planning studio",
+    "owner_decision": "Retain direction A, which the owner approved on 2026-09-21. This PR changes how the specification is requested (a generate call followed by a translate call) and makes no rendered UI change."
+  },
+  "author": "Copilot implementation session efaf31cf-a7ff-4ae9-adb8-7e933005b657",
+  "reviewer": "Independent code-review agent ff2e2bbf-2e51-42ee-bf1b-8ced069ba310",
+  "review_notes": "Independent review of 089b034 found one medium issue: flat 4,000-token ceilings over-reserved gpt-6-luna TPM. 22d8499 resolves it, and the follow-up review found no new issues in the sized ceilings, heading de-duplication or per-part data. For this receipt the reviewer confirmed the screenshot hashes (byte-identical to the 7ff33b6 desktop.png and mobile.png), CI run 43015625154, the runner's per-width coverage, zero accessibility failures in browser-results.json, and the translation-failure path by code inspection. The reviewer's three corrections (JS delta attribution, code-inspection wording, missing limitations) were applied. Live timings, the 18-of-20 capture comparison and the initial-JS delta are author-measured.",
+  "unresolved_findings": [],
+  "checks": {
+    "primary_task": {
+      "status": "pass",
+      "evidence": "The exact-source CI preview (run 43015625154) passed the full mocked journey at 1440 px and 390 px. The English specification arrives from /api/generate-description; selecting Latvian (desktop) or Estonian (mobile) renders the heading returned by the separate /api/translate-description call, with no fallback notice and no page errors. CI lint, type check, 164 Vitest tests and the API build passed on the same commit."
+    },
+    "keyboard": {
+      "status": "pass",
+      "evidence": "No component, markup or focus code changed. The runner's Enter/Space upload, Enter room review and Enter socket placement passed at 1440 px and 390 px, and paywall Escape passed at 390 px."
+    },
+    "responsive": {
+      "status": "pass",
+      "evidence": "The runner found no horizontal overflow at 320, 390, 768 and 1440 px. desktop.png (1440 px) and mobile.png (390 px) are byte-identical to the approved 7ff33b6 captures."
+    },
+    "states": {
+      "status": "pass",
+      "evidence": "Analysis and calculation waiting/error and Markdown-renderer failure passed at both widths, and empty analysis/review passed at 390 px. By code inspection, a failed generate or translate call throws inside the existing calculation try block and reaches the same calculation-error state, which keeps placements and offers retry; a retry reruns calculate, generate and translate. The two failure captures differ from 7ff33b6 only in the drawing date printed in the room-layout SVG header."
+    },
+    "accessibility": {
+      "status": "pass",
+      "evidence": "Measured text contrast, control border/focus contrast and 200% text enlargement passed in every phase recorded in browser-results.json. No markup, styles or semantics changed."
+    },
+    "performance": {
+      "status": "pass",
+      "evidence": "Initial decoded JavaScript is 264,579 bytes, 596 bytes more than the approved 7ff33b6 capture; that difference includes dependency updates merged since 7ff33b6 as well as the second fetch in src/api.ts. Markdown and PDF chunks stay deferred. Live runs on gpt-6-luna measured 11.0-12.3 s to generate and 12.4-13.2 s to translate, against 39.8 s and 57.5 s for the single call."
+    },
+    "visual_intent": {
+      "status": "pass",
+      "evidence": "The rendered product is unchanged: 18 of 20 captured screens are byte-identical to the approved 7ff33b6 evidence, and the other two differ only in the printed drawing date. The receipt screenshots show direction A rendered from 22d8499."
+    }
+  },
+  "screenshots": [
+    {
+      "viewport": "desktop",
+      "path": "docs/design-evidence/description-latency-58/desktop.png",
+      "sha256": "a0f1b972cce9fccfce307124c5843bef262811d40fd18d02ac998c30014b1224"
+    },
+    {
+      "viewport": "mobile",
+      "path": "docs/design-evidence/description-latency-58/mobile.png",
+      "sha256": "3bfe18046d584bc2c49da74c830631d821def74ab6f85da6ab92a378f6c14990"
+    }
+  ],
+  "limitations": [
+    "Browser journeys use synthetic API fixtures; no fixture exercises a failed generate or translate call.",
+    "Live gpt-6-luna timings were measured by the author with a local harness, not through the browser.",
+    "The 18-of-20 byte-identical comparison with 7ff33b6 was measured by the author; only desktop.png and mobile.png were retained and independently checked.",
+    "Chromium only; no physical-device test or WCAG certification.",
+    "The authenticated end-to-end run on the live site remains with the owner, because /api/* requires the authenticated role."
+  ]
+}
